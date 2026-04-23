@@ -1,0 +1,24 @@
+# Build output
+dist/
+
+# Internal planning documents
+docs/
+
+# Dependencies
+node_modules/
+
+# PhpStorm / JetBrains
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
