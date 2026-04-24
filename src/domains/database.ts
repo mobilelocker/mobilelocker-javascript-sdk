@@ -3,6 +3,14 @@ import { MobileLockerDatabaseError, DatabaseErrorCode } from '../errors'
 import type { DatabaseQueryResult } from '../types/database'
 import axios from 'axios'
 
+function isOfflineError(err: unknown): boolean {
+    return err instanceof TypeError && (
+        (err as TypeError).message.includes('Failed to fetch') ||
+        (err as TypeError).message.includes('NetworkError') ||
+        (err as TypeError).message.includes('Network request failed')
+    )
+}
+
 const _sqliteCache = new Map<string, unknown>()
 
 async function _loadSqlJs(): Promise<unknown> {
@@ -12,7 +20,7 @@ async function _loadSqlJs(): Promise<unknown> {
         const script = document.createElement('script')
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.12.0/sql-wasm.js'
         script.onload = () => resolve()
-        script.onerror = () => reject(new Error('Failed to load sql.js from CDN'))
+        script.onerror = () => reject(new MobileLockerDatabaseError('No internet connection', DatabaseErrorCode.NotConnected))
         document.head.appendChild(script)
     })
 
@@ -28,7 +36,13 @@ async function _openDevDatabase(path: string): Promise<unknown> {
 
     const SQL = await _loadSqlJs() as { Database: new (data: Uint8Array) => unknown }
 
-    const response = await fetch(path)
+    let response: Response
+    try {
+        response = await fetch(path)
+    } catch (err) {
+        if (isOfflineError(err)) throw new MobileLockerDatabaseError('No internet connection', DatabaseErrorCode.NotConnected)
+        throw err
+    }
     if (!response.ok) {
         throw new MobileLockerDatabaseError(
             `Could not fetch database at '${path}': ${response.status} ${response.statusText}`,
