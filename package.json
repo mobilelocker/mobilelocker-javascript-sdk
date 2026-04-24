@@ -1,6 +1,6 @@
 {
   "name": "@mobilelocker/javascript-sdk",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Mobile Locker JavaScript SDK",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",

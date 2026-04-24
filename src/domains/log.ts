@@ -2,9 +2,9 @@ import { apiClient, getEndpoint, isMobileLocker, withRetry } from '../env'
 import { analytics } from './analytics'
 import localforage from 'localforage'
 
-export type SDKLogLevel = 'debug' | 'info' | 'warning' | 'error'
+export type SDKLogLevel = 'debug' | 'info' | 'warn' | 'error'
 export type SDKLogDomain = 'analytics' | 'congresses' | 'contacts' | 'crm'
-    | 'data' | 'database' | 'debug' | 'device'
+    | 'data' | 'database' | 'device' | 'log'
     | 'presentation' | 'scanner' | 'search' | 'session'
     | 'share' | 'storage' | 'ui' | 'user'
     | 'custom'
@@ -48,7 +48,26 @@ async function _saveLocalLog(entry: SDKLogEntry): Promise<void> {
     await localforage.setItem(LOCAL_STORAGE_KEY, logs)
 }
 
-export const debug = {
+function _writeLog(level: SDKLogLevel, message: string, metadata?: Record<string, unknown>): void {
+    const entry: SDKLogEntry = {
+        id: ++_localLogId,
+        timestamp: new Date().toISOString(),
+        level,
+        domain: 'custom',
+        function: null,
+        message,
+        durationMs: null,
+        retryCount: null,
+        metadata: metadata ?? null,
+    }
+    if (isMobileLocker()) {
+        void apiClient.post(getEndpoint('/sdk-logs'), entry)
+    } else {
+        void _saveLocalLog(entry)
+    }
+}
+
+export const log = {
     setMode(enabled: boolean): void {
         _debugMode = typeof enabled === 'boolean' ? enabled : false
     },
@@ -95,7 +114,7 @@ export const debug = {
             )
             return data
         }
-        const logs = await debug.getSdkLogs(filter)
+        const logs = await log.getSdkLogs(filter)
         const lower = text.toLowerCase()
         return logs.filter(l =>
             l.message.toLowerCase().includes(lower) ||
@@ -103,24 +122,10 @@ export const debug = {
         )
     },
 
-    log(level: SDKLogLevel, message: string, metadata?: Record<string, unknown>): void {
-        const entry: SDKLogEntry = {
-            id: ++_localLogId,
-            timestamp: new Date().toISOString(),
-            level,
-            domain: 'custom',
-            function: null,
-            message,
-            durationMs: null,
-            retryCount: null,
-            metadata: metadata ?? null,
-        }
-        if (isMobileLocker()) {
-            void apiClient.post(getEndpoint('/sdk-logs'), entry)
-        } else {
-            void _saveLocalLog(entry)
-        }
-    },
+    debug(message: string, metadata?: Record<string, unknown>): void { _writeLog('debug', message, metadata) },
+    info(message: string, metadata?: Record<string, unknown>): void { _writeLog('info', message, metadata) },
+    warn(message: string, metadata?: Record<string, unknown>): void { _writeLog('warn', message, metadata) },
+    error(message: string, metadata?: Record<string, unknown>): void { _writeLog('error', message, metadata) },
 
     async deleteSdkLog(id: number): Promise<void> {
         if (isMobileLocker()) {

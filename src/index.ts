@@ -6,7 +6,7 @@ import { contacts } from './domains/contacts'
 import { crm } from './domains/crm'
 import { data } from './domains/data'
 import { database } from './domains/database'
-import { debug } from './domains/debug'
+import { log } from './domains/log'
 import { device } from './domains/device'
 import { http } from './domains/http'
 import { network } from './domains/network'
@@ -48,7 +48,7 @@ const mobilelocker = {
     crm,
     data,
     database,
-    debug,
+    log,
     device,
     http,
     network,
@@ -72,7 +72,7 @@ export { GeneralErrorCode, CRMErrorCode, DatabaseErrorCode, HTTPErrorCode } from
 
 // Domain types
 export type { StorageEntry, StorageFilter } from './domains/storage'
-export type { SDKLogEntry, SDKLogFilter, SDKLogLevel, SDKLogDomain } from './domains/debug'
+export type { SDKLogEntry, SDKLogFilter, SDKLogLevel, SDKLogDomain } from './domains/log'
 export type { CRMRefreshMode, CRMRefreshStatus, PickerStatus, CRMQueryResult } from './domains/crm'
 export type { DownloadStatus } from './domains/presentation'
 export type { ScanStatus, ScanResult } from './domains/scanner'
