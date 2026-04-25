@@ -130,9 +130,9 @@ const result = await mobilelocker.database.query(
     'SELECT * FROM products WHERE category = ?',
     ['widgets'],
 )
-// result.rows           — array of row objects
-// result.rowsAffected   — integer (always 0 for SELECT)
-// result.lastInsertRowId — null for SELECT
+// result.rows                — array of row objects
+// result.rows_affected       — integer (always 0 for SELECT)
+// result.last_insert_row_id  — null for SELECT
 ```
 
 Named parameters are also supported:
@@ -152,7 +152,7 @@ const description = await mobilelocker.database.describe('products.sqlite', 'pro
 // description.name    — 'products'
 // description.sql     — 'CREATE TABLE products (id INTEGER PRIMARY KEY, ...)'
 // description.columns — array of column info objects:
-//   { cid, name, type, notNull, defaultValue, primaryKey }
+//   { cid, name, type, not_null, default_value, primary_key }
 ```
 
 ### `device`
@@ -305,7 +305,7 @@ Get the currently authenticated user.
 
 ```js
 const user = await mobilelocker.user.get()
-// user.id, user.name, user.email, user.teamID
+// user.id, user.name, user.email, user.current_team_id
 ```
 
 ---
@@ -384,6 +384,34 @@ import type {
     VideoResult,
 } from '@mobilelocker/javascript-sdk'
 ```
+
+---
+
+## Contributing
+
+### Project structure
+
+```
+src/
+  domains/   — one file per SDK domain (analytics, crm, database, …)
+  types/     — entity types mirroring GRDB model toJSON() output
+  errors.ts  — error classes and error code constants
+  index.ts   — composes the mobilelocker object and re-exports everything
+```
+
+### Where to put types
+
+**`src/types/`** — entity shapes that directly mirror a GRDB model's `toJSON()` output: `Presentation`, `Customer`, `Attendee`, `User`, etc. These are the data objects returned by the iOS app. A type belongs here if it represents a row from the database and could appear across multiple domains.
+
+**`src/domains/<domain>.ts`** — parameter types, filter types, response envelopes, and status unions that are specific to a single domain's API surface: `SearchOptions`, `SearchResults`, `StorageFilter`, `ScanStatus`, `DownloadStatus`, etc. Keep these co-located with the functions that use them.
+
+`src/types/database.ts` is the one exception — `DatabaseQueryResult`, `DatabaseColumnInfo`, and `DatabaseTableDescription` are domain-specific but live in `types/` because there are three related types that would clutter the database domain file.
+
+### Wire format convention
+
+All JSON keys use **snake_case** — consistent with the Laravel/Spatie backend that seeds the iOS database and with the GRDB model `toJSON()` methods that produce the wire format.
+
+When a GRDB model in `mobilelocker-ios` gains or loses a field in its `toJSON()`, update the corresponding type in `src/types/` in the same change.
 
 ---
 
