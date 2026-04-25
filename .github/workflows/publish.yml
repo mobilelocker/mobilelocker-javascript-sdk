@@ -17,6 +17,7 @@ jobs:
         with:
           node-version: 22
           cache: yarn
+          registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -26,3 +27,5 @@ jobs:
 
       - name: Publish
         run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
