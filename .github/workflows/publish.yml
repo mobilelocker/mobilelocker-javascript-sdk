@@ -24,5 +24,8 @@ jobs:
       - name: Build
         run: yarn build
 
+      - name: Configure npm registry
+        run: npm config set registry https://registry.npmjs.org/
+
       - name: Publish
         run: npm publish --provenance --access public
