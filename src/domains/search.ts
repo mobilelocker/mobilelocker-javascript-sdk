@@ -43,12 +43,10 @@ export const search = {
     async query(text: string, options: SearchOptions = {}): Promise<SearchResults> {
         try {
             const { data } = await withRetry(() =>
-                apiClient.get<SearchResults>(getEndpoint('/search'), {
-                    params: {
-                        q: text,
-                        types: options.types?.join(','),
-                        limit: options.limit ?? 5,
-                    },
+                apiClient.post<SearchResults>(getEndpoint('/search'), {
+                    q: text,
+                    types: options.types,
+                    limit: options.limit ?? 5,
                 }),
             )
             return data
