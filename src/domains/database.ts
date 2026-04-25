@@ -81,11 +81,13 @@ function toError(err: unknown): MobileLockerDatabaseError {
     if (axios.isAxiosError(err)) {
         if (!err.response) return new MobileLockerDatabaseError('No internet connection', DatabaseErrorCode.NotConnected)
         const status = err.response.status
-        const msg = (err.response.data as { error?: string })?.error ?? err.message
+        const body = err.response.data as { error?: string; sqlite_message?: string }
+        const msg = body?.error ?? err.message
+        const sqliteMsg = body?.sqlite_message
         if (status === 400) return new MobileLockerDatabaseError(msg, DatabaseErrorCode.InvalidPath)
         if (status === 403) return new MobileLockerDatabaseError(msg, DatabaseErrorCode.WriteNotPermitted)
         if (status === 503) return new MobileLockerDatabaseError(msg, DatabaseErrorCode.NotReady)
-        return new MobileLockerDatabaseError(msg, DatabaseErrorCode.QueryFailed)
+        return new MobileLockerDatabaseError(msg, DatabaseErrorCode.QueryFailed, sqliteMsg)
     }
     return new MobileLockerDatabaseError(String(err), DatabaseErrorCode.QueryFailed)
 }
@@ -159,9 +161,9 @@ export const database = {
                     cid: r.cid,
                     name: r.name,
                     type: r.type,
-                    notNull: r.notnull !== 0,
-                    defaultValue: r.dflt_value ?? null,
-                    primaryKey: r.pk !== 0,
+                    not_null: r.notnull !== 0,
+                    default_value: r.dflt_value ?? null,
+                    primary_key: r.pk !== 0,
                 })
             }
             pragmaStmt.free()
@@ -181,7 +183,7 @@ export const database = {
      * @param path - Path to the `.sqlite` file (relative to the presentation root).
      * @param sql - A SQL SELECT statement, optionally with `?` or `:name` placeholders.
      * @param parameters - Positional array or named object of bind parameters.
-     * @returns A {@link DatabaseQueryResult} with `rows`, `rowsAffected`, and `lastInsertRowId`.
+     * @returns A {@link DatabaseQueryResult} with `rows`, `rows_affected`, and `last_insert_row_id`.
      * @throws {@link MobileLockerDatabaseError} with codes `InvalidPath`, `WriteNotPermitted`,
      *   `NotReady`, `QueryFailed`, or `NotConnected`.
      *
@@ -215,7 +217,7 @@ export const database = {
             const rows: Record<string, unknown>[] = []
             while (stmt.step()) rows.push(stmt.getAsObject())
             stmt.free()
-            return { rows, rowsAffected: 0, lastInsertRowId: null }
+            return { rows, rows_affected: 0, last_insert_row_id: null }
         } catch (err) {
             throw toError(err)
         }

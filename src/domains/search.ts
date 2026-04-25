@@ -7,7 +7,7 @@ import type { Attendee } from '../types/attendee'
 import type { BusinessCard } from '../types/businessCard'
 import axios from 'axios'
 
-export type SearchEntityType = 'presentations' | 'customers' | 'contacts' | 'attendees' | 'businessCards'
+export type SearchEntityType = 'presentations' | 'customers' | 'contacts' | 'attendees' | 'business_cards'
 
 export interface SearchOptions {
     /** Limit results to specific entity types. Defaults to all types. */
@@ -17,11 +17,11 @@ export interface SearchOptions {
 }
 
 export interface SearchResults {
-    presentations: { results: Presentation[]; totalCount: number }
-    customers:     { results: Customer[];     totalCount: number }
-    contacts:      { results: UserContact[];  totalCount: number }
-    attendees:     { results: (Attendee & { eventName: string })[]; totalCount: number }
-    businessCards: { results: BusinessCard[]; totalCount: number }
+    presentations:  { results: Presentation[]; total_count: number }
+    customers:      { results: Customer[];     total_count: number }
+    contacts:       { results: UserContact[];  total_count: number }
+    attendees:      { results: (Attendee & { event_name: string })[]; total_count: number }
+    business_cards: { results: BusinessCard[]; total_count: number }
 }
 
 export const search = {

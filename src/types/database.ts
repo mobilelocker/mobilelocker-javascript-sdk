@@ -4,10 +4,10 @@
 export interface DatabaseQueryResult {
     /** Array of row objects, one per result row. Keys are column names. */
     rows: Record<string, unknown>[]
-    /** Number of rows affected by the statement (always `0` in dev/sql.js mode). */
-    rowsAffected: number
+    /** Number of rows affected by the statement (always `0` for SELECT queries). */
+    rows_affected: number
     /** Row ID of the last inserted row, or `null` for SELECT statements. */
-    lastInsertRowId: number | null
+    last_insert_row_id: number | null
 }
 
 /**
@@ -20,11 +20,11 @@ export interface DatabaseColumnInfo {
     /** SQLite type affinity (e.g. `'TEXT'`, `'INTEGER'`, `'REAL'`, `'BLOB'`). */
     type: string
     /** Whether the column has a `NOT NULL` constraint. */
-    notNull: boolean
+    not_null: boolean
     /** Default value expression, or `null` if none is defined. */
-    defaultValue: string | null
+    default_value: string | null
     /** Whether this column is part of the primary key. */
-    primaryKey: boolean
+    primary_key: boolean
 }
 
 /**

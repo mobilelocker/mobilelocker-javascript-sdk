@@ -83,7 +83,7 @@ export type { DeviceInfo, AppEnvironment } from './domains/device'
 export type { HTTPMethod, HTTPResponseType, HTTPOptions, HTTPRequestOptions, HTTPResponse } from './domains/http'
 export type { VideoOptions, VideoResult } from './domains/ui'
 export type { ShareRecipient } from './domains/share'
-export type { User } from './domains/user'
+export type { User } from './types/user'
 
 // DTO types
 export type { Presentation } from './types/presentation'

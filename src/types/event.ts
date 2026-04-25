@@ -1,35 +1,34 @@
 /**
  * A lead retrieval event (congress, conference, or trade show).
- * Mirrors the iOS `EventData` Swift DTO.
+ * Mirrors the iOS `GRDBEvent` Swift model's `toJSON()` output.
  */
 export interface Event {
     id: number
-    teamID: number
-    ownerID: number
+    name: string
+    slug: string
+    team_id: number
+    owner_id: number
     /** ID of the lead capture form associated with this event. */
-    formID: number
+    form_id: number
     /** Lead retrieval provider (e.g. `'cvent'`, `'a2z'`). */
     provider: string
     /** Event classification (e.g. `'congress'`, `'tradeshow'`). */
-    eventType: string
+    event_type: string
     status: string
-    /** CRM object type for synced leads (e.g. `'Lead'`, `'Contact'`). */
-    crmObjectType: string | null
-    /** CRM campaign ID this event maps to. */
-    crmObjectID: string | null
-    /** Provider-assigned external event ID. */
-    externalID: string | null
-    /** CRM campaign ID for lead association. */
-    crmCampaignID: string | null
-    name: string
-    slug: string
-    website: string
     location: string
-    /** ISO 8601 start date/time. */
-    startAt: string
-    /** ISO 8601 end date/time. */
-    endAt: string
     timezone: string
-    createdAt: string
-    updatedAt: string
+    /** ISO 8601 start date/time. */
+    start_at: string
+    /** ISO 8601 end date/time. */
+    end_at: string
+    created_at: string
+    updated_at: string
+    /** CRM object type for synced leads (e.g. `'Lead'`, `'Contact'`). */
+    crm_object_type: string | null
+    /** CRM record ID this event maps to. */
+    crm_object_id: string | null
+    /** Provider-assigned external event ID. */
+    external_id: string | null
+    /** CRM campaign ID for lead association. */
+    crm_campaign_id: string | null
 }

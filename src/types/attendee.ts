@@ -1,60 +1,59 @@
 /**
  * An event attendee captured via badge scan or lead retrieval.
- * Mirrors the iOS `AttendeeData` Swift DTO.
+ * Mirrors the iOS `GRDBAttendee` Swift model's `toJSON()` output.
  */
 export interface Attendee {
     id: string
-    httpStatus: number
-    teamID: number
-    eventID: number
-    userID: number
-    /** ID of the form response submitted for this attendee, if any. */
-    formResponseID: number | null
-    /** ID of an associated business card scan, if any. */
-    cardID: string | null
+    team_id: number
+    event_id: number
+    user_id: number
     type: string
-    status: string
-    /** How the attendee record was captured (e.g. `'badge'`, `'manual'`). */
-    source: string
-    /** CRM object type mapped to this attendee (e.g. `'Contact'`, `'Lead'`). */
-    crmObjectType: string
-    /** CRM object ID for this attendee. */
-    crmObjectID: string
-    firstName: string
-    lastName: string
+    salutation: string
+    first_name: string
+    last_name: string
     name: string
     slug: string
     degree: string
-    email: string
-    title: string
     company: string
+    title: string
+    designation: string
+    specialty: string
+    industry: string
+    email: string
     phone: string
-    mobilePhone: string
+    mobile_phone: string
     address: string
     street1: string
     street2: string
     city: string
     state: string
-    postalCode: string
+    postal_code: string
+    /** Legacy alias for `postal_code` — kept for backward compatibility with JS slides. */
+    zip_code: string
     country: string
     note: string
-    linkedinURL: string
-    /** Badge barcode or QR value, if scanned. */
-    badgeID: string | null
-    checkedInByID: number | null
-    /** ISO 8601 timestamp when the attendee checked in, if applicable. */
-    checkedInAt: string | null
-    /** ISO 8601 timestamp when the attendee checked out, if applicable. */
-    checkedOutAt: string | null
-    /** ISO 8601 timestamp when the attendee declined, if applicable. */
-    declinedAt: string | null
-    createdAt: string
-    updatedAt: string
-    salutation: string
-    designation: string
-    specialty: string
-    industry: string
-    crmObject: string
-    /** ID of the linked user contact record, if any. */
-    userContactID: number | null
+    status: string
+    source: string
+    crm_object_type: string
+    crm_object_id: string
+    crm_object: string
+    form_response_id: number | null
+    card_id: string | null
+    badge_id: string | null
+    linkedin_url: string
+    mobilelocker_url: string | null
+    clearbit_id: string
+    /** Decoded Clearbit person data, or `null` if unavailable. */
+    clearbit_data: object | null
+    /** Decoded Clearbit company data, or `null` if unavailable. */
+    clearbit_company_data: object | null
+    /** Decoded supplemental data blob, or `null` if unavailable. */
+    data: object | null
+    checked_in_by_id: number | null
+    checked_in_at: string | null
+    checked_out_at: string | null
+    declined_at: string | null
+    created_at: string
+    updated_at: string
+    user_contact_id: number | null
 }

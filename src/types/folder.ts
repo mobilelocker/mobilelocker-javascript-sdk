@@ -1,24 +1,20 @@
 /**
  * A presentation folder in the user's library.
- * Mirrors the iOS `FolderData` Swift DTO.
+ * Mirrors the iOS `GRDBFolder` Swift model's `toJSON()` output.
  */
 export interface Folder {
     id: number
     name: string
-    detailedDescription: string | null
+    detailed_description: string | null
     /** URI to the folder's thumbnail image, if set. */
-    imageURI: string | null
-    userID: number
+    image_uri: string | null
+    user_id: number
     /** ID of the parent folder, or `0` for root-level folders. */
-    parentID: number
-    /** Whether this is a system-managed special folder. */
-    isSpecial: boolean
-    isHomeFolder: boolean
-    isWorldFolder: boolean
-    isFavoritesFolder: boolean
-    isMyFolder: boolean
-    isSlidesFolder: boolean
-    isNewFolder: boolean
+    parent_id: number
+    /** Nested set left boundary (used for tree traversal). */
+    _lft: number
+    /** Nested set right boundary (used for tree traversal). */
+    _rgt: number
     /** IDs of presentations contained in this folder. */
-    presentationIDs: number[]
+    presentation_ids: number[]
 }

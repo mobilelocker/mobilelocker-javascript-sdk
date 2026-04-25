@@ -1,37 +1,58 @@
 /**
  * A contact from the current user's personal contact list.
- * Mirrors the iOS `UserContactDisplayData` Swift DTO.
+ * Mirrors the iOS `GRDBUserContact` Swift model's `toJSON()` output.
  */
 export interface UserContact {
     id: number
+    team_id: number
+    user_id: number
+    uuid: string
+    status: string
+    source: string
+    greeting_type: string
+    greeting: string | null
+    salutation: string
+    suffix: string | null
+    initials: string | null
+    first_name: string
+    last_name: string
     name: string
-    /** URL-safe identifier. */
     slug: string
-    email: string | null
-    title: string | null
-    companyName: string | null
-    /** City or locality. */
-    locality: string | null
-    /** State, province, or region. */
-    administrativeArea: string | null
-    /** Professional designation (e.g. `'MD'`, `'PhD'`). */
-    designation: string | null
-    specialty: string | null
-    leadSource: string | null
+    title: string
+    designation: string
+    specialty: string
+    industry: string
+    email: string
+    phone: string
+    mobile_phone: string
+    address: string
+    street1: string
+    street2: string
+    city: string
+    state: string
+    postal_code: string
+    country: string
+    linkedin_url: string
+    external_id: string
+    contact_type: string
+    territory: string
+    note: string
+    company_name: string
     /** National Provider Identifier (US healthcare). */
     npi: string | null
-    level: string | null
-    tier: string | null
-    segment: string | null
+    level: string
+    tier: string
+    segment: string
+    lead_source: string
     /** Connected CRM provider name (e.g. `'salesforce'`). */
-    crmProvider: string | null
+    crm_provider: string | null
     /** CRM object type (e.g. `'Contact'`, `'Lead'`). */
-    crmObject: string | null
-    crmObjectID: string | null
-    /** Whether this contact exists in the connected CRM. */
-    inCRM: boolean
-    /** ISO 8601 timestamp of the most recent contact interaction. */
-    lastContactedAt: string | null
-    updatedAt: string | null
-    createdAt: string | null
+    crm_object: string
+    crm_object_id: string | null
+    email_deliverability_status: string | null
+    can_be_deleted: boolean
+    last_contacted_at: string | null
+    synced_at: string | null
+    created_at: string | null
+    updated_at: string | null
 }

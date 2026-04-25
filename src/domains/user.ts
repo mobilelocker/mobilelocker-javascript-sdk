@@ -2,17 +2,8 @@ import { apiClient, getEndpoint, withRetry } from '../env'
 import { MobileLockerError, GeneralErrorCode } from '../errors'
 import axios from 'axios'
 
-export interface User {
-    /** Numeric user ID. */
-    id: number
-    /** Full display name. */
-    name: string
-    /** Email address. */
-    email: string
-    /** The team this user belongs to. */
-    teamID: number
-    [key: string]: unknown
-}
+export type { User } from '../types/user'
+import type { User } from '../types/user'
 
 export const user = {
     /**
