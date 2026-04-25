@@ -1,4 +1,4 @@
-import { apiClient, getEndpoint, isMobileLockerApp, isMobileLockerIOSApp, withRetry } from '../env'
+import { apiClient, getEndpoint, isApp, isIOS, withRetry } from '../env'
 import { MobileLockerError, GeneralErrorCode } from '../errors'
 import { analytics } from './analytics'
 
@@ -53,7 +53,7 @@ export const ui = {
      * mobilelocker.ui.openPDF('/files/brochure.pdf', 'Product Brochure')
      */
     openPDF(pdfPath: string, title: string, customOptions?: Record<string, unknown>): void {
-        if (isMobileLockerApp()) {
+        if (isApp()) {
             analytics.logEvent('PDF', 'Open', pdfPath, { filename: pdfPath, title, ...customOptions }, 'showpdf')
         } else {
             window.open(pdfPath, '_blank')
@@ -67,7 +67,7 @@ export const ui = {
      * @throws {@link MobileLockerError} if called outside the iOS app.
      */
     showToolbar(): void {
-        if (!isMobileLockerIOSApp()) {
+        if (!isIOS()) {
             throw new MobileLockerError('showToolbar() is only supported in the iOS app', GeneralErrorCode.ServerError)
         }
         void apiClient.post(getEndpoint('/menu/show'))
@@ -89,7 +89,7 @@ export const ui = {
      * if (result.status === 'completed') console.log(`Watched to ${result.position}s`)
      */
     async openVideo(path: string, options: VideoOptions = {}): Promise<VideoResult> {
-        if (isMobileLockerIOSApp()) {
+        if (isIOS()) {
             const { data } = await withRetry(() =>
                 apiClient.post<VideoResult>(getEndpoint('/ui/open-video'), { path, options }),
             )

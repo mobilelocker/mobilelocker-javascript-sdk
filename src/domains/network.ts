@@ -1,4 +1,4 @@
-import { apiClient, getEndpoint, isMobileLockerApp, withRetry } from '../env'
+import { apiClient, getEndpoint, isApp, withRetry } from '../env'
 
 export type NetworkConnectionType = 'wifi' | 'cellular' | 'wired' | 'none'
 
@@ -24,7 +24,7 @@ export const network = {
      * if (!connected) showOfflineBanner()
      */
     async getStatus(): Promise<NetworkStatus> {
-        if (isMobileLockerApp()) {
+        if (isApp()) {
             const { data } = await withRetry(() => apiClient.get<NetworkStatus>(getEndpoint('/network/status')))
             return data
         }

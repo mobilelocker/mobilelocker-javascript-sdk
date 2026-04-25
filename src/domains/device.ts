@@ -1,4 +1,4 @@
-import { apiClient, getEndpoint, isMobileLockerIOSApp, withRetry } from '../env'
+import { apiClient, getEndpoint, isIOS, withRetry } from '../env'
 
 export type AppEnvironment = 'production' | 'staging'
 
@@ -49,7 +49,7 @@ export const device = {
      * if (info) console.log(info.app.version, info.hardware.model)
      */
     async get(): Promise<DeviceInfo | null> {
-        if (!isMobileLockerIOSApp()) return null
+        if (!isIOS()) return null
         const { data } = await withRetry(() => apiClient.get<DeviceInfo>(getEndpoint('/device')))
         return data
     },
@@ -67,7 +67,7 @@ export const device = {
      * }
      */
     async isAtLeastVersion(version: string): Promise<boolean> {
-        if (!isMobileLockerIOSApp()) return false
+        if (!isIOS()) return false
         const info = await device.get()
         if (!info) return false
         return semverCompare(info.app.version, version) >= 0

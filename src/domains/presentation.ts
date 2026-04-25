@@ -1,4 +1,4 @@
-import { apiClient, getEndpoint, isMobileLockerIOSApp, withRetry } from '../env'
+import { apiClient, getEndpoint, isIOS, withRetry } from '../env'
 import { MobileLockerError, GeneralErrorCode } from '../errors'
 import type { Presentation } from '../types/presentation'
 import { analytics } from './analytics'
@@ -149,7 +149,7 @@ export const presentation = {
      * @throws {@link MobileLockerError} if called outside the iOS app.
      */
     openByID(id: number): void {
-        if (!isMobileLockerIOSApp()) throw new MobileLockerError('openByID() is only supported in the iOS app', GeneralErrorCode.ServerError)
+        if (!isIOS()) throw new MobileLockerError('openByID() is only supported in the iOS app', GeneralErrorCode.ServerError)
         void apiClient.get(getEndpoint('/open-presentation'), { params: { id } })
     },
 
@@ -161,7 +161,7 @@ export const presentation = {
      * @throws {@link MobileLockerError} if called outside the iOS app.
      */
     openByExternalID(externalID: string): void {
-        if (!isMobileLockerIOSApp()) throw new MobileLockerError('openByExternalID() is only supported in the iOS app', GeneralErrorCode.ServerError)
+        if (!isIOS()) throw new MobileLockerError('openByExternalID() is only supported in the iOS app', GeneralErrorCode.ServerError)
         void apiClient.get(getEndpoint('/open-presentation'), { params: { external_id: externalID } })
     },
 
@@ -173,7 +173,7 @@ export const presentation = {
      * @throws {@link MobileLockerError} if called outside the iOS app.
      */
     openByName(name: string): void {
-        if (!isMobileLockerIOSApp()) throw new MobileLockerError('openByName() is only supported in the iOS app', GeneralErrorCode.ServerError)
+        if (!isIOS()) throw new MobileLockerError('openByName() is only supported in the iOS app', GeneralErrorCode.ServerError)
         void apiClient.get(getEndpoint('/open-presentation'), { params: { name } })
     },
 
@@ -184,7 +184,7 @@ export const presentation = {
      * @throws {@link MobileLockerError} if called outside the iOS app.
      */
     openPicker(): void {
-        if (!isMobileLockerIOSApp()) throw new MobileLockerError('openPicker() is only supported in the iOS app', GeneralErrorCode.ServerError)
+        if (!isIOS()) throw new MobileLockerError('openPicker() is only supported in the iOS app', GeneralErrorCode.ServerError)
         void apiClient.get(getEndpoint('/open-presentation-picker'))
     },
 }

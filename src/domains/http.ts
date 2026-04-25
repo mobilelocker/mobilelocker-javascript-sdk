@@ -1,4 +1,4 @@
-import { apiClient, getEndpoint, isMobileLockerApp } from '../env'
+import { apiClient, getEndpoint, isApp } from '../env'
 import { MobileLockerHTTPError, MobileLockerHttpResponseError, HTTPErrorCode } from '../errors'
 
 export type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
@@ -34,7 +34,7 @@ async function request(url: string, options: HTTPRequestOptions = {}): Promise<H
     const timeout = options.timeout ?? 30_000
     const responseType = options.responseType ?? 'json'
 
-    if (isMobileLockerApp()) {
+    if (isApp()) {
         // Proxy through iOS GCDWebServer — URLSession makes the real request (no CORS)
         const { data } = await apiClient.post<HTTPResponse>(getEndpoint('/http/request'), {
             url,

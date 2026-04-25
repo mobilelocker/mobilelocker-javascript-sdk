@@ -8,10 +8,11 @@ This SDK gives IVA developers programmatic access to the Mobile Locker platform 
 
 The SDK works in two environments:
 
-| Environment | Description                                                                  |
-|-------------|------------------------------------------------------------------------------|
-| **iOS App** | Running inside the Mobile Locker iOS app (`isMobileLockerApp() === true`)    |
-| **CDN**     | Loaded as part of a CDN-hosted presentation (`isMobileLockerCDN() === true`) |
+| Environment      | Description                                                                     |
+|------------------|---------------------------------------------------------------------------------|
+| **iOS/iPadOS**   | Running inside the Mobile Locker iOS app (`isIOS() === true`)                   |
+| **Electron**     | Running inside the Mobile Locker Windows app (`isElectron() === true`)          |
+| **CDN**          | Loaded as part of a CDN-hosted presentation (`isCDN() === true`)                |
 
 When running outside of either environment (e.g. local development), most SDK calls are silently no-ops or return sensible local fallbacks. No errors are thrown — so you can develop locally without a live Mobile Locker context.
 
@@ -39,7 +40,7 @@ yarn add @mobilelocker/javascript-sdk
 The SDK initializes automatically — there is no `init()` call required. It reads authentication and configuration from the `?jwt=` query parameter that Mobile Locker injects into every presentation URL at runtime.
 
 ```js
-import mobilelocker from '@mobilelocker/sdk'
+import mobilelocker from '@mobilelocker/javascript-sdk'
 
 // The SDK is ready to use immediately after import
 const user = await mobilelocker.user.get()
@@ -53,12 +54,13 @@ console.log(`Hello, ${user.name}`)
 Use these helpers to branch behavior based on where your code is running:
 
 ```js
-import mobilelocker from '@mobilelocker/sdk'
+import mobilelocker from '@mobilelocker/javascript-sdk'
 
-mobilelocker.isMobileLocker()        // true in app or CDN
-mobilelocker.isMobileLockerApp()     // true in iOS or iPadOS app
-mobilelocker.isMobileLockerIOSApp()  // true specifically in the iOS app
-mobilelocker.isMobileLockerCDN()     // true when served from a CDN presentation URL
+mobilelocker.isMobileLocker()  // true in any app or CDN context
+mobilelocker.isApp()           // true in the iOS app or Electron (Windows) app
+mobilelocker.isIOS()           // true specifically in the iOS or iPadOS app
+mobilelocker.isElectron()      // true in the Electron (Windows) app
+mobilelocker.isCDN()           // true when served from a CDN presentation URL
 ```
 
 ---
@@ -287,7 +289,7 @@ Control the presentation UI (iOS app only where noted).
 ```js
 mobilelocker.ui.openPDF('/files/brochure.pdf', 'Product Brochure')
 
-const result = await mobilelocker.ui.playVideo('/files/demo.mp4', {
+const result = await mobilelocker.ui.openVideo('/files/demo.mp4', {
     autoplay: true,
     showControls: true,
 })
@@ -336,7 +338,7 @@ import mobilelocker, {
     GeneralErrorCode,
     CRMErrorCode,
     DatabaseErrorCode,
-} from '@mobilelocker/sdk'
+} from '@mobilelocker/javascript-sdk'
 
 try {
     const accounts = await mobilelocker.crm.getAccounts()
@@ -380,7 +382,7 @@ import type {
     ScanResult,
     HTTPResponse,
     VideoResult,
-} from '@mobilelocker/sdk'
+} from '@mobilelocker/javascript-sdk'
 ```
 
 ---

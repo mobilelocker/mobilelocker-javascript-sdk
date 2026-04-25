@@ -1,4 +1,4 @@
-import { apiClient, getEndpoint, isMobileLockerIOSApp, withRetry } from '../env'
+import { apiClient, getEndpoint, isIOS, withRetry } from '../env'
 import { MobileLockerCRMError, MobileLockerError, CRMErrorCode, GeneralErrorCode } from '../errors'
 import type { Customer } from '../types/customer'
 import axios from 'axios'
@@ -92,7 +92,7 @@ export const crm = {
      * if (status === 'selected') console.log(customers)
      */
     async openCustomerPicker(): Promise<{ status: PickerStatus; customers?: Customer[] }> {
-        if (!isMobileLockerIOSApp()) {
+        if (!isIOS()) {
             throw new MobileLockerError('openCustomerPicker() is only supported in the iOS app', GeneralErrorCode.ServerError)
         }
         try {

@@ -1,4 +1,4 @@
-import { apiClient, getEndpoint, isMobileLockerIOSApp, withRetry } from '../env'
+import { apiClient, getEndpoint, isIOS, withRetry } from '../env'
 import { MobileLockerError, GeneralErrorCode } from '../errors'
 import type { Attendee } from '../types/attendee'
 import type { BusinessCard } from '../types/businessCard'
@@ -25,7 +25,7 @@ export const scanner = {
      * if (result.status === 'success') console.log(result.businessCard)
      */
     async scanBusinessCard(eventID?: number): Promise<ScanResult> {
-        if (!isMobileLockerIOSApp()) {
+        if (!isIOS()) {
             throw new MobileLockerError('scanBusinessCard() is only supported in the iOS app', GeneralErrorCode.ServerError)
         }
         const { data } = await withRetry(() =>
@@ -47,7 +47,7 @@ export const scanner = {
      * if (result.status === 'success') console.log(result.attendee)
      */
     async scanBadge(eventID: number): Promise<ScanResult> {
-        if (!isMobileLockerIOSApp()) {
+        if (!isIOS()) {
             throw new MobileLockerError('scanBadge() is only supported in the iOS app', GeneralErrorCode.ServerError)
         }
         const { data } = await withRetry(() =>

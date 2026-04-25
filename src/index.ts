@@ -1,4 +1,4 @@
-import { isMobileLocker, isMobileLockerApp, isMobileLockerCDN, isMobileLockerIOSApp } from './env'
+import { isMobileLocker, isApp, isCDN, isIOS, isElectron } from './env'
 
 import { analytics } from './domains/analytics'
 import { congresses } from './domains/congresses'
@@ -31,9 +31,10 @@ const notificationLevels = {
 const mobilelocker = {
     // Top-level environment detection
     isMobileLocker,
-    isMobileLockerApp,
-    isMobileLockerCDN,
-    isMobileLockerIOSApp,
+    isApp,
+    isCDN,
+    isIOS,
+    isElectron,
 
     // Top-level error class
     MobileLockerError,
@@ -65,7 +66,7 @@ const mobilelocker = {
 export default mobilelocker
 
 // Named exports for TypeScript consumers
-export { isMobileLocker, isMobileLockerApp, isMobileLockerCDN, isMobileLockerIOSApp }
+export { isMobileLocker, isApp, isCDN, isIOS, isElectron }
 export { MobileLockerError } from './errors'
 export { MobileLockerCRMError, MobileLockerDatabaseError, MobileLockerHTTPError, MobileLockerHttpResponseError } from './errors'
 export { GeneralErrorCode, CRMErrorCode, DatabaseErrorCode, HTTPErrorCode } from './errors'

@@ -1,4 +1,4 @@
-import { apiClient, getEndpoint, isMobileLocker, isMobileLockerApp, userID, jwt, fallbackSessionId, fallbackSessionStartedAt } from '../env'
+import { apiClient, getEndpoint, isMobileLocker, isApp, userID, jwt, fallbackSessionId, fallbackSessionStartedAt } from '../env'
 import localforage from 'localforage'
 import { v4 as uuidv4 } from 'uuid'
 import { MobileLockerError, GeneralErrorCode } from '../errors'
@@ -20,7 +20,7 @@ async function _postEvent(
     const now = Date.now()
     const event = { method, category, action, uri, path: uri, data }
 
-    if (isMobileLockerApp()) {
+    if (isApp()) {
         await apiClient.post(getEndpoint(), event)
     } else if (userID) {
         await apiClient.post(getEndpoint('/device-events'), {
