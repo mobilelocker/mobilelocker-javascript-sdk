@@ -3,19 +3,33 @@ import { MobileLockerError, GeneralErrorCode } from '../errors'
 import { analytics } from './analytics'
 
 export interface VideoOptions {
+    /** Start playback automatically. Defaults to `true` in the browser fallback. */
     autoplay?: boolean
+    /** Loop the video continuously. */
     loop?: boolean
+    /** Start the video muted. */
     muted?: boolean
+    /** Start playback from this position in seconds. */
     startTime?: number
+    /** Stop playback at this position in seconds. */
     endTime?: number
+    /** Playback speed multiplier (e.g. `1.5` for 1.5× speed). */
     rate?: number
+    /** Show the native playback controls. */
     showControls?: boolean
+    /** Allow the user to scrub (seek) through the video. */
     allowScrubbing?: boolean
+    /** Allowed playback speeds to offer the user. */
     allowedSpeeds?: number[]
+    /** Allow Picture-in-Picture mode. */
     allowPiP?: boolean
+    /** Allow AirPlay output. */
     allowAirPlay?: boolean
+    /** Allow full-screen mode. */
     allowFullscreen?: boolean
+    /** Title to display in the player UI. */
     title?: string
+    /** How to fit the video within its display area. */
     videoGravity?: 'fit' | 'fill' | 'stretch'
 }
 
@@ -25,6 +39,19 @@ export type VideoResult =
     | { status: 'failed'; error: string }
 
 export const ui = {
+    /**
+     * Open a PDF file in the platform viewer.
+     *
+     * In the iOS app, opens the native PDF viewer with annotation support.
+     * In the browser, opens the file in a new tab.
+     *
+     * @param pdfPath - Path to the PDF file, relative to the presentation root.
+     * @param title - Display title for the viewer.
+     * @param customOptions - Optional extra properties passed through to the analytics event.
+     *
+     * @example
+     * mobilelocker.ui.openPDF('/files/brochure.pdf', 'Product Brochure')
+     */
     openPDF(pdfPath: string, title: string, customOptions?: Record<string, unknown>): void {
         if (isMobileLockerApp()) {
             analytics.logEvent('PDF', 'Open', pdfPath, { filename: pdfPath, title, ...customOptions }, 'showpdf')
@@ -33,6 +60,12 @@ export const ui = {
         }
     },
 
+    /**
+     * Show the app navigation toolbar.
+     *
+     * @remarks iOS app only. Throws in all other environments.
+     * @throws {@link MobileLockerError} if called outside the iOS app.
+     */
     showToolbar(): void {
         if (!isMobileLockerIOSApp()) {
             throw new MobileLockerError('showToolbar() is only supported in the iOS app', GeneralErrorCode.ServerError)
@@ -40,6 +73,21 @@ export const ui = {
         void apiClient.post(getEndpoint('/menu/show'))
     },
 
+    /**
+     * Open a video file in the platform player.
+     *
+     * In the iOS app, uses the native AVPlayer with full option support.
+     * In the browser, renders a full-viewport `<video>` overlay. Click outside
+     * the video to dismiss it.
+     *
+     * @param path - Path to the video file, relative to the presentation root.
+     * @param options - Playback options (autoplay, loop, controls, speed, etc.).
+     * @returns A {@link VideoResult} with `status` and final playback `position` in seconds.
+     *
+     * @example
+     * const result = await mobilelocker.ui.openVideo('/files/demo.mp4', { autoplay: true, showControls: true })
+     * if (result.status === 'completed') console.log(`Watched to ${result.position}s`)
+     */
     async openVideo(path: string, options: VideoOptions = {}): Promise<VideoResult> {
         if (isMobileLockerIOSApp()) {
             const { data } = await withRetry(() =>

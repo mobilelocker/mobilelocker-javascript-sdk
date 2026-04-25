@@ -1,0 +1,9 @@
+{
+  "entryPoints": ["src/index.ts"],
+  "out": "docs",
+  "name": "Mobile Locker JavaScript SDK",
+  "readme": "README.md",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "hideGenerator": true
+}

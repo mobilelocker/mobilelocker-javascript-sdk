@@ -1,6 +1,6 @@
 {
   "name": "@mobilelocker/javascript-sdk",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Mobile Locker JavaScript SDK",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
@@ -14,6 +14,7 @@
     "build": "vite build",
     "dev": "vite build --watch",
     "lint": "eslint src",
+    "docs": "typedoc",
     "prepublishOnly": "yarn build"
   },
   "repository": {
@@ -40,6 +41,7 @@
   },
   "devDependencies": {
     "eslint": "^10.2.1",
+    "typedoc": "^0.28.19",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.0",
     "vite": "^8.0.10",

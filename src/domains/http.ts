@@ -5,8 +5,11 @@ export type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 export type HTTPResponseType = 'json' | 'text' | 'blob'
 
 export interface HTTPOptions {
+    /** Additional request headers. */
     headers?: Record<string, string>
+    /** Request timeout in milliseconds. Defaults to `30000`. */
     timeout?: number
+    /** Expected response format. Defaults to `'json'`. */
     responseType?: HTTPResponseType
 }
 
@@ -16,9 +19,13 @@ export interface HTTPRequestOptions extends HTTPOptions {
 }
 
 export interface HTTPResponse {
+    /** HTTP status code. */
     status: number
+    /** HTTP status text. */
     statusText: string
+    /** Response headers as a flat key/value map. */
     headers: Record<string, string>
+    /** Parsed response body. Type depends on `responseType`. */
     data: unknown
 }
 
@@ -80,20 +87,85 @@ async function request(url: string, options: HTTPRequestOptions = {}): Promise<H
 }
 
 export const http = {
+    /**
+     * Make a GET request to an external URL.
+     *
+     * In the iOS app, requests are proxied through the native layer to bypass CORS.
+     * In the browser, standard `fetch` is used and CORS rules apply.
+     *
+     * @param url - The full URL to request.
+     * @param options - Optional headers, timeout, and response type.
+     * @returns An {@link HTTPResponse} with `status`, `statusText`, `headers`, and `data`.
+     * @throws {@link MobileLockerHTTPError} on network failure or timeout.
+     * @throws {@link MobileLockerHttpResponseError} on non-2xx responses.
+     */
     async get(url: string, options?: HTTPOptions): Promise<HTTPResponse> {
         return request(url, { ...options, method: 'GET' })
     },
+
+    /**
+     * Make a POST request to an external URL.
+     *
+     * @param url - The full URL to request.
+     * @param body - Request body, serialized as JSON.
+     * @param options - Optional headers, timeout, and response type.
+     * @returns An {@link HTTPResponse}.
+     * @throws {@link MobileLockerHTTPError} on network failure or timeout.
+     * @throws {@link MobileLockerHttpResponseError} on non-2xx responses.
+     */
     async post(url: string, body?: unknown, options?: HTTPOptions): Promise<HTTPResponse> {
         return request(url, { ...options, method: 'POST', body })
     },
+
+    /**
+     * Make a PUT request to an external URL.
+     *
+     * @param url - The full URL to request.
+     * @param body - Request body, serialized as JSON.
+     * @param options - Optional headers, timeout, and response type.
+     * @returns An {@link HTTPResponse}.
+     * @throws {@link MobileLockerHTTPError} on network failure or timeout.
+     * @throws {@link MobileLockerHttpResponseError} on non-2xx responses.
+     */
     async put(url: string, body?: unknown, options?: HTTPOptions): Promise<HTTPResponse> {
         return request(url, { ...options, method: 'PUT', body })
     },
+
+    /**
+     * Make a PATCH request to an external URL.
+     *
+     * @param url - The full URL to request.
+     * @param body - Request body, serialized as JSON.
+     * @param options - Optional headers, timeout, and response type.
+     * @returns An {@link HTTPResponse}.
+     * @throws {@link MobileLockerHTTPError} on network failure or timeout.
+     * @throws {@link MobileLockerHttpResponseError} on non-2xx responses.
+     */
     async patch(url: string, body?: unknown, options?: HTTPOptions): Promise<HTTPResponse> {
         return request(url, { ...options, method: 'PATCH', body })
     },
+
+    /**
+     * Make a DELETE request to an external URL.
+     *
+     * @param url - The full URL to request.
+     * @param options - Optional headers, timeout, and response type.
+     * @returns An {@link HTTPResponse}.
+     * @throws {@link MobileLockerHTTPError} on network failure or timeout.
+     * @throws {@link MobileLockerHttpResponseError} on non-2xx responses.
+     */
     async delete(url: string, options?: HTTPOptions): Promise<HTTPResponse> {
         return request(url, { ...options, method: 'DELETE' })
     },
+
+    /**
+     * Make an HTTP request with full control over method and options.
+     *
+     * @param url - The full URL to request.
+     * @param options - Method, body, headers, timeout, and response type.
+     * @returns An {@link HTTPResponse}.
+     * @throws {@link MobileLockerHTTPError} on network failure or timeout.
+     * @throws {@link MobileLockerHttpResponseError} on non-2xx responses.
+     */
     request,
 }

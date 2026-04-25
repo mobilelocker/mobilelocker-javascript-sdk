@@ -15,6 +15,12 @@ function toError(err: unknown): MobileLockerError {
 }
 
 export const contacts = {
+    /**
+     * Get all contacts for the current user.
+     *
+     * @returns Array of {@link UserContact} objects.
+     * @throws {@link MobileLockerError} on network failure or server error.
+     */
     async getAll(): Promise<UserContact[]> {
         try {
             const { data } = await withRetry(() => apiClient.get<UserContact[]>(getEndpoint('/user-contacts')))
@@ -24,6 +30,17 @@ export const contacts = {
         }
     },
 
+    /**
+     * Get a paginated chunk of contacts starting after a given ID.
+     *
+     * Useful for incrementally syncing large contact lists without loading
+     * everything into memory at once.
+     *
+     * @param minID - Return only contacts with an ID greater than this value.
+     * @param limit - Maximum number of contacts to return.
+     * @returns Array of {@link UserContact} objects.
+     * @throws {@link MobileLockerError} on network failure or server error.
+     */
     async getChunked(minID: number, limit: number): Promise<UserContact[]> {
         try {
             const { data } = await withRetry(() =>

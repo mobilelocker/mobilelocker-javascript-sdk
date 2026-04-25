@@ -63,6 +63,18 @@ async function _saveToLocalforage(
 }
 
 export const analytics = {
+    /**
+     * Track a custom analytics event.
+     *
+     * @param category - Event category (e.g. `'data-capture'`, `'share'`).
+     * @param action - Event action (e.g. `'submit'`, `'open'`).
+     * @param uri - The URI or name that identifies the subject of the event.
+     * @param data - Optional payload attached to the event.
+     * @param method - Internal tracking method; defaults to `'trackevent'`.
+     *
+     * @example
+     * mobilelocker.analytics.logEvent('product', 'view', '/slides/overview', { productId: 42 })
+     */
     logEvent(
         category: string,
         action: string,
@@ -73,11 +85,11 @@ export const analytics = {
         void _postEvent(category, action, uri, data, method)
     },
 
-    // Internal helper used by other domains (storage, share, data, ui)
+    /** @internal */
     _post: _postEvent,
 }
 
-// Internal helper for reading localforage events (used by session domain)
+/** @internal */
 export async function getLocalforageEvents(): Promise<unknown[]> {
     if (isMobileLocker()) {
         throw new MobileLockerError(

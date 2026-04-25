@@ -17,6 +17,12 @@ function toError(err: unknown): MobileLockerError {
 }
 
 export const congresses = {
+    /**
+     * List all lead retrieval events available to the current user.
+     *
+     * @returns Array of {@link Event} objects.
+     * @throws {@link MobileLockerError} on network failure or server error.
+     */
     async list(): Promise<Event[]> {
         try {
             const { data } = await withRetry(() => apiClient.get<Event[]>(getEndpoint('/leadretrieval/events')))
@@ -26,6 +32,13 @@ export const congresses = {
         }
     },
 
+    /**
+     * Get a single lead retrieval event by ID.
+     *
+     * @param eventID - The numeric ID of the event.
+     * @returns The matching {@link Event}.
+     * @throws {@link MobileLockerError} on network failure or if the event is not found.
+     */
     async get(eventID: number): Promise<Event> {
         try {
             const { data } = await withRetry(() => apiClient.get<Event>(getEndpoint(`/leadretrieval/events/${eventID}`)))
@@ -35,6 +48,13 @@ export const congresses = {
         }
     },
 
+    /**
+     * Get all attendees for a lead retrieval event.
+     *
+     * @param eventID - The numeric ID of the event.
+     * @returns Array of {@link Attendee} objects.
+     * @throws {@link MobileLockerError} on network failure or server error.
+     */
     async getAttendees(eventID: number): Promise<Attendee[]> {
         try {
             const { data } = await withRetry(() =>
@@ -46,6 +66,12 @@ export const congresses = {
         }
     },
 
+    /**
+     * Get all business cards scanned by the current user.
+     *
+     * @returns Array of {@link BusinessCard} objects.
+     * @throws {@link MobileLockerError} on network failure or server error.
+     */
     async getBusinessCards(): Promise<BusinessCard[]> {
         try {
             const { data } = await withRetry(() => apiClient.get<BusinessCard[]>(getEndpoint('/cards')))

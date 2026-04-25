@@ -3,14 +3,28 @@ import { MobileLockerError, GeneralErrorCode } from '../errors'
 import axios from 'axios'
 
 export interface User {
+    /** Numeric user ID. */
     id: number
+    /** Full display name. */
     name: string
+    /** Email address. */
     email: string
+    /** The team this user belongs to. */
     teamID: number
     [key: string]: unknown
 }
 
 export const user = {
+    /**
+     * Get the currently authenticated user.
+     *
+     * @returns The authenticated {@link User}.
+     * @throws {@link MobileLockerError} on network failure or server error.
+     *
+     * @example
+     * const u = await mobilelocker.user.get()
+     * console.log(`Hello, ${u.name}`)
+     */
     async get(): Promise<User> {
         try {
             const { data } = await withRetry(() => apiClient.get<User>(getEndpoint('/user')))

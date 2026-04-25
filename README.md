@@ -117,23 +117,40 @@ mobilelocker.data.submitForm('lead-form', {firstName: 'Jane', email: 'jane@examp
 
 ### `database`
 
-Query the local SQLite database embedded in a presentation.
+Query SQLite databases bundled with the current presentation.
 
 ```js
-const result = await mobilelocker.database.query('SELECT * FROM products WHERE category = ?', ['widgets'])
-// result.rows — array of row objects
-// result.totalSize — total matched rows
+const databases = await mobilelocker.database.list()
+// → ['products.sqlite', 'search/fts.db']
+
+const result = await mobilelocker.database.query(
+    'products.sqlite',
+    'SELECT * FROM products WHERE category = ?',
+    ['widgets'],
+)
+// result.rows           — array of row objects
+// result.rowsAffected   — integer (always 0 for SELECT)
+// result.lastInsertRowId — null for SELECT
 ```
 
-### `debug`
-
-Structured logging with levels and domain filtering.
+Named parameters are also supported:
 
 ```js
-mobilelocker.debug.enable()   // turn on debug mode
-mobilelocker.debug.log('info', 'custom', 'myFunction', 'Something happened', {detail: true})
-const logs = await mobilelocker.debug.getLogs({level: 'error', domain: 'crm'})
-await mobilelocker.debug.flush()   // ship buffered logs to server
+const result = await mobilelocker.database.query(
+    'products.sqlite',
+    'SELECT * FROM products WHERE category = :category AND approved = :approved',
+    { category: 'oncology', approved: 1 },
+)
+```
+
+Inspect a table's shape (useful during development):
+
+```js
+const description = await mobilelocker.database.describe('products.sqlite', 'products')
+// description.name    — 'products'
+// description.sql     — 'CREATE TABLE products (id INTEGER PRIMARY KEY, ...)'
+// description.columns — array of column info objects:
+//   { cid, name, type, notNull, defaultValue, primaryKey }
 ```
 
 ### `device`
@@ -153,6 +170,34 @@ Make cross-origin HTTP requests. In the iOS app, requests are proxied through th
 const response = await mobilelocker.http.get('https://api.example.com/data')
 const response = await mobilelocker.http.post('https://api.example.com/submit', {body: payload})
 // response.status, response.data, response.headers
+```
+
+### `log`
+
+Structured logging with levels, filtering, and SDK log access.
+
+```js
+// Enable/disable debug mode (synchronous)
+mobilelocker.log.setMode(true)
+mobilelocker.log.isEnabled()   // → boolean
+
+// Write log entries from your presentation code (synchronous)
+mobilelocker.log.debug('Fetching products', { category: 'oncology' })
+mobilelocker.log.info('Query returned 42 rows')
+mobilelocker.log.warn('Result set large — consider paginating')
+mobilelocker.log.error('Query failed', { error: err.message })
+
+// Read SDK log entries (async)
+const logs = await mobilelocker.log.getSdkLogs({ level: 'error', domain: 'crm' })
+const results = await mobilelocker.log.searchSdkLogs('timeout', { domain: 'database' })
+
+// Session mode (synchronous)
+mobilelocker.log.liveMode()      // activate live session recording
+mobilelocker.log.practiceMode()  // deactivate (practice mode)
+
+// Manage log entries (async)
+await mobilelocker.log.deleteSdkLog(id)
+await mobilelocker.log.clearSdkLogs()
 ```
 
 ### `network`

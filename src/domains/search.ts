@@ -10,7 +10,9 @@ import axios from 'axios'
 export type SearchEntityType = 'presentations' | 'customers' | 'contacts' | 'attendees' | 'businessCards'
 
 export interface SearchOptions {
+    /** Limit results to specific entity types. Defaults to all types. */
     types?: SearchEntityType[]
+    /** Maximum number of results per entity type. Defaults to `5`. */
     limit?: number
 }
 
@@ -23,6 +25,21 @@ export interface SearchResults {
 }
 
 export const search = {
+    /**
+     * Search across multiple entity types simultaneously.
+     *
+     * Returns results grouped by type. Use `options.types` to restrict the search
+     * to specific entities and `options.limit` to control result set size per type.
+     *
+     * @param text - The search string.
+     * @param options - Optional filter for entity types and result limit.
+     * @returns A {@link SearchResults} object with a result set for each entity type.
+     * @throws {@link MobileLockerError} on network failure or server error.
+     *
+     * @example
+     * const results = await mobilelocker.search.query('Acme', { types: ['customers'], limit: 10 })
+     * results.customers.results.forEach(c => console.log(c.name))
+     */
     async query(text: string, options: SearchOptions = {}): Promise<SearchResults> {
         try {
             const { data } = await withRetry(() =>

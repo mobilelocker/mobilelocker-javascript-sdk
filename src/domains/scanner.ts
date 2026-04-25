@@ -12,6 +12,18 @@ export type ScanResult =
     | { status: 'failed'; error: string }
 
 export const scanner = {
+    /**
+     * Open the native business card scanner and capture a contact.
+     *
+     * @remarks iOS app only. Throws in all other environments.
+     * @param eventID - Optional lead retrieval event ID to associate the scan with.
+     * @returns A {@link ScanResult} — check `status` before accessing `businessCard`.
+     * @throws {@link MobileLockerError} if called outside the iOS app.
+     *
+     * @example
+     * const result = await mobilelocker.scanner.scanBusinessCard()
+     * if (result.status === 'success') console.log(result.businessCard)
+     */
     async scanBusinessCard(eventID?: number): Promise<ScanResult> {
         if (!isMobileLockerIOSApp()) {
             throw new MobileLockerError('scanBusinessCard() is only supported in the iOS app', GeneralErrorCode.ServerError)
@@ -22,6 +34,18 @@ export const scanner = {
         return data
     },
 
+    /**
+     * Open the native badge scanner and capture an event attendee.
+     *
+     * @remarks iOS app only. Throws in all other environments.
+     * @param eventID - The lead retrieval event ID to associate the scan with.
+     * @returns A {@link ScanResult} — check `status` before accessing `attendee`.
+     * @throws {@link MobileLockerError} if called outside the iOS app.
+     *
+     * @example
+     * const result = await mobilelocker.scanner.scanBadge(eventID)
+     * if (result.status === 'success') console.log(result.attendee)
+     */
     async scanBadge(eventID: number): Promise<ScanResult> {
         if (!isMobileLockerIOSApp()) {
             throw new MobileLockerError('scanBadge() is only supported in the iOS app', GeneralErrorCode.ServerError)

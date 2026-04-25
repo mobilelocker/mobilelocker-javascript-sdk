@@ -5,20 +5,29 @@ import { v4 as uuidv4 } from 'uuid'
 import axios from 'axios'
 
 export interface StorageEntry {
+    /** The key name used to store and retrieve this entry. */
     name: string
+    /** The stored value. Can be any JSON-serializable type. */
     data: unknown
     teamID: number
     userID: number
     presentationID: number
+    /** ISO 8601 timestamp of when the entry was first created. */
     createdAt: string
+    /** ISO 8601 timestamp of the most recent update. */
     updatedAt: string
 }
 
 export interface StorageFilter {
+    /** Filter entries by name. */
     name?: string
+    /** Filter entries by presentation ID. */
     presentationID?: number
+    /** Return only entries updated at or after this ISO 8601 timestamp. */
     since?: string
+    /** Return only entries updated at or before this ISO 8601 timestamp. */
     until?: string
+    /** Maximum number of entries to return. Defaults to `100`. */
     limit?: number
 }
 
@@ -37,6 +46,13 @@ async function _localGet(): Promise<StorageEntry[]> {
 }
 
 export const storage = {
+    /**
+     * Get a single storage entry by name for the current presentation and user.
+     *
+     * @param name - The key name of the entry to retrieve.
+     * @returns The matching {@link StorageEntry}, or `null` if not found.
+     * @throws {@link MobileLockerError} on network failure or server error.
+     */
     async get(name: string): Promise<StorageEntry | null> {
         try {
             if (isMobileLocker()) {
@@ -48,6 +64,12 @@ export const storage = {
         } catch (err) { throw toError(err) }
     },
 
+    /**
+     * Get all storage entries for the current presentation and user.
+     *
+     * @returns Array of {@link StorageEntry} objects.
+     * @throws {@link MobileLockerError} on network failure or server error.
+     */
     async getAll(): Promise<StorageEntry[]> {
         try {
             if (isMobileLocker()) {
@@ -60,6 +82,12 @@ export const storage = {
         } catch (err) { throw toError(err) }
     },
 
+    /**
+     * Get all storage entries for the current user across all presentations.
+     *
+     * @returns Array of {@link StorageEntry} objects.
+     * @throws {@link MobileLockerError} on network failure or server error.
+     */
     async getAllForPresentation(): Promise<StorageEntry[]> {
         try {
             const { data } = await withRetry(() =>
@@ -69,6 +97,13 @@ export const storage = {
         } catch (err) { throw toError(err) }
     },
 
+    /**
+     * Get all storage entries for a specific presentation by ID.
+     *
+     * @param presentationID - The numeric ID of the presentation.
+     * @returns Array of {@link StorageEntry} objects.
+     * @throws {@link MobileLockerError} on network failure or server error.
+     */
     async getForPresentation(presentationID: number): Promise<StorageEntry[]> {
         try {
             const { data } = await withRetry(() =>
@@ -78,6 +113,18 @@ export const storage = {
         } catch (err) { throw toError(err) }
     },
 
+    /**
+     * Query storage entries with optional filtering.
+     *
+     * Outside the Mobile Locker app, filters are applied locally against IndexedDB.
+     *
+     * @param filter - Optional filter by name, presentation, date range, and limit.
+     * @returns Array of matching {@link StorageEntry} objects.
+     * @throws {@link MobileLockerError} on network failure or server error.
+     *
+     * @example
+     * const entries = await mobilelocker.storage.query({ name: 'scan-results', limit: 10 })
+     */
     async query(filter?: StorageFilter): Promise<StorageEntry[]> {
         try {
             if (isMobileLocker()) {
@@ -94,6 +141,14 @@ export const storage = {
         } catch (err) { throw toError(err) }
     },
 
+    /**
+     * Full-text search across storage entry names and data.
+     *
+     * @param text - The search string. Matched against `name` and the stringified `data`.
+     * @param filter - Optional pre-filter applied before the text search.
+     * @returns Array of matching {@link StorageEntry} objects.
+     * @throws {@link MobileLockerError} on network failure or server error.
+     */
     async search(text: string, filter?: StorageFilter): Promise<StorageEntry[]> {
         try {
             if (isMobileLocker()) {
@@ -113,6 +168,20 @@ export const storage = {
         } catch (err) { throw toError(err) }
     },
 
+    /**
+     * Save a value to storage under the given name.
+     *
+     * Creates a new entry if one does not exist, or updates the existing entry.
+     * Outside the Mobile Locker app, persists to IndexedDB via localforage.
+     *
+     * @param name - The key name for the entry.
+     * @param data - Any JSON-serializable value to store.
+     * @returns The saved {@link StorageEntry}.
+     * @throws {@link MobileLockerError} on network failure or server error.
+     *
+     * @example
+     * await mobilelocker.storage.save('scan-results', { leads: [...] })
+     */
     async save(name: string, data: unknown): Promise<StorageEntry> {
         try {
             if (isMobileLocker()) {
@@ -136,6 +205,12 @@ export const storage = {
         } catch (err) { throw toError(err) }
     },
 
+    /**
+     * Delete the storage entry with the given name.
+     *
+     * @param name - The key name of the entry to delete.
+     * @throws {@link MobileLockerError} on network failure or server error.
+     */
     async delete(name: string): Promise<void> {
         try {
             if (isMobileLocker()) {
