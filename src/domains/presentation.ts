@@ -2,9 +2,14 @@ import { apiClient, getEndpoint, isIOS, withRetry } from '../env'
 import { MobileLockerError, GeneralErrorCode } from '../errors'
 import type { Presentation } from '../types/presentation'
 import { analytics } from './analytics'
+import { withStatusBooleans, WithStatusBooleans } from '../utils/status'
 import axios from 'axios'
 
 export type DownloadStatus = 'queued' | 'already_installed' | 'not_available' | 'not_permitted'
+
+const DOWNLOAD_STATUSES = ['queued', 'already_installed', 'not_available', 'not_permitted'] as const
+
+export type DownloadResult = WithStatusBooleans<{ status: DownloadStatus }>
 
 function toError(err: unknown): MobileLockerError {
     if (err instanceof MobileLockerError) return err
@@ -134,10 +139,10 @@ export const presentation = {
      * @returns An object with `status`: `'queued'`, `'already_installed'`, `'not_available'`, or `'not_permitted'`.
      * @throws {@link MobileLockerError} on network failure or server error.
      */
-    async download(id: number): Promise<{ status: DownloadStatus }> {
+    async download(id: number): Promise<DownloadResult> {
         try {
             const { data } = await apiClient.post<{ status: DownloadStatus }>(getEndpoint('/presentation/download'), { id })
-            return data
+            return withStatusBooleans(data, DOWNLOAD_STATUSES)
         } catch (err) { throw toError(err) }
     },
 

@@ -1,6 +1,7 @@
 import { apiClient, getEndpoint, isApp, isIOS, withRetry } from '../env'
 import { MobileLockerError, GeneralErrorCode } from '../errors'
 import { analytics } from './analytics'
+import { withStatusBooleans, WithStatusBooleans } from '../utils/status'
 
 export interface VideoOptions {
     /** Start playback automatically. Defaults to `true` in the browser fallback. */
@@ -33,10 +34,14 @@ export interface VideoOptions {
     videoGravity?: 'fit' | 'fill' | 'stretch'
 }
 
-export type VideoResult =
+const VIDEO_STATUSES = ['completed', 'dismissed', 'failed'] as const
+
+type RawVideoResult =
     | { status: 'completed'; position: number }
     | { status: 'dismissed'; position: number }
     | { status: 'failed'; error: string }
+
+export type VideoResult = WithStatusBooleans<RawVideoResult>
 
 export const ui = {
     /**
@@ -93,7 +98,7 @@ export const ui = {
             const { data } = await withRetry(() =>
                 apiClient.post<VideoResult>(getEndpoint('/ui/open-video'), { path, options }),
             )
-            return data
+            return withStatusBooleans(data as RawVideoResult, VIDEO_STATUSES)
         }
 
         // Browser fallback: full-viewport <video> overlay
@@ -112,16 +117,18 @@ export const ui = {
             if (options.rate) video.playbackRate = options.rate
             if (options.title) video.title = options.title
 
+            const wrap = (raw: RawVideoResult) => resolve(withStatusBooleans(raw, VIDEO_STATUSES))
+
             const close = (status: 'completed' | 'dismissed') => {
                 document.body.removeChild(overlay)
-                resolve({ status, position: video.currentTime })
+                wrap({ status, position: video.currentTime })
             }
 
             video.addEventListener('ended', () => close('completed'))
             overlay.addEventListener('click', e => { if (e.target === overlay) close('dismissed') })
             video.addEventListener('error', () => {
                 document.body.removeChild(overlay)
-                resolve({ status: 'failed', error: 'Video playback error' })
+                wrap({ status: 'failed', error: 'Video playback error' })
             })
 
             overlay.appendChild(video)

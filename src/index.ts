@@ -71,11 +71,15 @@ export { MobileLockerError } from './errors'
 export { MobileLockerCRMError, MobileLockerDatabaseError, MobileLockerHTTPError, MobileLockerHttpResponseError } from './errors'
 export { GeneralErrorCode, CRMErrorCode, DatabaseErrorCode, HTTPErrorCode } from './errors'
 
+// Utility types
+export type { WithStatusBooleans } from './utils/status'
+export { withStatusBooleans } from './utils/status'
+
 // Domain types
 export type { StorageEntry, StorageFilter } from './domains/storage'
 export type { SDKLogEntry, SDKLogFilter, SDKLogLevel, SDKLogDomain } from './domains/log'
-export type { CRMRefreshMode, CRMRefreshStatus, PickerStatus, CRMQueryResult } from './domains/crm'
-export type { DownloadStatus } from './domains/presentation'
+export type { CRMRefreshMode, CRMRefreshStatus, PickerStatus, CRMQueryResult, PickerResult, CRMRefreshResult } from './domains/crm'
+export type { DownloadStatus, DownloadResult } from './domains/presentation'
 export type { ScanStatus, ScanResult } from './domains/scanner'
 export type { SearchEntityType, SearchOptions, SearchResults } from './domains/search'
 export type { NetworkStatus, NetworkConnectionType } from './domains/network'

@@ -1,11 +1,18 @@
 import { apiClient, getEndpoint, isIOS, withRetry } from '../env'
 import { MobileLockerCRMError, MobileLockerError, CRMErrorCode, GeneralErrorCode } from '../errors'
 import type { Customer } from '../types/customer'
+import { withStatusBooleans, WithStatusBooleans } from '../utils/status'
 import axios from 'axios'
 
 export type CRMRefreshMode = 'incremental' | 'full'
 export type CRMRefreshStatus = 'started' | 'not_connected'
 export type PickerStatus = 'selected' | 'cancelled'
+
+const PICKER_STATUSES = ['selected', 'cancelled'] as const
+const REFRESH_STATUSES = ['started', 'not_connected'] as const
+
+export type PickerResult = WithStatusBooleans<{ status: PickerStatus; customers?: Customer[] }>
+export type CRMRefreshResult = WithStatusBooleans<{ status: CRMRefreshStatus }>
 
 export interface CRMQueryResult {
     rows: Record<string, unknown>[]
@@ -91,13 +98,13 @@ export const crm = {
      * const { status, customers } = await mobilelocker.crm.openCustomerPicker()
      * if (status === 'selected') console.log(customers)
      */
-    async openCustomerPicker(): Promise<{ status: PickerStatus; customers?: Customer[] }> {
+    async openCustomerPicker(): Promise<PickerResult> {
         if (!isIOS()) {
             throw new MobileLockerError('openCustomerPicker() is only supported in the iOS app', GeneralErrorCode.ServerError)
         }
         try {
             const { data } = await withRetry(() => apiClient.post<{ status: PickerStatus; customers?: Customer[] }>(getEndpoint('/open-customer-picker')))
-            return data
+            return withStatusBooleans(data, PICKER_STATUSES)
         } catch (err) { throw toError(err) }
     },
 
@@ -200,10 +207,10 @@ export const crm = {
      * @example
      * const { status } = await mobilelocker.crm.refresh({ mode: 'full' })
      */
-    async refresh(options?: { mode?: CRMRefreshMode }): Promise<{ status: CRMRefreshStatus }> {
+    async refresh(options?: { mode?: CRMRefreshMode }): Promise<CRMRefreshResult> {
         try {
             const { data } = await apiClient.post<{ status: CRMRefreshStatus }>(getEndpoint('/crm/refresh'), { mode: options?.mode ?? 'incremental' })
-            return data
+            return withStatusBooleans(data, REFRESH_STATUSES)
         } catch (err) { throw toError(err) }
     },
 
