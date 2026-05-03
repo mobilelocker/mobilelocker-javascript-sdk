@@ -50,7 +50,7 @@ export const presentation = {
     },
 
     /**
-     * Alias for {@link getEvents}.
+     * Alias for `getEvents`.
      *
      * @returns Array of raw event objects.
      */

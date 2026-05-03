@@ -1,4 +1,4 @@
-type SnakeToCamel<S extends string> = S extends `${infer Head}_${infer Tail}`
+export type SnakeToCamel<S extends string> = S extends `${infer Head}_${infer Tail}`
     ? `${Head}${Capitalize<SnakeToCamel<Tail>>}`
     : S
 

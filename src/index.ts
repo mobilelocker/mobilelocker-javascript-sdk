@@ -74,7 +74,7 @@ export { MobileLockerCRMError, MobileLockerDatabaseError, MobileLockerHTTPError,
 export { GeneralErrorCode, CRMErrorCode, DatabaseErrorCode, HTTPErrorCode } from './errors'
 
 // Utility types
-export type { WithStatusBooleans } from './utils/status'
+export type { SnakeToCamel, WithStatusBooleans } from './utils/status'
 export { withStatusBooleans } from './utils/status'
 
 // Domain types
@@ -82,18 +82,19 @@ export type { StorageEntry, StorageFilter } from './domains/storage'
 export type { SDKLogEntry, SDKLogFilter, SDKLogLevel, SDKLogDomain } from './domains/log'
 export type { CRMRefreshMode, CRMRefreshStatus, PickerStatus, CRMQueryResult, PickerResult, CRMRefreshResult } from './domains/crm'
 export type { DownloadStatus, DownloadResult } from './domains/presentation'
-export type { ScanStatus, ScanResult } from './domains/scanner'
+export type { ScanStatus, RawScanResult, ScanResult } from './domains/scanner'
 export type { SearchEntityType, SearchOptions, SearchResults } from './domains/search'
 export type { NetworkStatus, NetworkConnectionType } from './domains/network'
 export type { PermissionStatus, BiometricType, PermissionResult, BiometricResult } from './domains/permissions'
 export type { DeviceInfo, AppEnvironment } from './domains/device'
 export type { HTTPMethod, HTTPResponseType, HTTPOptions, HTTPRequestOptions, HTTPResponse } from './domains/http'
-export type { VideoOptions, VideoResult } from './domains/ui'
+export type { VideoOptions, RawVideoResult, VideoResult } from './domains/ui'
 export type { ShareRecipient } from './domains/share'
 export type { User } from './types/user'
+export type { Product } from './types/product'
 
 // DTO types
-export type { Presentation } from './types/presentation'
+export type { Presentation, PresentationFile } from './types/presentation'
 export type { Customer } from './types/customer'
 export type { Attendee } from './types/attendee'
 export type { Event } from './types/event'

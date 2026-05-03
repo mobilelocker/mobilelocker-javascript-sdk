@@ -36,7 +36,7 @@ export interface VideoOptions {
 
 const VIDEO_STATUSES = ['completed', 'dismissed', 'failed'] as const
 
-type RawVideoResult =
+export type RawVideoResult =
     | { status: 'completed'; position: number }
     | { status: 'dismissed'; position: number }
     | { status: 'failed'; error: string }

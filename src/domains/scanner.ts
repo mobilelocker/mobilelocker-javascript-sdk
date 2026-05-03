@@ -8,7 +8,7 @@ export type ScanStatus = 'success' | 'cancelled' | 'failed'
 
 const SCAN_STATUSES = ['success', 'cancelled', 'failed'] as const
 
-type RawScanResult =
+export type RawScanResult =
     | { status: 'success'; attendee: Attendee }
     | { status: 'success'; businessCard: BusinessCard }
     | { status: 'cancelled' }

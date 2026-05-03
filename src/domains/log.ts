@@ -151,7 +151,7 @@ export const log = {
      * Full-text search across SDK log entries.
      *
      * Searches the `message` field and stringified `metadata`. Accepts the same
-     * filter options as {@link getSdkLogs} to narrow the scope before searching.
+     * filter options as `getSdkLogs` to narrow the scope before searching.
      *
      * @param text - The search string.
      * @param filter - Optional pre-filter applied before the text search.
