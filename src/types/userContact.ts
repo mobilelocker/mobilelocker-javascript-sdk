@@ -1,3 +1,5 @@
+import { WithStatusBooleans } from '../utils/status'
+
 /**
  * NeverBounce email deliverability result for a contact's email address.
  * @see https://developers.neverbounce.com/reference/single-check#result-codes
@@ -17,6 +19,20 @@ export type EmailDeliverabilityStatus =
     | 'catchall'
     /** Domain or server did not respond after 75 attempts. Status is inconclusive — send only if your bounce tolerance allows it. */
     | 'unknown'
+
+/**
+ * A deliverability status result with `is*` boolean helpers for each status value.
+ *
+ * @example
+ * const result: UserContactDeliverability = withStatusBooleans({ status: 'valid' }, EMAIL_DELIVERABILITY_STATUSES)
+ * result.isValid      // true
+ * result.isDisposable // false
+ */
+export type UserContactDeliverability = WithStatusBooleans<{ status: EmailDeliverabilityStatus }>
+
+export const EMAIL_DELIVERABILITY_STATUSES = [
+    'TBD', 'valid', 'overridden', 'invalid', 'disposable', 'catchall', 'unknown',
+] as const
 
 /**
  * A contact from the current user's personal contact list.
