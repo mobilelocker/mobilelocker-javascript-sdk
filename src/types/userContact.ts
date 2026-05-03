@@ -1,3 +1,13 @@
+/** @see https://developers.neverbounce.com/reference/single-check#result-codes */
+export type EmailDeliverabilityStatus =
+    | 'TBD'
+    | 'valid'
+    | 'overridden'
+    | 'invalid'
+    | 'disposable'
+    | 'catchall'
+    | 'unknown'
+
 /**
  * A contact from the current user's personal contact list.
  * Mirrors the iOS `GRDBUserContact` Swift model's `toJSON()` output.
@@ -49,7 +59,7 @@ export interface UserContact {
     /** CRM object type (e.g. `'Contact'`, `'Lead'`). */
     crm_object: string
     crm_object_id: string | null
-    email_deliverability_status: string | null
+    email_deliverability_status: EmailDeliverabilityStatus | null
     can_be_deleted: boolean
     last_contacted_at: string | null
     synced_at: string | null
