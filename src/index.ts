@@ -10,6 +10,7 @@ import { log } from './domains/log'
 import { device } from './domains/device'
 import { http } from './domains/http'
 import { network } from './domains/network'
+import { permissions } from './domains/permissions'
 import { presentation } from './domains/presentation'
 import { scanner } from './domains/scanner'
 import { search } from './domains/search'
@@ -53,6 +54,7 @@ const mobilelocker = {
     device,
     http,
     network,
+    permissions,
     presentation,
     scanner,
     search,
@@ -83,6 +85,7 @@ export type { DownloadStatus, DownloadResult } from './domains/presentation'
 export type { ScanStatus, ScanResult } from './domains/scanner'
 export type { SearchEntityType, SearchOptions, SearchResults } from './domains/search'
 export type { NetworkStatus, NetworkConnectionType } from './domains/network'
+export type { PermissionStatus, BiometricType, PermissionResult, BiometricResult } from './domains/permissions'
 export type { DeviceInfo, AppEnvironment } from './domains/device'
 export type { HTTPMethod, HTTPResponseType, HTTPOptions, HTTPRequestOptions, HTTPResponse } from './domains/http'
 export type { VideoOptions, VideoResult } from './domains/ui'
