@@ -31,6 +31,22 @@ export const contacts = {
     },
 
     /**
+     * Get a specific contact by ID.
+     *
+     * @param contactID - The ID of the contact to fetch.
+     * @returns A {@link UserContact} object.
+     * @throws {@link MobileLockerError} on network failure or server error.
+     */
+    async get(contactID: number): Promise<UserContact> {
+        try {
+            const { data } = await withRetry(() => apiClient.get<UserContact>(getEndpoint(`/user-contacts/${contactID}`)))
+            return data
+        } catch (err) {
+            throw toError(err)
+        }
+    },
+
+    /**
      * Get a paginated chunk of contacts starting after a given ID.
      *
      * Useful for incrementally syncing large contact lists without loading

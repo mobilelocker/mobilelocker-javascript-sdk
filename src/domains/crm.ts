@@ -48,6 +48,20 @@ export const crm = {
     },
 
     /**
+     * Get a specific CRM account by ID.
+     *
+     * @param accountID - The CRM account ID to fetch.
+     * @returns Raw account record from the connected CRM.
+     * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
+     */
+    async getAccount(accountID: string): Promise<unknown> {
+        try {
+            const { data } = await withRetry(() => apiClient.get<unknown>(getEndpoint(`/crm/accounts/${accountID}`)))
+            return data
+        } catch (err) { throw toError(err) }
+    },
+
+    /**
      * Get all CRM addresses synced for the current user.
      *
      * @returns Raw address records from the connected CRM.
@@ -56,6 +70,20 @@ export const crm = {
     async getAddresses(): Promise<unknown> {
         try {
             const { data } = await withRetry(() => apiClient.get<unknown>(getEndpoint('/crm/addresses')))
+            return data
+        } catch (err) { throw toError(err) }
+    },
+
+    /**
+     * Get a specific CRM address by ID.
+     *
+     * @param addressID - The CRM address ID to fetch.
+     * @returns Raw address record from the connected CRM.
+     * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
+     */
+    async getAddress(addressID: string): Promise<unknown> {
+        try {
+            const { data } = await withRetry(() => apiClient.get<unknown>(getEndpoint(`/crm/addresses/${addressID}`)))
             return data
         } catch (err) { throw toError(err) }
     },
@@ -74,6 +102,47 @@ export const crm = {
     },
 
     /**
+     * Get a specific CRM contact by ID.
+     *
+     * @param contactID - The CRM contact ID to fetch.
+     * @returns Raw contact record from the connected CRM.
+     * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
+     */
+    async getContact(contactID: string): Promise<unknown> {
+        try {
+            const { data } = await withRetry(() => apiClient.get<unknown>(getEndpoint(`/crm/contacts/${contactID}`)))
+            return data
+        } catch (err) { throw toError(err) }
+    },
+
+    /**
+     * Get all CRM leads synced for the current user.
+     *
+     * @returns Raw lead records from the connected CRM.
+     * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
+     */
+    async getLeads(): Promise<unknown> {
+        try {
+            const { data } = await withRetry(() => apiClient.get<unknown>(getEndpoint('/crm/leads')))
+            return data
+        } catch (err) { throw toError(err) }
+    },
+
+    /**
+     * Get a specific CRM lead by ID.
+     *
+     * @param leadID - The CRM lead ID to fetch.
+     * @returns Raw lead record from the connected CRM.
+     * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
+     */
+    async getLead(leadID: string): Promise<unknown> {
+        try {
+            const { data } = await withRetry(() => apiClient.get<unknown>(getEndpoint(`/crm/leads/${leadID}`)))
+            return data
+        } catch (err) { throw toError(err) }
+    },
+
+    /**
      * Get all CRM users synced for the current team.
      *
      * @returns Raw user records from the connected CRM.
@@ -82,6 +151,20 @@ export const crm = {
     async getUsers(): Promise<unknown> {
         try {
             const { data } = await withRetry(() => apiClient.get<unknown>(getEndpoint('/crm/users')))
+            return data
+        } catch (err) { throw toError(err) }
+    },
+
+    /**
+     * Get a specific CRM user by ID.
+     *
+     * @param userID - The CRM user ID to fetch.
+     * @returns Raw user record from the connected CRM.
+     * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
+     */
+    async getUser(userID: string): Promise<unknown> {
+        try {
+            const { data } = await withRetry(() => apiClient.get<unknown>(getEndpoint(`/crm/users/${userID}`)))
             return data
         } catch (err) { throw toError(err) }
     },
