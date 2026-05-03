@@ -95,6 +95,7 @@ Read the current user's contacts.
 
 ```js
 const contacts = await mobilelocker.contacts.getAll()
+const contact = await mobilelocker.contacts.get(contactID)
 const chunk = await mobilelocker.contacts.getChunked(minID, limit)
 ```
 
@@ -103,18 +104,62 @@ const chunk = await mobilelocker.contacts.getChunked(minID, limit)
 Interact with the connected CRM (Salesforce, etc.).
 
 ```js
-const accounts = await mobilelocker.crm.getAccounts()
-await mobilelocker.crm.refresh('incremental')   // or 'full'
-const results = await mobilelocker.crm.query('SELECT Id, Name FROM Account')
+// Fetch all records of a type
+const accounts  = await mobilelocker.crm.getAccounts()
+const addresses = await mobilelocker.crm.getAddresses()
+const contacts  = await mobilelocker.crm.getContacts()
+const leads     = await mobilelocker.crm.getLeads()
+const users     = await mobilelocker.crm.getUsers()
+
+// Fetch a single record by ID
+const account = await mobilelocker.crm.getAccount(accountID)
+const address = await mobilelocker.crm.getAddress(addressID)
+const contact = await mobilelocker.crm.getContact(contactID)
+const lead    = await mobilelocker.crm.getLead(leadID)
+const user    = await mobilelocker.crm.getUser(userID)
+
+// Customer session management
+const current = await mobilelocker.crm.getCurrentCustomers()
+const recent  = await mobilelocker.crm.getRecentCustomers()
+const isCurrent = await mobilelocker.crm.isCurrentCustomer(objectID)
+await mobilelocker.crm.setCurrentCustomers([id1, id2])
+await mobilelocker.crm.addCurrentCustomer(id)
+await mobilelocker.crm.removeCurrentCustomer(id)
+await mobilelocker.crm.clearCurrentCustomers()
+
+// iOS app only — opens native customer picker UI
+const { status, customers } = await mobilelocker.crm.openCustomerPicker()
+if (status === 'selected') console.log(customers)
+
+// Sync and query
+const { status } = await mobilelocker.crm.refresh({ mode: 'incremental' })  // or 'full'
+const results = await mobilelocker.crm.query('SELECT Id, Name FROM Account WHERE Name = :name', { name: 'Acme' })
+// results.rows, results.totalSize, results.done
 ```
 
 ### `data`
 
-Submit form/data capture events.
+Submit form/data capture events and fetch platform reference data.
 
 ```js
 // Synchronous
-mobilelocker.data.submitForm('lead-form', {firstName: 'Jane', email: 'jane@example.com'})
+mobilelocker.data.submitForm('lead-form', { firstName: 'Jane', email: 'jane@example.com' })
+
+// Products
+const products = await mobilelocker.data.getProducts()
+const product  = await mobilelocker.data.getProduct(id)
+
+// Labels
+const labels = await mobilelocker.data.getLabels()
+const label  = await mobilelocker.data.getLabel(id)
+
+// Folders
+const folders = await mobilelocker.data.getFolders()
+const folder  = await mobilelocker.data.getFolder(id)
+
+// Customers
+const customers = await mobilelocker.data.getCustomers()
+const customer  = await mobilelocker.data.getCustomer(crmObjectID)
 ```
 
 ### `database`
@@ -210,6 +255,27 @@ Check connectivity status.
 const status = await mobilelocker.network.getStatus()
 // status.connected — boolean
 // status.type — 'wifi' | 'cellular' | 'wired' | 'none'
+```
+
+### `permissions`
+
+Check iOS permission status (iOS app only). All methods return a safe default outside the iOS app rather than throwing.
+
+```js
+// Each returns { status, granted }
+const camera       = await mobilelocker.permissions.camera()
+const microphone   = await mobilelocker.permissions.microphone()
+const photoLibrary = await mobilelocker.permissions.photoLibrary()
+const location     = await mobilelocker.permissions.location()
+const bluetooth    = await mobilelocker.permissions.bluetooth()
+
+// status values: 'authorized' | 'denied' | 'restricted' | 'not_determined' | 'unknown'
+// location also has: 'authorized_always' | 'authorized_when_in_use'
+// photo library also has: 'limited'
+
+// Returns { available, biometric_type, error }
+const biometric = await mobilelocker.permissions.biometric()
+// biometric_type: 'face_id' | 'touch_id' | 'optic_id' | 'none' | 'unknown'
 ```
 
 ### `presentation`
@@ -371,6 +437,8 @@ The SDK ships with full TypeScript definitions. All domain types are exported:
 import type {
     User,
     Presentation,
+    PresentationFile,
+    Product,
     Customer,
     Attendee,
     BusinessCard,
@@ -379,6 +447,10 @@ import type {
     SearchResults,
     DeviceInfo,
     NetworkStatus,
+    PermissionResult,
+    BiometricResult,
+    PermissionStatus,
+    BiometricType,
     ScanResult,
     HTTPResponse,
     VideoResult,
