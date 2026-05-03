@@ -1,11 +1,21 @@
-/** @see https://developers.neverbounce.com/reference/single-check#result-codes */
+/**
+ * NeverBounce email deliverability result for a contact's email address.
+ * @see https://developers.neverbounce.com/reference/single-check#result-codes
+ */
 export type EmailDeliverabilityStatus =
+    /** Not yet checked. */
     | 'TBD'
+    /** Verified as a real, active address currently accepting mail. Safe to send. */
     | 'valid'
+    /** Manually overridden — treated as deliverable regardless of NeverBounce result. */
     | 'overridden'
+    /** Verified as a bad recipient address; will result in a bounce. Do not send. */
     | 'invalid'
+    /** Temporary/disposable address. Will result in a bounce. Do not send. */
     | 'disposable'
+    /** Domain accepts all mail ("catch-all"). Deliverability cannot be confirmed — send only if your bounce tolerance allows it. */
     | 'catchall'
+    /** Domain or server did not respond after 75 attempts. Status is inconclusive — send only if your bounce tolerance allows it. */
     | 'unknown'
 
 /**
