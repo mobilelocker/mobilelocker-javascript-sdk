@@ -18,6 +18,7 @@ export interface Attendee {
     title: string
     designation: string
     specialty: string
+    npi: string | null
     industry: string
     email: string
     phone: string
