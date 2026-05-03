@@ -67,6 +67,24 @@ export const congresses = {
     },
 
     /**
+     * Get a specific attendee by ID.
+     *
+     * @param attendeeID - The attendee's string ID.
+     * @returns The matching {@link Attendee}.
+     * @throws {@link MobileLockerError} on network failure or if not found.
+     */
+    async getAttendee(attendeeID: string): Promise<Attendee> {
+        try {
+            const { data } = await withRetry(() =>
+                apiClient.get<Attendee>(getEndpoint(`/leadretrieval/attendees/${attendeeID}`)),
+            )
+            return data
+        } catch (err) {
+            throw toError(err)
+        }
+    },
+
+    /**
      * Get all business cards scanned by the current user.
      *
      * @returns Array of {@link BusinessCard} objects.
@@ -75,6 +93,24 @@ export const congresses = {
     async getBusinessCards(): Promise<BusinessCard[]> {
         try {
             const { data } = await withRetry(() => apiClient.get<BusinessCard[]>(getEndpoint('/cards')))
+            return data
+        } catch (err) {
+            throw toError(err)
+        }
+    },
+
+    /**
+     * Get a specific business card by ID.
+     *
+     * @param cardID - The business card's string ID.
+     * @returns The matching {@link BusinessCard}.
+     * @throws {@link MobileLockerError} on network failure or if not found.
+     */
+    async getBusinessCard(cardID: string): Promise<BusinessCard> {
+        try {
+            const { data } = await withRetry(() =>
+                apiClient.get<BusinessCard>(getEndpoint(`/cards/${cardID}`)),
+            )
             return data
         } catch (err) {
             throw toError(err)
