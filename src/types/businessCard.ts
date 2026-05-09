@@ -20,6 +20,7 @@ export interface BusinessCard {
     image_back_url: string | null
     first_name: string
     last_name: string
+    /** Full name as parsed by OCR. */
     name: string
     email: string
     /** Job title from the scanned card. Also available as `title` (legacy alias). */
@@ -40,4 +41,27 @@ export interface BusinessCard {
     http_status: number
     created_at: string | null
     updated_at: string | null
+    // MLI-1332: Extended fields from the OCR scan result
+    job: string | null
+    zip: string | null
+    city: string | null
+    state: string | null
+    country: string | null
+    address1: string | null
+    address2: string | null
+    note: string | null
+    degree: string | null
+    extra_name: string | null
+    phone_body: string | null
+    phone_code: string | null
+    middle_name: string | null
+    company_name: string | null
+    job_position: string | null
+    linkedin_url: string | null
+    mobile_phone: string | null
+    job_department: string | null
+    twitter_handle: string | null
+    linkedin_handle: string | null
+    phone_extension: string | null
+    phone_country_code: string | null
 }
