@@ -51,17 +51,21 @@ export function isApp(): boolean {
     return _isAppCached
 }
 
+function matchesMlHost(host: string, sub: string): boolean {
+    return host === `${sub}.mobilelocker.com` || host.endsWith(`.${sub}.mobilelocker.com`)
+}
+
 /**
  * Returns `true` when the presentation is served from a Mobile Locker CDN hostname
- * (e.g. `*.app.mobilelocker.com`, `*.eu.mobilelocker.com`).
+ * (e.g. `app.mobilelocker.com`, `*.app.mobilelocker.com`, `*.eu.mobilelocker.com`).
  */
 export function isCDN(): boolean {
     if (_isCDNCached === null) {
         const host = window.location?.hostname ?? ''
-        _isCDNCached = host.endsWith('.app.mobilelocker.com') ||
-            host.endsWith('.eu.mobilelocker.com') ||
-            host.endsWith('.staging.mobilelocker.com') ||
-            host.endsWith('.dev.mobilelocker.com')
+        _isCDNCached = matchesMlHost(host, 'app') ||
+            matchesMlHost(host, 'eu') ||
+            matchesMlHost(host, 'staging') ||
+            matchesMlHost(host, 'dev')
     }
     return _isCDNCached
 }
