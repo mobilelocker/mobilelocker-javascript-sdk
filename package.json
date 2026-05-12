@@ -1,11 +1,18 @@
 {
   "name": "@mobilelocker/javascript-sdk",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Mobile Locker JavaScript SDK",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "browser": "dist/index.umd.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.umd.js"
+    }
+  },
   "files": [
     "dist/",
     "README.md"
