@@ -60,6 +60,7 @@ interface ServerEntry {
 }
 
 const LOCALFORAGE_KEY = 'user_storage'
+const MAX_ATTEMPTS = 3
 
 // MLJS-14: Stored in localforage (not in the server store) so it is per-origin.
 // If the origin changes (e.g. port changes between app versions), migration re-runs
@@ -323,9 +324,8 @@ export const storage = {
             if (isMobileLocker()) {
                 const { analytics } = await import('./analytics')
                 await analytics._post('user_storage', 'save', name, { data }, 'capturedata')
-                // Retry up to 3 times with 500ms between each attempt, giving the backend
-                // time to process the capturedata event before reading back the saved entry.
-                const MAX_ATTEMPTS = 3
+                // Retry up to MAX_ATTEMPTS times with 500ms between each attempt, giving the
+                // backend time to process the capturedata event before reading back.
                 for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
                     await new Promise(resolve => setTimeout(resolve, 500))
                     const entry = await storage.get(name)

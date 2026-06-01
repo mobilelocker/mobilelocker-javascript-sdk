@@ -5,9 +5,9 @@ import axios from 'axios'
 
 function isOfflineError(err: unknown): boolean {
     return err instanceof TypeError && (
-        (err as TypeError).message.includes('Failed to fetch') ||
-        (err as TypeError).message.includes('NetworkError') ||
-        (err as TypeError).message.includes('Network request failed')
+        err.message.includes('Failed to fetch') ||
+        err.message.includes('NetworkError') ||
+        err.message.includes('Network request failed')
     )
 }
 
