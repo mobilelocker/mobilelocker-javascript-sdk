@@ -8,13 +8,26 @@ export interface StorageEntry {
     name: string
     /** The stored value. Can be any JSON-serializable type. */
     data: unknown
-    teamID: number
-    userID: number
-    presentationID: number
+    // snake_case — canonical field names, matching the backend Laravel response
+    team_id: number
+    user_id: number
+    presentation_id: number | null
     /** ISO 8601 timestamp of when the entry was first created. */
-    createdAt: string
+    created_at: string | null
     /** ISO 8601 timestamp of the most recent update. */
-    updatedAt: string
+    updated_at: string | null
+    // MLJS-14: camelCase aliases included temporarily for backward compatibility
+    // with presentations that used the previous SDK shape. Remove in a future release.
+    /** @deprecated Use {@link team_id} */
+    teamID?: number
+    /** @deprecated Use {@link user_id} */
+    userID?: number
+    /** @deprecated Use {@link presentation_id} */
+    presentationID?: number
+    /** @deprecated Use {@link created_at} */
+    createdAt?: string
+    /** @deprecated Use {@link updated_at} */
+    updatedAt?: string
 }
 
 export interface StorageFilter {
@@ -60,11 +73,20 @@ function toError(err: unknown): MobileLockerError {
     return new MobileLockerError(String(err), GeneralErrorCode.ServerError)
 }
 
-// MLJS-14: Maps a snake_case server entry to the camelCase StorageEntry interface.
+// MLJS-14: Maps a snake_case server entry to StorageEntry.
+// Both snake_case (canonical) and camelCase (deprecated aliases) are populated
+// during the transitional period so existing presentations reading either key style continue to work.
 function _fromServer(e: ServerEntry): StorageEntry {
     return {
         name: e.name,
         data: e.data,
+        // snake_case — canonical
+        team_id: e.team_id,
+        user_id: e.user_id,
+        presentation_id: e.presentation_id,
+        created_at: e.created_at,
+        updated_at: e.updated_at,
+        // camelCase — deprecated aliases
         teamID: e.team_id,
         userID: e.user_id,
         presentationID: e.presentation_id ?? 0,
@@ -214,8 +236,8 @@ export const storage = {
             }
             let entries = await _localGet()
             if (filter?.name) entries = entries.filter(e => e.name === filter.name)
-            if (filter?.since) entries = entries.filter(e => e.updatedAt >= filter.since!)
-            if (filter?.until) entries = entries.filter(e => e.updatedAt <= filter.until!)
+            if (filter?.since) entries = entries.filter(e => (e.updated_at ?? '') >= filter.since!)
+            if (filter?.until) entries = entries.filter(e => (e.updated_at ?? '') <= filter.until!)
             return entries.slice(0, filter?.limit ?? 100)
         } catch (err) { throw toError(err) }
     },
@@ -276,6 +298,14 @@ export const storage = {
             if (isMobileLocker()) {
                 const { analytics } = await import('./analytics')
                 await analytics._post('user_storage', 'save', name, { data }, 'capturedata')
+                // Retry up to 3 times with 500ms between each attempt, giving the backend
+                // time to process the capturedata event before reading back the saved entry.
+                const MAX_ATTEMPTS = 3
+                for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+                    await new Promise(resolve => setTimeout(resolve, 500))
+                    const entry = await storage.get(name)
+                    if (entry) return entry
+                }
                 return (await storage.get(name))!
             }
             const all = await _localGet()
@@ -286,7 +316,7 @@ export const storage = {
                 all[idx] = { ...all[idx], data, updatedAt: now }
                 entry = all[idx]
             } else {
-                entry = { name, data, teamID: 0, userID: 0, presentationID: 0, createdAt: now, updatedAt: now }
+                entry = { name, data, team_id: 0, user_id: 0, presentation_id: 0, created_at: now, updated_at: now }
                 all.push(entry)
             }
             await localforage.setItem(LOCALFORAGE_KEY, all)

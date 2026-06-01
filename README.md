@@ -459,6 +459,12 @@ import type {
 
 ---
 
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md) for a full history of releases and breaking changes.
+
+---
+
 ## Contributing
 
 ### Project structure
