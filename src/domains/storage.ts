@@ -1,5 +1,6 @@
 import { apiClient, getEndpoint, isMobileLocker, isIOS, withRetry } from '../env'
 import { MobileLockerError, GeneralErrorCode } from '../errors'
+import { analytics } from './analytics'
 import { device } from './device'
 import localforage from 'localforage'
 import axios from 'axios'
@@ -133,6 +134,18 @@ function _ensureMigrated(): Promise<void> {
 // Reads all entries from localforage, POSTs each to the server, removes them
 // from localforage on success, then stores a migration flag so this only runs once.
 // Failure is non-fatal — normal storage operations proceed regardless.
+// Shared capturedata save path used by pre-5.2.2 iOS and CDN/Electron.
+// Posts the event then retries get() until the backend has processed it.
+async function _saveViaCapturedata(name: string, data: unknown): Promise<StorageEntry> {
+    await analytics._post('user_storage', 'save', name, { data }, 'capturedata')
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 500))
+        const entry = await storage.get(name)
+        if (entry) return entry
+    }
+    return (await storage.get(name))!
+}
+
 async function _runMigration(): Promise<void> {
     try {
         if (!await _hasSQLiteRoutes()) return
@@ -312,26 +325,10 @@ export const storage = {
                     return _fromServer(raw)
                 }
                 // Pre-5.2.2 fallback — SQLite routes not available; use capturedata.
-                const { analytics } = await import('./analytics')
-                await analytics._post('user_storage', 'save', name, { data }, 'capturedata')
-                for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-                    await new Promise(resolve => setTimeout(resolve, 500))
-                    const entry = await storage.get(name)
-                    if (entry) return entry
-                }
-                return (await storage.get(name))!
+                return _saveViaCapturedata(name, data)
             }
             if (isMobileLocker()) {
-                const { analytics } = await import('./analytics')
-                await analytics._post('user_storage', 'save', name, { data }, 'capturedata')
-                // Retry up to MAX_ATTEMPTS times with 500ms between each attempt, giving the
-                // backend time to process the capturedata event before reading back.
-                for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-                    await new Promise(resolve => setTimeout(resolve, 500))
-                    const entry = await storage.get(name)
-                    if (entry) return entry
-                }
-                return (await storage.get(name))!
+                return _saveViaCapturedata(name, data)
             }
             const all = await _localGet()
             const now = new Date().toISOString()
@@ -359,7 +356,7 @@ export const storage = {
         try {
             if (isIOS()) {
                 // MLJS-14: Always post the capturedata event for backend audit trail.
-                const { analytics } = await import('./analytics')
+
                 await analytics._post('user_storage', 'delete', name, {}, 'capturedata')
                 if (await _hasSQLiteRoutes()) {
                     // iOS 5.2.2+ — also delete the local SQLite record immediately so the
@@ -369,7 +366,7 @@ export const storage = {
                 return
             }
             if (isMobileLocker()) {
-                const { analytics } = await import('./analytics')
+
                 await analytics._post('user_storage', 'delete', name, {}, 'capturedata')
                 return
             }
