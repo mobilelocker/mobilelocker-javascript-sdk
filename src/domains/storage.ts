@@ -107,7 +107,9 @@ let _sqliteRoutesAvailablePromise: Promise<boolean> | null = null
 
 function _hasSQLiteRoutes(): Promise<boolean> {
     if (!_sqliteRoutesAvailablePromise) {
-        _sqliteRoutesAvailablePromise = device.isAtLeastVersion('5.2.2')
+        // .catch(() => false) ensures that if /device doesn't exist on very old app
+        // versions, we fall back to capturedata rather than throwing.
+        _sqliteRoutesAvailablePromise = device.isAtLeastVersion('5.2.2').catch(() => false)
     }
     return _sqliteRoutesAvailablePromise
 }
