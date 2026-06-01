@@ -16,8 +16,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 
 - `storage.save()` on iOS now POSTs directly to the native SQLite route (`POST /mobilelocker/api/user/user-storage-entries`) instead of routing through the capturedata analytics path. This fixes an issue where entries were lost or silently shared between presentations when multiple high-ID presentations were served from the same port (`65535`).
+- `storage.save()` on CDN and Electron retains the capturedata analytics path but now retries `get()` up to 3 times with 500ms between each attempt. Previously the immediate read-back could return stale data or `null` before the backend had finished processing the event.
 - `storage.delete()` on iOS now calls the capturedata analytics path (for backend audit trail) **and** immediately deletes the local SQLite record (`DELETE /mobilelocker/api/user/user-storage-entries?name=X`), so deleted entries no longer reappear in subsequent `getAll()` calls before the next backend sync.
-- `StorageEntry` fields are now documented with snake_case as the canonical wire format, matching the Laravel backend and iOS `toJSON()` output: `team_id`, `user_id`, `presentation_id`, `created_at`, `updated_at`.
+- `StorageEntry` fields now use snake_case as the canonical wire format, matching the Laravel backend and iOS `toJSON()` output: `team_id`, `user_id`, `presentation_id`, `created_at`, `updated_at`.
 - All server responses in the `storage` domain are mapped through a new internal `_fromServer()` function.
 
 ### Deprecated
