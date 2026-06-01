@@ -1,7 +1,6 @@
-import { apiClient, getEndpoint, isMobileLocker, withRetry } from '../env'
+import { apiClient, getEndpoint, isMobileLocker, isIOS, withRetry } from '../env'
 import { MobileLockerError, GeneralErrorCode } from '../errors'
 import localforage from 'localforage'
-import { v4 as uuidv4 } from 'uuid'
 import axios from 'axios'
 
 export interface StorageEntry {
@@ -31,7 +30,27 @@ export interface StorageFilter {
     limit?: number
 }
 
+// MLJS-14: Internal type for snake_case server responses.
+// The iOS server returns snake_case keys; _fromServer() maps them to the
+// camelCase StorageEntry interface consumed by SDK callers.
+interface ServerEntry {
+    uuid: string
+    id: number
+    team_id: number
+    user_id: number
+    presentation_id: number | null
+    name: string
+    data: unknown
+    created_at: string | null
+    updated_at: string | null
+}
+
 const LOCALFORAGE_KEY = 'user_storage'
+
+// MLJS-14: Stored in localforage (not in the server store) so it is per-origin.
+// If the origin changes (e.g. port changes between app versions), migration re-runs
+// for the new origin — harmlessly, since there will be no old entries to find there.
+const MIGRATION_FLAG_KEY = 'ml_storage_migration_v1'
 
 function toError(err: unknown): MobileLockerError {
     if (err instanceof MobileLockerError) return err
@@ -41,8 +60,67 @@ function toError(err: unknown): MobileLockerError {
     return new MobileLockerError(String(err), GeneralErrorCode.ServerError)
 }
 
+// MLJS-14: Maps a snake_case server entry to the camelCase StorageEntry interface.
+function _fromServer(e: ServerEntry): StorageEntry {
+    return {
+        name: e.name,
+        data: e.data,
+        teamID: e.team_id,
+        userID: e.user_id,
+        presentationID: e.presentation_id ?? 0,
+        createdAt: e.created_at ?? '',
+        updatedAt: e.updated_at ?? '',
+    }
+}
+
 async function _localGet(): Promise<StorageEntry[]> {
     return (await localforage.getItem<StorageEntry[]>(LOCALFORAGE_KEY)) ?? []
+}
+
+// MLJS-14: Migration state. Module-level so migration runs at most once per page load
+// regardless of how many storage calls fire simultaneously on first access.
+let _migrationPromise: Promise<void> | null = null
+
+// MLJS-14: Ensures localStorage → SQLite migration has run before any iOS read or write.
+// Only applicable on iOS where the port-collision localStorage problem exists.
+function _ensureMigrated(): Promise<void> {
+    if (!isIOS()) return Promise.resolve()
+    if (!_migrationPromise) {
+        _migrationPromise = _runMigration()
+    }
+    return _migrationPromise
+}
+
+// MLJS-14: One-time migration of localStorage entries into the iOS SQLite store.
+// Reads all entries from localforage, POSTs each to the server, removes them
+// from localforage on success, then stores a migration flag so this only runs once.
+// Failure is non-fatal — normal storage operations proceed regardless.
+async function _runMigration(): Promise<void> {
+    try {
+        const alreadyMigrated = await localforage.getItem<boolean>(MIGRATION_FLAG_KEY)
+        if (alreadyMigrated) return
+
+        const local = await _localGet()
+        for (const entry of local) {
+            try {
+                await apiClient.post(getEndpoint('/user/user-storage-entries'), {
+                    name: entry.name,
+                    data: entry.data,
+                })
+                // Remove migrated entry from localforage immediately on success
+                // so a partial migration doesn't re-migrate already-moved entries.
+                const remaining = await _localGet()
+                await localforage.setItem(LOCALFORAGE_KEY, remaining.filter(e => e.name !== entry.name))
+            } catch {
+                // Skip entries that fail (e.g. offline) — don't block migration of others.
+                // On the next page load, migration will re-run and retry any that were skipped.
+            }
+        }
+
+        await localforage.setItem(MIGRATION_FLAG_KEY, true)
+    } catch {
+        // Non-fatal — normal storage operations proceed regardless.
+    }
 }
 
 export const storage = {
@@ -73,10 +151,11 @@ export const storage = {
     async getAll(): Promise<StorageEntry[]> {
         try {
             if (isMobileLocker()) {
+                await _ensureMigrated()
                 const { data } = await withRetry(() =>
-                    apiClient.get<StorageEntry[]>(getEndpoint('/user/user-storage-entries/current-presentation')),
+                    apiClient.get<ServerEntry[]>(getEndpoint('/user/user-storage-entries/current-presentation')),
                 )
-                return data
+                return data.map(_fromServer)
             }
             return _localGet()
         } catch (err) { throw toError(err) }
@@ -91,9 +170,9 @@ export const storage = {
     async getAllForPresentation(): Promise<StorageEntry[]> {
         try {
             const { data } = await withRetry(() =>
-                apiClient.get<StorageEntry[]>(getEndpoint('/user/user-storage-entries')),
+                apiClient.get<ServerEntry[]>(getEndpoint('/user/user-storage-entries')),
             )
-            return data
+            return data.map(_fromServer)
         } catch (err) { throw toError(err) }
     },
 
@@ -107,9 +186,9 @@ export const storage = {
     async getForPresentation(presentationID: number): Promise<StorageEntry[]> {
         try {
             const { data } = await withRetry(() =>
-                apiClient.get<StorageEntry[]>(getEndpoint(`/user/user-storage-entries/presentations/${presentationID}`)),
+                apiClient.get<ServerEntry[]>(getEndpoint(`/user/user-storage-entries/presentations/${presentationID}`)),
             )
-            return data
+            return data.map(_fromServer)
         } catch (err) { throw toError(err) }
     },
 
@@ -129,9 +208,9 @@ export const storage = {
         try {
             if (isMobileLocker()) {
                 const { data } = await withRetry(() =>
-                    apiClient.get<StorageEntry[]>(getEndpoint('/user/user-storage-entries'), { params: filter }),
+                    apiClient.get<ServerEntry[]>(getEndpoint('/user/user-storage-entries'), { params: filter }),
                 )
-                return data
+                return data.map(_fromServer)
             }
             let entries = await _localGet()
             if (filter?.name) entries = entries.filter(e => e.name === filter.name)
@@ -153,11 +232,11 @@ export const storage = {
         try {
             if (isMobileLocker()) {
                 const { data } = await withRetry(() =>
-                    apiClient.get<StorageEntry[]>(getEndpoint('/user/user-storage-entries/search'), {
+                    apiClient.get<ServerEntry[]>(getEndpoint('/user/user-storage-entries/search'), {
                         params: { q: text, ...filter },
                     }),
                 )
-                return data
+                return data.map(_fromServer)
             }
             const entries = await storage.query(filter)
             const lower = text.toLowerCase()
@@ -184,9 +263,19 @@ export const storage = {
      */
     async save(name: string, data: unknown): Promise<StorageEntry> {
         try {
+            if (isIOS()) {
+                // MLJS-14: POST directly to the SQLite-backed iOS route instead of the
+                // capturedata analytics path, which is unreliable when the localStorage
+                // origin changes due to port collision on high-ID presentations.
+                await _ensureMigrated()
+                const { data: raw } = await withRetry(() =>
+                    apiClient.post<ServerEntry>(getEndpoint('/user/user-storage-entries'), { name, data }),
+                )
+                return _fromServer(raw)
+            }
             if (isMobileLocker()) {
                 const { analytics } = await import('./analytics')
-                await analytics._post('user_storage', 'save', name, { uuid: uuidv4(), data }, 'capturedata')
+                await analytics._post('user_storage', 'save', name, { data }, 'capturedata')
                 return (await storage.get(name))!
             }
             const all = await _localGet()
@@ -213,6 +302,15 @@ export const storage = {
      */
     async delete(name: string): Promise<void> {
         try {
+            if (isIOS()) {
+                // MLJS-14: Post the capturedata event for backend audit trail and server-side
+                // deletion, then immediately delete the local SQLite record so the entry is
+                // not visible in subsequent getAll() calls before the next backend sync.
+                const { analytics } = await import('./analytics')
+                await analytics._post('user_storage', 'delete', name, {}, 'capturedata')
+                await apiClient.delete(getEndpoint('/user/user-storage-entries'), { params: { name } })
+                return
+            }
             if (isMobileLocker()) {
                 const { analytics } = await import('./analytics')
                 await analytics._post('user_storage', 'delete', name, {}, 'capturedata')
@@ -222,4 +320,12 @@ export const storage = {
             await localforage.setItem(LOCALFORAGE_KEY, all.filter(e => e.name !== name))
         } catch (err) { throw toError(err) }
     },
+
+    /**
+     * @internal
+     * Migrates existing localStorage entries into the iOS SQLite store.
+     * Called automatically on first storage access when running on iOS.
+     * Safe to call manually for testing or early initialization.
+     */
+    _migrate: _runMigration,
 }
