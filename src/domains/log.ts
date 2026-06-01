@@ -208,31 +208,4 @@ export const log = {
      */
     error(message: string, metadata?: Record<string, unknown>): void { _writeLog('error', message, metadata) },
 
-    /**
-     * Delete a single SDK log entry by ID.
-     *
-     * @param id - The numeric ID of the entry to delete.
-     * @throws {@link MobileLockerError} on network failure or server error.
-     */
-    async deleteSdkLog(id: number): Promise<void> {
-        if (isMobileLocker()) {
-            await apiClient.delete(getEndpoint(`/sdk-logs/${id}`))
-            return
-        }
-        const logs = await _localLogs()
-        await localforage.setItem(LOCAL_STORAGE_KEY, logs.filter(l => l.id !== id))
-    },
-
-    /**
-     * Delete all SDK log entries for the current presentation and user.
-     *
-     * @throws {@link MobileLockerError} on network failure or server error.
-     */
-    async clearSdkLogs(): Promise<void> {
-        if (isMobileLocker()) {
-            await apiClient.delete(getEndpoint('/sdk-logs'))
-            return
-        }
-        await localforage.removeItem(LOCAL_STORAGE_KEY)
-    },
 }
