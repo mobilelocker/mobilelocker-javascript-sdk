@@ -1,4 +1,4 @@
-// MLJS-15: Native-app-backed localForage instance for iOS 5.3.0+ (Android and Windows when supported).
+// MLJS-15/MLJS-16: Native-app-backed localForage instance for iOS 5.3.0+ (Android and Windows when supported).
 //
 // Registers a custom localForage driver backed by /mobilelocker/api/localstorage routes.
 // On supported native app versions the native driver is used, giving port-collision-safe storage.
@@ -54,6 +54,62 @@ function nativeSupport(): Promise<boolean> {
     return _nativeSupportPromise
 }
 
+// MLJS-16: One-time migration of existing native localforage (IndexedDB) data to GRDB.
+//
+// Presentations that used native localforage before iOS 5.3.0 stored data in IndexedDB.
+// On first use of the mobilelockerNative driver, we read all keys from the IndexedDB
+// instance that mobilelocker.localforage would have used (same name/storeName) and POST
+// each entry to GRDB. A sentinel key in IndexedDB prevents the migration running again.
+//
+// localforage.iterate() does not await async callbacks, so we collect entries in a
+// synchronous pass first, then POST them sequentially with full await semantics.
+
+const MIGRATION_FLAG = '__mljs_localforage_migration_v1'
+let _migrationPromise: Promise<void> | null = null
+
+function runIndexedDBMigration(): Promise<void> {
+    if (!_migrationPromise) {
+        _migrationPromise = migrateIndexedDB()
+    }
+    return _migrationPromise
+}
+
+async function migrateIndexedDB(): Promise<void> {
+    try {
+        // A dedicated native-driver-only instance targeting the same store namespace.
+        // Excludes mobilelockerNative to avoid triggering _initStorage recursively.
+        const idbInstance = localforage.createInstance({
+            driver: [localforage.INDEXEDDB, localforage.WEBSQL, localforage.LOCALSTORAGE],
+            name: 'mobilelocker',
+            storeName: 'localforage',
+        })
+
+        const alreadyMigrated = await idbInstance.getItem<boolean>(MIGRATION_FLAG)
+        if (alreadyMigrated) return
+
+        // Collect entries synchronously — iterate() does not await async callbacks.
+        const entries: Array<{ key: string; value: unknown }> = []
+        await idbInstance.iterate((value, key) => {
+            if (key !== MIGRATION_FLAG) entries.push({ key, value })
+        })
+
+        // POST each entry to GRDB sequentially. Per-entry errors are isolated so one
+        // bad entry does not block migration of the rest.
+        for (const { key, value } of entries) {
+            try {
+                const serialized = await serializeValue(value)
+                await apiClient.post(getEndpoint('/localstorage'), { key, value: serialized })
+            } catch {
+                // Skip — migration of remaining entries continues
+            }
+        }
+
+        await idbInstance.setItem(MIGRATION_FLAG, true)
+    } catch {
+        // Non-fatal — driver continues normally if migration fails entirely
+    }
+}
+
 // Shape of each entry returned by GET /mobilelocker/api/localstorage
 interface LocalStorageEntry {
     key: string
@@ -64,10 +120,12 @@ const nativeDriver = {
     _driver: 'mobilelockerNative',
     _support: nativeSupport,
 
-    // No-op: native routes are always available once _support() returns true.
-    // The LocalForageDriver typings declare this as void but localForage actually
-    // awaits a Promise — both are fine; synchronous return satisfies both.
-    _initStorage(_options: LocalForageOptions): void { /* no-op */ },
+    // MLJS-16: Runs the one-time IndexedDB → GRDB migration before the first data call.
+    // The LocalForageDriver typings declare _initStorage as returning void, but localForage
+    // actually awaits its return value — so async is correct here.
+    async _initStorage(_options: LocalForageOptions): Promise<void> {
+        await runIndexedDBMigration()
+    },
 
     async getItem<T>(key: string): Promise<T | null> {
         const { data } = await apiClient.get<{ value: string | null }>(
