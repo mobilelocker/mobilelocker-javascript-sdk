@@ -30,6 +30,7 @@ export interface User {
     is_debug_mode: boolean
     max_records_from_crm: number
     can_use_haystack: boolean
+    can_use_metabase: boolean
     /** Whether this is the currently authenticated user (vs. a team member record). */
     is_current_user: boolean
 }

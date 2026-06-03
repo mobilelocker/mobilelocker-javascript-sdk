@@ -15,13 +15,13 @@ export interface Presentation {
     /** External URL, set when the presentation opens a remote URL. */
     url: string | null
     team_id: number | null
-    description: string
+    description: string | null
     /** Presentation format type (e.g. `'html'`, `'pdf'`, `'video'`). */
-    type: string
+    type: string | null
     /** Relative path to the main entry file (e.g. `'index.html'`). */
-    main_path: string
+    main_path: string | null
     /** Download/availability status (e.g. `'Installed'`, `'Available'`). */
-    status: string
+    status: string | null
     installed: boolean
     thumbnail_url: string | null
     thumbnail_hash: string | null
@@ -73,11 +73,15 @@ export interface PresentationFile {
     presentation_id: number
     presentation_code: string
     /** Relative path of the file within the presentation bundle. */
-    path: string
+    path: string | null
     /** Remote URL for the file asset. */
     url: string | null
+    /** Download/availability status (e.g. `'Installed'`, `'Available'`). */
+    status: string | null
+    installed: boolean
     /** File size in bytes. */
     size: number
+    mime_type: string | null
     local_hash: string | null
     remote_hash: string | null
     created_at: string | null
