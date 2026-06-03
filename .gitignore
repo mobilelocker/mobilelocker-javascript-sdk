@@ -10,6 +10,9 @@ node_modules/
 # PhpStorm / JetBrains
 .idea/
 
+# Playwright MCP output
+.playwright-mcp/
+
 # OS
 .DS_Store
 Thumbs.db
