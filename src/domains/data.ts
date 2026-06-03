@@ -18,6 +18,7 @@ function toError(err: unknown): MobileLockerError {
     )
 }
 
+/** @category Data */
 export const data = {
     /**
      * Submit a data capture form event.

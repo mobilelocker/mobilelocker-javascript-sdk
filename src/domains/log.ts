@@ -79,6 +79,7 @@ function _writeLog(level: SDKLogLevel, message: string, metadata?: Record<string
     }
 }
 
+/** @category Analytics */
 export const log = {
     /**
      * Enable or disable debug mode.

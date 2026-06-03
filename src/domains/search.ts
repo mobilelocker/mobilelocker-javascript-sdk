@@ -24,6 +24,7 @@ export interface SearchResults {
     business_cards: { results: BusinessCard[]; total_count: number }
 }
 
+/** @category Data */
 export const search = {
     /**
      * Search across multiple entity types simultaneously.

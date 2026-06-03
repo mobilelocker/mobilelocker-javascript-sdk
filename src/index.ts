@@ -71,6 +71,7 @@ export default mobilelocker
 
 // Named exports for TypeScript consumers
 export { isMobileLocker, isApp, isCDN, isIOS, isElectron }
+export { analytics, congresses, contacts, crm, data, database, device, http, localforage, log, network, permissions, presentation, scanner, search, session, share, storage, ui, user }
 export { MobileLockerError } from './errors'
 export { MobileLockerCRMError, MobileLockerDatabaseError, MobileLockerHTTPError, MobileLockerHttpResponseError } from './errors'
 export { GeneralErrorCode, CRMErrorCode, DatabaseErrorCode, HTTPErrorCode } from './errors'

@@ -9,6 +9,7 @@ export interface NetworkStatus {
     type: NetworkConnectionType
 }
 
+/** @category Networking */
 export const network = {
     /**
      * Get the current network connectivity status.

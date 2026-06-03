@@ -37,6 +37,7 @@ function semverCompare(a: string, b: string): number {
     return 0
 }
 
+/** @category Device */
 export const device = {
     /**
      * Get hardware and app metadata for the current device.

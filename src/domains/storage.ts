@@ -175,6 +175,7 @@ async function _runMigration(): Promise<void> {
     }
 }
 
+/** @category Storage */
 export const storage = {
     /**
      * Get a single storage entry by name for the current presentation and user.

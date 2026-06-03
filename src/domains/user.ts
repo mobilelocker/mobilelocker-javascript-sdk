@@ -5,6 +5,7 @@ import axios from 'axios'
 export type { User } from '../types/user'
 import type { User } from '../types/user'
 
+/** @category Analytics */
 export const user = {
     /**
      * Get the currently authenticated user.

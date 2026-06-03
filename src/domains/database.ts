@@ -92,6 +92,7 @@ function toError(err: unknown): MobileLockerDatabaseError {
     return new MobileLockerDatabaseError(String(err), DatabaseErrorCode.QueryFailed)
 }
 
+/** @category Data */
 export const database = {
     /**
      * List the SQLite database files available to the current presentation.

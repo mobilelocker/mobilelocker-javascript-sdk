@@ -236,6 +236,7 @@ export interface MobileLockerLocalForage {
  * await mobilelocker.localforage.setItem('user-prefs', { theme: 'dark' })
  * const prefs = await mobilelocker.localforage.getItem('user-prefs')
  */
+/** @category Storage */
 export const localforageDomain: MobileLockerLocalForage = localforage.createInstance({
     driver: [
         'mobilelockerNative',

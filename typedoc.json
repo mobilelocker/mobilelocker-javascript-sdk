@@ -13,9 +13,12 @@
   "includeHierarchySummary": true,
   "lightHighlightTheme": "github-light",
   "darkHighlightTheme": "github-dark",
+  "plugin": ["typedoc-plugin-llms-txt"],
   "groupReferencesByType": true,
   "groupOrder": ["Variables", "Functions", "*", "Type Aliases", "Interfaces"],
   "sort": ["source-order"],
+  "categorizeByGroup": true,
+  "categoryOrder": ["CRM", "Data", "Device", "Networking", "Storage", "Analytics", "UI", "*"],
   "navigationLinks": {
     "Mobile Locker": "https://www.mobilelocker.com",
     "GitHub": "https://github.com/mobilelocker/mobilelocker-javascript-sdk",

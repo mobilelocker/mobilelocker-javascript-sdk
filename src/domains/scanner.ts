@@ -16,6 +16,7 @@ export type RawScanResult =
 
 export type ScanResult = WithStatusBooleans<RawScanResult>
 
+/** @category Device */
 export const scanner = {
     /**
      * Open the native business card scanner and capture a contact.

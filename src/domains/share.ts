@@ -9,6 +9,7 @@ export interface ShareRecipient {
     name?: string
 }
 
+/** @category UI */
 export const share = {
     /**
      * Share the current presentation with one or more recipients.

@@ -86,6 +86,7 @@ async function request(url: string, options: HTTPRequestOptions = {}): Promise<H
     return { status: response.status, statusText: response.statusText, headers: responseHeaders, data: responseData }
 }
 
+/** @category Networking */
 export const http = {
     /**
      * Make a GET request to an external URL.

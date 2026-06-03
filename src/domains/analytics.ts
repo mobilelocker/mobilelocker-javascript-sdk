@@ -62,6 +62,7 @@ async function _saveToLocalforage(
     await localforage.setItem('deviceEvents', [...existing, event])
 }
 
+/** @category Analytics */
 export const analytics = {
     /**
      * Track a custom analytics event.

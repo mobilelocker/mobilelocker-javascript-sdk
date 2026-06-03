@@ -22,6 +22,7 @@ function toError(err: unknown): MobileLockerError {
     )
 }
 
+/** @category Data */
 export const presentation = {
     /**
      * Get the presentation that is currently open.

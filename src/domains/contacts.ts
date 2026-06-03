@@ -14,6 +14,7 @@ function toError(err: unknown): MobileLockerError {
     )
 }
 
+/** @category CRM */
 export const contacts = {
     /**
      * Get all contacts for the current user.

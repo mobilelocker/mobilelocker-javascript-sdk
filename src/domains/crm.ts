@@ -33,6 +33,7 @@ function toError(err: unknown): MobileLockerCRMError {
     return new MobileLockerCRMError(String(err), CRMErrorCode.ServerError)
 }
 
+/** @category CRM */
 export const crm = {
     /**
      * Get all CRM accounts synced for the current user.

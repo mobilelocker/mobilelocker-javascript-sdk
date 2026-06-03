@@ -1,6 +1,7 @@
 import { apiClient, getEndpoint, isMobileLocker, withRetry } from '../env'
 import { getLocalforageEvents } from './analytics'
 
+/** @category Analytics */
 export const session = {
     /**
      * Get all analytics events recorded during the current device session.

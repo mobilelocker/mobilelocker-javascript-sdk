@@ -33,6 +33,7 @@ function toError(err: unknown): MobileLockerError {
     )
 }
 
+/** @category Device */
 export const permissions = {
     /**
      * Check camera permission status.

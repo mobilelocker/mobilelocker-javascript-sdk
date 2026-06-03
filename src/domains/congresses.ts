@@ -16,6 +16,7 @@ function toError(err: unknown): MobileLockerError {
     )
 }
 
+/** @category CRM */
 export const congresses = {
     /**
      * List all lead retrieval events available to the current user.

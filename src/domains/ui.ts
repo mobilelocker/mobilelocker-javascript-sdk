@@ -43,6 +43,7 @@ export type RawVideoResult =
 
 export type VideoResult = WithStatusBooleans<RawVideoResult>
 
+/** @category UI */
 export const ui = {
     /**
      * Open a PDF file in the platform viewer.
