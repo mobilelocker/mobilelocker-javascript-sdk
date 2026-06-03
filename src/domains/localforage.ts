@@ -8,6 +8,7 @@
 import localforage from 'localforage'
 import { isIOS, getEndpoint, apiClient } from '../env'
 import { device } from './device'
+import { log } from './log'
 
 // localforage/src/utils/serializer has no TypeScript declarations (internal subpath).
 // The LocalForageSerializer interface is declared globally by localforage's typings.
@@ -85,7 +86,10 @@ async function migrateIndexedDB(): Promise<void> {
         })
 
         const alreadyMigrated = await idbInstance.getItem<boolean>(MIGRATION_FLAG)
-        if (alreadyMigrated) return
+        if (alreadyMigrated) {
+            log.debug('IndexedDB → GRDB migration already complete — skipping')
+            return
+        }
 
         // Collect entries synchronously — iterate() does not await async callbacks.
         const entries: Array<{ key: string; value: unknown }> = []
@@ -93,17 +97,22 @@ async function migrateIndexedDB(): Promise<void> {
             if (key !== MIGRATION_FLAG) entries.push({ key, value })
         })
 
+        log.info('IndexedDB → GRDB migration starting', { count: entries.length })
+
         // POST each entry to GRDB sequentially. Per-entry errors are isolated so one
         // bad entry does not block migration of the rest.
+        let migrated = 0
         for (const { key, value } of entries) {
             try {
                 const serialized = await serializeValue(value)
                 await apiClient.post(getEndpoint('/localstorage'), { key, value: serialized })
+                migrated++
             } catch {
-                // Skip — migration of remaining entries continues
+                log.warn('IndexedDB → GRDB migration: failed to migrate key', { key })
             }
         }
 
+        log.info('IndexedDB → GRDB migration complete', { migrated, total: entries.length })
         await idbInstance.setItem(MIGRATION_FLAG, true)
     } catch {
         // Non-fatal — driver continues normally if migration fails entirely
