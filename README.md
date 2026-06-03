@@ -69,7 +69,7 @@ mobilelocker.isCDN()           // true when served from a CDN presentation URL
 
 The SDK is organized into domains. All methods are async unless noted.
 
-### `analytics`
+### analytics
 
 Track custom events within a presentation.
 
@@ -78,7 +78,7 @@ mobilelocker.analytics.logEvent(category, action, uri, data)
 mobilelocker.analytics.trackPageView(uri)
 ```
 
-### `congresses`
+### congresses
 
 Access lead retrieval events and attendees (badge/card scanning).
 
@@ -89,7 +89,7 @@ const businessCards = await mobilelocker.congresses.getBusinessCards(eventID)
 await mobilelocker.congresses.submitLead(eventID, attendeeID, data)
 ```
 
-### `contacts`
+### contacts
 
 Read the current user's contacts.
 
@@ -99,7 +99,7 @@ const contact = await mobilelocker.contacts.get(contactID)
 const chunk = await mobilelocker.contacts.getChunked(minID, limit)
 ```
 
-### `crm`
+### crm
 
 Interact with the connected CRM (Salesforce, etc.).
 
@@ -137,7 +137,7 @@ const results = await mobilelocker.crm.query('SELECT Id, Name FROM Account WHERE
 // results.rows, results.totalSize, results.done
 ```
 
-### `data`
+### data
 
 Submit form/data capture events and fetch platform reference data.
 
@@ -162,7 +162,7 @@ const customers = await mobilelocker.data.getCustomers()
 const customer  = await mobilelocker.data.getCustomer(crmObjectID)
 ```
 
-### `database`
+### database
 
 Query SQLite databases bundled with the current presentation.
 
@@ -200,7 +200,7 @@ const description = await mobilelocker.database.describe('products.sqlite', 'pro
 //   { cid, name, type, not_null, default_value, primary_key }
 ```
 
-### `device`
+### device
 
 Read device and app metadata (iOS app only).
 
@@ -209,7 +209,7 @@ const info = await mobilelocker.device.getInfo()
 // info.app.version, info.os.name, info.hardware.model, info.orientation, etc.
 ```
 
-### `http`
+### http
 
 Make cross-origin HTTP requests. In the iOS app, requests are proxied through the native layer to avoid CORS restrictions.
 
@@ -219,7 +219,7 @@ const response = await mobilelocker.http.post('https://api.example.com/submit', 
 // response.status, response.data, response.headers
 ```
 
-### `log`
+### log
 
 Structured logging with levels, filtering, and SDK log access.
 
@@ -247,7 +247,7 @@ await mobilelocker.log.deleteSdkLog(id)
 await mobilelocker.log.clearSdkLogs()
 ```
 
-### `localforage`
+### localforage
 
 A localForage-compatible key-value store backed by native app storage — immune to the port-collision data loss problem in WKWebView. Use this instead of native `localforage` in any presentation that needs persistent key-value storage.
 
@@ -276,7 +276,7 @@ await mobilelocker.localforage.iterate((value, key, n) => {
 
 > **Why not native `localforage`?** Native `localforage` uses IndexedDB, which is origin-scoped. In WKWebView each presentation runs on a unique port, so the origin changes between app versions and data is silently lost or isolated. `mobilelocker.localforage` routes storage through the native app layer, which is stable across port changes.
 
-### `network`
+### network
 
 Check connectivity status.
 
@@ -286,7 +286,7 @@ const status = await mobilelocker.network.getStatus()
 // status.type — 'wifi' | 'cellular' | 'wired' | 'none'
 ```
 
-### `permissions`
+### permissions
 
 Check iOS permission status (iOS app only). All methods return a safe default outside the iOS app rather than throwing.
 
@@ -307,7 +307,7 @@ const biometric = await mobilelocker.permissions.biometric()
 // biometric_type: 'face_id' | 'touch_id' | 'optic_id' | 'none' | 'unknown'
 ```
 
-### `presentation`
+### presentation
 
 Access the current presentation and trigger lifecycle actions.
 
@@ -317,7 +317,7 @@ await mobilelocker.presentation.download(presentationID)   // returns DownloadSt
 mobilelocker.presentation.reload()
 ```
 
-### `scanner`
+### scanner
 
 Trigger the device camera scanner (iOS app only).
 
@@ -328,7 +328,7 @@ const result = await mobilelocker.scanner.scanBadge(eventID)
 // result.attendee or result.businessCard on success
 ```
 
-### `search`
+### search
 
 Search across presentations, customers, contacts, attendees, and business cards.
 
@@ -340,7 +340,7 @@ const results = await mobilelocker.search.query('Acme', {
 // results.customers.results, results.presentations.results, etc.
 ```
 
-### `session`
+### session
 
 Read events recorded during the current session.
 
@@ -348,7 +348,7 @@ Read events recorded during the current session.
 const events = await mobilelocker.session.getDeviceEvents()
 ```
 
-### `share`
+### share
 
 Share a presentation or send email.
 
@@ -366,7 +366,7 @@ mobilelocker.share.email(
 )
 ```
 
-### `storage`
+### storage
 
 Persist arbitrary data tied to the current presentation/user context.
 
@@ -377,7 +377,7 @@ const entries = await mobilelocker.storage.getAll({name: 'scan-results'})
 await mobilelocker.storage.delete('scan-results')
 ```
 
-### `ui`
+### ui
 
 Control the presentation UI (iOS app only where noted).
 
@@ -394,7 +394,7 @@ mobilelocker.ui.showToolbar()   // iOS app only
 mobilelocker.ui.hideToolbar()   // iOS app only
 ```
 
-### `user`
+### user
 
 Get the currently authenticated user.
 

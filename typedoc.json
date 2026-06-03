@@ -5,5 +5,20 @@
   "readme": "README.md",
   "excludePrivate": true,
   "excludeInternal": true,
-  "hideGenerator": true
+  "hideGenerator": true,
+  "favicon": "assets/mobilelocker_icon.svg",
+  "customCss": "assets/custom.css",
+  "githubPages": true,
+  "useFirstParagraphOfCommentAsSummary": true,
+  "includeHierarchySummary": true,
+  "lightHighlightTheme": "github-light",
+  "darkHighlightTheme": "github-dark",
+  "groupReferencesByType": true,
+  "groupOrder": ["Variables", "Functions", "*", "Type Aliases", "Interfaces"],
+  "sort": ["source-order"],
+  "navigationLinks": {
+    "Mobile Locker": "https://www.mobilelocker.com",
+    "GitHub": "https://github.com/mobilelocker/mobilelocker-javascript-sdk",
+    "Help": "https://help.mobilelocker.com"
+  }
 }
