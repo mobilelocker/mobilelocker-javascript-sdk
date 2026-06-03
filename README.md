@@ -247,6 +247,35 @@ await mobilelocker.log.deleteSdkLog(id)
 await mobilelocker.log.clearSdkLogs()
 ```
 
+### `localforage`
+
+A localForage-compatible key-value store backed by native app storage — immune to the port-collision data loss problem in WKWebView. Use this instead of native `localforage` in any presentation that needs persistent key-value storage.
+
+On iOS 5.3.0+ reads and writes go through the native app's local server. On CDN, Electron, and older iOS versions, localForage falls back automatically to IndexedDB — no environment detection required.
+
+```js
+// Drop-in replacement for localforage
+await mobilelocker.localforage.setItem('user-prefs', { theme: 'dark', fontSize: 14 })
+const prefs = await mobilelocker.localforage.getItem('user-prefs')
+
+// Full localForage data API is supported
+const count = await mobilelocker.localforage.length()
+const keys  = await mobilelocker.localforage.keys()
+await mobilelocker.localforage.removeItem('user-prefs')
+await mobilelocker.localforage.clear()
+
+// All value types supported by localForage work, including binary
+await mobilelocker.localforage.setItem('buffer', new Uint8Array([1, 2, 3]).buffer)
+const buf = await mobilelocker.localforage.getItem('buffer')  // → ArrayBuffer
+
+// iterate with optional early exit
+await mobilelocker.localforage.iterate((value, key, n) => {
+    console.log(n, key, value)
+})
+```
+
+> **Why not native `localforage`?** Native `localforage` uses IndexedDB, which is origin-scoped. In WKWebView each presentation runs on a unique port, so the origin changes between app versions and data is silently lost or isolated. `mobilelocker.localforage` routes storage through the native app layer, which is stable across port changes.
+
 ### `network`
 
 Check connectivity status.
@@ -435,6 +464,7 @@ The SDK ships with full TypeScript definitions. All domain types are exported:
 
 ```ts
 import type {
+    MobileLockerLocalForage,
     User,
     Presentation,
     PresentationFile,

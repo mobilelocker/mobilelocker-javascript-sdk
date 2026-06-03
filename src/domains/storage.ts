@@ -103,7 +103,7 @@ async function _localGet(): Promise<StorageEntry[]> {
 }
 
 // MLJS-14: Cached version check — resolved once per page load so every save/delete
-// doesn't hit the /device endpoint. Returns true only on iOS 5.2.2+, which introduced
+// doesn't hit the /device endpoint. Returns true only on iOS 5.3.0+, which introduced
 // the SQLite-backed POST/PUT/DELETE routes (MLI-1387).
 let _sqliteRoutesAvailablePromise: Promise<boolean> | null = null
 
@@ -111,7 +111,7 @@ function _hasSQLiteRoutes(): Promise<boolean> {
     if (!_sqliteRoutesAvailablePromise) {
         // .catch(() => false) ensures that if /device doesn't exist on very old app
         // versions, we fall back to capturedata rather than throwing.
-        _sqliteRoutesAvailablePromise = device.isAtLeastVersion('5.2.2').catch(() => false)
+        _sqliteRoutesAvailablePromise = device.isAtLeastVersion('5.3.0').catch(() => false)
     }
     return _sqliteRoutesAvailablePromise
 }
@@ -134,7 +134,7 @@ function _ensureMigrated(): Promise<void> {
 // Reads all entries from localforage, POSTs each to the server, removes them
 // from localforage on success, then stores a migration flag so this only runs once.
 // Failure is non-fatal — normal storage operations proceed regardless.
-// Shared capturedata save path used by pre-5.2.2 iOS and CDN/Electron.
+// Shared capturedata save path used by pre-5.3.0 iOS and CDN/Electron.
 // Posts the event then retries get() until the backend has processed it.
 async function _saveViaCapturedata(name: string, data: unknown): Promise<StorageEntry> {
     await analytics._post('user_storage', 'save', name, { data }, 'capturedata')
@@ -318,13 +318,13 @@ export const storage = {
             if (isIOS()) {
                 await _ensureMigrated()
                 if (await _hasSQLiteRoutes()) {
-                    // MLJS-14: iOS 5.2.2+ — POST directly to the SQLite-backed route.
+                    // MLJS-14: iOS 5.3.0+ — POST directly to the SQLite-backed route.
                     const { data: raw } = await withRetry(() =>
                         apiClient.post<ServerEntry>(getEndpoint('/user/user-storage-entries'), { name, data }),
                     )
                     return _fromServer(raw)
                 }
-                // Pre-5.2.2 fallback — SQLite routes not available; use capturedata.
+                // Pre-5.3.0 fallback — SQLite routes not available; use capturedata.
                 return _saveViaCapturedata(name, data)
             }
             if (isMobileLocker()) {
@@ -359,7 +359,7 @@ export const storage = {
 
                 await analytics._post('user_storage', 'delete', name, {}, 'capturedata')
                 if (await _hasSQLiteRoutes()) {
-                    // iOS 5.2.2+ — also delete the local SQLite record immediately so the
+                    // iOS 5.3.0+ — also delete the local SQLite record immediately so the
                     // entry is not visible in subsequent getAll() calls before the next sync.
                     await apiClient.delete(getEndpoint('/user/user-storage-entries'), { params: { name } })
                 }

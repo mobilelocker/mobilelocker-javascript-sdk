@@ -16,6 +16,7 @@ import { scanner } from './domains/scanner'
 import { search } from './domains/search'
 import { session } from './domains/session'
 import { share } from './domains/share'
+import { localforageDomain as localforage } from './domains/localforage'
 import { storage } from './domains/storage'
 import { ui } from './domains/ui'
 import { user } from './domains/user'
@@ -60,6 +61,7 @@ const mobilelocker = {
     search,
     session,
     share,
+    localforage,
     storage,
     ui,
     user,
@@ -78,6 +80,7 @@ export type { SnakeToCamel, WithStatusBooleans } from './utils/status'
 export { withStatusBooleans } from './utils/status'
 
 // Domain types
+export type { MobileLockerLocalForage } from './domains/localforage'
 export type { StorageEntry, StorageFilter } from './domains/storage'
 export type { SDKLogEntry, SDKLogFilter, SDKLogLevel, SDKLogDomain } from './domains/log'
 export type { CRMRefreshMode, CRMRefreshStatus, PickerStatus, CRMQueryResult, PickerResult, CRMRefreshResult } from './domains/crm'
