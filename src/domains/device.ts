@@ -1,4 +1,4 @@
-import { apiClient, getEndpoint, isIOS, withRetry } from '../env'
+import { apiClient, getEndpoint, isAndroid, isIOS, withRetry } from '../env'
 
 export type AppEnvironment = 'production' | 'staging'
 
@@ -50,7 +50,7 @@ export const device = {
      * if (info) console.log(info.app.version, info.hardware.model)
      */
     async get(): Promise<DeviceInfo | null> {
-        if (!isIOS()) return null
+        if (!isIOS() && !isAndroid()) return null
         const { data } = await withRetry(() => apiClient.get<DeviceInfo>(getEndpoint('/device')))
         return data
     },
@@ -68,7 +68,7 @@ export const device = {
      * }
      */
     async isAtLeastVersion(version: string): Promise<boolean> {
-        if (!isIOS()) return false
+        if (!isIOS() && !isAndroid()) return false
         const info = await device.get()
         if (!info) return false
         return semverCompare(info.app.version, version) >= 0

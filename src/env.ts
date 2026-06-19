@@ -4,6 +4,7 @@ import { GeneralErrorCode, MobileLockerError, MobileLockerCRMError, CRMErrorCode
 declare global {
     interface Window {
         IS_MOBILE_LOCKER_IOS_APP?: boolean
+        IS_MOBILE_LOCKER_ANDROID_APP?: boolean
         SQL?: unknown
         initSqlJs?: (config: object) => Promise<unknown>
     }
@@ -28,6 +29,18 @@ export function isIOS(): boolean {
 }
 
 /**
+ * Returns `true` when running inside the Mobile Locker Android app.
+ *
+ * Detected via the `IS_MOBILE_LOCKER_ANDROID_APP` window flag or the
+ * `mobilelocker-android` user agent prefix.
+ */
+export function isAndroid(): boolean {
+    if (window.IS_MOBILE_LOCKER_ANDROID_APP === true) return true
+    const ua = navigator?.userAgent?.toLowerCase() ?? ''
+    return ua.startsWith('mobilelocker-android')
+}
+
+/**
  * Returns `true` when running inside the Mobile Locker Electron desktop app.
  *
  * Detected via the `Mobile Locker` user agent prefix set by the Electron app.
@@ -45,7 +58,7 @@ export function isElectron(): boolean {
  */
 export function isApp(): boolean {
     if (_isAppCached === null) {
-        _isAppCached = isIOS() || isElectron() ||
+        _isAppCached = isIOS() || isAndroid() || isElectron() ||
             typeof (globalThis as Record<string, unknown>)['ML_ENVIRONMENT'] !== 'undefined'
     }
     return _isAppCached

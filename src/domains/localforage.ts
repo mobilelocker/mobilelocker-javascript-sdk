@@ -6,7 +6,7 @@
 // automatically to its native driver stack (IndexedDB → WebSQL → localStorage).
 
 import localforage from 'localforage'
-import { isIOS, getEndpoint, apiClient } from '../env'
+import { isAndroid, isIOS, getEndpoint, apiClient } from '../env'
 import { device } from './device'
 import { log } from './log'
 
@@ -48,6 +48,10 @@ function deserializeValue(raw: string | null | undefined): unknown {
 let _nativeSupportPromise: Promise<boolean> | null = null
 
 function nativeSupport(): Promise<boolean> {
+    if (isAndroid()) {
+        // MLA-41: Android native driver ships with local_storage_entries + HTTP routes.
+        return Promise.resolve(true)
+    }
     if (!isIOS()) return Promise.resolve(false)
     if (!_nativeSupportPromise) {
         _nativeSupportPromise = device.isAtLeastVersion('5.3.0').catch(() => false)
