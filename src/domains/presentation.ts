@@ -150,13 +150,20 @@ export const presentation = {
     /**
      * Open a presentation by its numeric ID.
      *
-     * @remarks iOS app only. Throws in all other environments.
+     * In the iOS app, triggers native presentation navigation via the app bridge.
+     * In a browser, opens the presentation in a new tab using the platform web URL.
+     *
      * @param id - The numeric ID of the presentation to open.
-     * @throws {@link MobileLockerError} if called outside the iOS app.
+     *
+     * @example
+     * mobilelocker.presentation.openByID(42)
      */
     openByID(id: number): void {
-        if (!isIOS()) throw new MobileLockerError('openByID() is only supported in the iOS app', GeneralErrorCode.ServerError)
-        void apiClient.get(getEndpoint('/open-presentation'), { params: { id } })
+        if (isIOS()) {
+            void apiClient.get(getEndpoint('/open-presentation'), { params: { id } })
+        } else {
+            window.open(`https://app.mobilelocker.com/v2/app/content/${id}/open`, '_blank')
+        }
     },
 
     /**
