@@ -14,6 +14,8 @@ export interface Presentation {
     code: string | null
     /** External URL, set when the presentation opens a remote URL. */
     url: string | null
+    /** External CRM identifier (e.g. a Salesforce ID). */
+    external_id: string | null
     /** Web URL that opens this presentation in the platform web app. */
     open_url: string
     team_id: number | null
