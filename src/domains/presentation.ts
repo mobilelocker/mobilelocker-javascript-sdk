@@ -1,8 +1,8 @@
-import { apiClient, getEndpoint, isIOS, withRetry } from '../env'
-import { MobileLockerError, GeneralErrorCode } from '../errors'
-import type { Presentation } from '../types/presentation'
-import { analytics } from './analytics'
-import { withStatusBooleans, WithStatusBooleans } from '../utils/status'
+import {apiClient, getEndpoint, isIOS, withRetry} from '../env'
+import {MobileLockerError, GeneralErrorCode} from '../errors'
+import type {Presentation} from '../types/presentation'
+import {analytics} from './analytics'
+import {withStatusBooleans, WithStatusBooleans} from '../utils/status'
 import axios from 'axios'
 
 export type DownloadStatus = 'queued' | 'already_installed' | 'not_available' | 'not_permitted'
@@ -32,9 +32,11 @@ export const presentation = {
      */
     async get(): Promise<Presentation> {
         try {
-            const { data } = await withRetry(() => apiClient.get<Presentation>(getEndpoint('/presentation')))
+            const {data} = await withRetry(() => apiClient.get<Presentation>(getEndpoint('/presentation')))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) {
+            throw toError(err)
+        }
     },
 
     /**
@@ -45,9 +47,11 @@ export const presentation = {
      */
     async getEvents(): Promise<unknown[]> {
         try {
-            const { data } = await withRetry(() => apiClient.get<unknown[]>(getEndpoint('/presentation/events')))
+            const {data} = await withRetry(() => apiClient.get<unknown[]>(getEndpoint('/presentation/events')))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) {
+            throw toError(err)
+        }
     },
 
     /**
@@ -83,9 +87,11 @@ export const presentation = {
      */
     async getAll(): Promise<Presentation[]> {
         try {
-            const { data } = await withRetry(() => apiClient.get<Presentation[]>(getEndpoint('/presentations')))
+            const {data} = await withRetry(() => apiClient.get<Presentation[]>(getEndpoint('/presentations')))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) {
+            throw toError(err)
+        }
     },
 
     /**
@@ -97,11 +103,13 @@ export const presentation = {
      */
     async getByID(id: number): Promise<Presentation> {
         try {
-            const { data } = await withRetry(() =>
-                apiClient.get<Presentation>(getEndpoint('/presentations/by-id'), { params: { id } }),
+            const {data} = await withRetry(() =>
+                apiClient.get<Presentation>(getEndpoint('/presentations/by-id'), {params: {id}}),
             )
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) {
+            throw toError(err)
+        }
     },
 
     /**
@@ -113,11 +121,13 @@ export const presentation = {
      */
     async getByName(name: string): Promise<Presentation> {
         try {
-            const { data } = await withRetry(() =>
-                apiClient.get<Presentation>(getEndpoint('/presentations/by-name'), { params: { name } }),
+            const {data} = await withRetry(() =>
+                apiClient.get<Presentation>(getEndpoint('/presentations/by-name'), {params: {name}}),
             )
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) {
+            throw toError(err)
+        }
     },
 
     /**
@@ -128,9 +138,11 @@ export const presentation = {
      */
     async refresh(): Promise<Presentation[]> {
         try {
-            const { data } = await withRetry(() => apiClient.post<Presentation[]>(getEndpoint('/presentations/refresh')))
+            const {data} = await withRetry(() => apiClient.post<Presentation[]>(getEndpoint('/presentations/refresh')))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) {
+            throw toError(err)
+        }
     },
 
     /**
@@ -142,45 +154,76 @@ export const presentation = {
      */
     async download(id: number): Promise<DownloadResult> {
         try {
-            const { data } = await apiClient.post<{ status: DownloadStatus }>(getEndpoint('/presentation/download'), { id })
+            const {data} = await apiClient.post<{ status: DownloadStatus }>(getEndpoint('/presentation/download'), {id})
             return withStatusBooleans(data, DOWNLOAD_STATUSES)
-        } catch (err) { throw toError(err) }
+        } catch (err) {
+            throw toError(err)
+        }
     },
 
     /**
      * Open a presentation by its numeric ID.
      *
-     * @remarks iOS app only. Throws in all other environments.
+     * In the iOS app, triggers native presentation navigation via the app bridge.
+     * In a browser, opens the presentation in a new tab using the platform web URL.
+     *
      * @param id - The numeric ID of the presentation to open.
-     * @throws {@link MobileLockerError} if called outside the iOS app.
+     *
+     * @example
+     * mobilelocker.presentation.openByID(42)
      */
     openByID(id: number): void {
-        if (!isIOS()) throw new MobileLockerError('openByID() is only supported in the iOS app', GeneralErrorCode.ServerError)
-        void apiClient.get(getEndpoint('/open-presentation'), { params: { id } })
+        if (isIOS()) {
+            void apiClient.get(getEndpoint('/open-presentation'), {params: {id}})
+        } else {
+            window.open(`https://app.mobilelocker.com/v2/app/content/${id}/open`, '_blank')
+        }
     },
 
     /**
      * Open a presentation by its external CRM ID.
      *
-     * @remarks iOS app only. Throws in all other environments.
+     * In the iOS app, triggers native presentation navigation via the app bridge.
+     * In a browser, fetches all presentations, finds the match by external ID, then opens it.
+     *
      * @param externalID - The external identifier for the presentation (e.g. a Salesforce ID).
-     * @throws {@link MobileLockerError} if called outside the iOS app.
+     * @throws {@link MobileLockerError} if no presentation with the given external ID is found.
+     *
+     * @example
+     * await mobilelocker.presentation.openByExternalID('a0B1234567890')
      */
-    openByExternalID(externalID: string): void {
-        if (!isIOS()) throw new MobileLockerError('openByExternalID() is only supported in the iOS app', GeneralErrorCode.ServerError)
-        void apiClient.get(getEndpoint('/open-presentation'), { params: { external_id: externalID } })
+    async openByExternalID(externalID: string): Promise<void> {
+        if (isIOS()) {
+            void apiClient.get(getEndpoint('/open-presentation'), {params: {external_id: externalID}})
+        } else {
+            const all = await this.getAll()
+            const match = all.find(p => p.external_id === externalID)
+            if (!match) throw new MobileLockerError(`No presentation found with external ID: ${externalID}`, GeneralErrorCode.ServerError)
+            this.openByID(match.id)
+        }
     },
 
     /**
      * Open a presentation by its name.
      *
-     * @remarks iOS app only. Throws in all other environments.
+     * In the iOS app, triggers native presentation navigation via the app bridge.
+     * In a browser, fetches all presentations, finds the match by name, then opens it.
+     *
      * @param name - The presentation name (case-sensitive).
-     * @throws {@link MobileLockerError} if called outside the iOS app.
+     * @throws {@link MobileLockerError} if no presentation with the given name is found.
+     *
+     * @example
+     * await mobilelocker.presentation.openByName('Kazaamax Rebate Calculator Demo');
      */
-    openByName(name: string): void {
-        if (!isIOS()) throw new MobileLockerError('openByName() is only supported in the iOS app', GeneralErrorCode.ServerError)
-        void apiClient.get(getEndpoint('/open-presentation'), { params: { name } })
+    async openByName(name: string): Promise<void> {
+        if (isIOS()) {
+            void apiClient.get(getEndpoint('/open-presentation'), {params: {name: name}})
+        } else {
+            const all = await this.getAll()
+            const match = all.find(p => p.name === name)
+            if (!match) throw new MobileLockerError(`No presentation found with name: ${name}`, GeneralErrorCode.ServerError)
+            this.openByID(match.id)
+        }
     },
 
     /**
