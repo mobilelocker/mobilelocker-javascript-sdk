@@ -1,4 +1,4 @@
-import { apiClient, getEndpoint, isMobileLocker, isApp, userID, jwt, fallbackSessionId, fallbackSessionStartedAt } from '../env'
+import { apiClient, getEndpoint, isMobileLocker, isApp, userID, jwt, fallbackSessionId, fallbackSessionStartedAt, hitSessionReady, hitSessionNumericId } from '../env'
 import localforage from 'localforage'
 import { v4 as uuidv4 } from 'uuid'
 import { MobileLockerError, GeneralErrorCode } from '../errors'
@@ -32,7 +32,14 @@ async function _postEvent(
             event_at_ms: now,
         })
     } else {
-        await apiClient.post(getEndpoint('/events'), { ...event, event_at_ms: now })
+        await hitSessionReady
+        if (hitSessionNumericId !== null) {
+            await apiClient.post(`${jwt!.base_url}/api/sessions/${hitSessionNumericId}/events`, {
+                category, action, path: uri, data, event_at_ms: now,
+            })
+        } else {
+            await apiClient.post(getEndpoint('/events'), { ...event, event_at_ms: now })
+        }
     }
 }
 

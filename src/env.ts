@@ -101,7 +101,7 @@ interface MobileLockerJWT {
     user_id: number | null
     expires: number
     device: { id: number; uuid: string } | null
-    payload: { session_uuid?: string; session_started_at?: string }
+    payload: { session_uuid?: string; session_started_at?: string; hit_uuid?: string }
 }
 
 function readToken(): string | null {
@@ -216,3 +216,39 @@ export const fallbackSessionId = uuidv4()
 export const fallbackSessionStartedAt = new Date().toISOString()
 /** @internal */
 export const userID = jwt?.user_id ?? null
+
+// ── Shared-link hit session (CDN-hosted presentations opened via a shared link) ──
+
+/** @internal */
+export let hitSessionId: string | null = null
+/** @internal */
+export let hitSessionNumericId: number | null = null
+/** @internal */
+export let hitSessionStartedAt: string | null = null
+
+interface CreateSessionResponse {
+    id: number
+    uuid: string
+}
+
+async function createSessionForHit(): Promise<void> {
+    const hitUuid = jwt?.payload?.hit_uuid
+    if (!isCDN() || !jwt?.base_url || !hitUuid) return
+
+    try {
+        const { data } = await withRetry(() =>
+            apiClient.post<CreateSessionResponse>(`${jwt.base_url}/api/sessions`, {
+                hit_uuid: hitUuid,
+                live_mode: true,
+            }),
+        )
+        hitSessionId = data.uuid
+        hitSessionNumericId = data.id
+        hitSessionStartedAt = new Date().toISOString()
+    } catch (err) {
+        console.warn('[mobilelocker-sdk] Failed to create session for shared-link hit', err)
+    }
+}
+
+/** @internal Resolves once shared-link hit session creation has settled (or immediately if not applicable). */
+export const hitSessionReady: Promise<void> = createSessionForHit()

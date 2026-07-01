@@ -1,4 +1,4 @@
-import { apiClient, getEndpoint, isMobileLocker, withRetry } from '../env'
+import { apiClient, getEndpoint, isMobileLocker, withRetry, hitSessionId } from '../env'
 import { getLocalforageEvents } from './analytics'
 
 /** @category Analytics */
@@ -17,5 +17,13 @@ export const session = {
             return data
         }
         return getLocalforageEvents()
+    },
+
+    /**
+     * The session id created from the JWT's `hit_uuid` when the presentation was opened
+     * via a shared link on the CDN, or `null` if not applicable or not yet created.
+     */
+    get hitSessionId(): string | null {
+        return hitSessionId
     },
 }
