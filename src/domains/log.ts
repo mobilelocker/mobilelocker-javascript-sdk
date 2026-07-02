@@ -7,7 +7,7 @@ export type SDKLogDomain = 'analytics' | 'congresses' | 'contacts' | 'crm'
     | 'data' | 'database' | 'device' | 'log'
     | 'presentation' | 'scanner' | 'search' | 'session'
     | 'share' | 'storage' | 'ui' | 'user'
-    | 'custom'
+    | 'sdk'
 
 export interface SDKLogEntry {
     id: number
@@ -15,12 +15,12 @@ export interface SDKLogEntry {
     timestamp: string
     level: SDKLogLevel
     domain: SDKLogDomain
-    /** Full function name that wrote the entry, or `null` for custom entries. */
+    /** Full function name that wrote the entry, or `null` for sdk entries. */
     function: string | null
     message: string
-    /** How long the operation took in milliseconds, or `null` for custom entries. */
+    /** How long the operation took in milliseconds, or `null` for sdk entries. */
     durationMs: number | null
-    /** Number of retries before success, or `null` for custom entries. */
+    /** Number of retries before success, or `null` for sdk entries. */
     retryCount: number | null
     /** Arbitrary key/value metadata attached to the entry. */
     metadata: Record<string, unknown> | null
@@ -65,7 +65,7 @@ function _writeLog(level: SDKLogLevel, message: string, metadata?: Record<string
         id: ++_localLogId,
         timestamp: new Date().toISOString(),
         level,
-        domain: 'custom',
+        domain: 'sdk',
         function: null,
         message,
         durationMs: null,
