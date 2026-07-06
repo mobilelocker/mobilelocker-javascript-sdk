@@ -43,6 +43,8 @@ export interface Attendee {
     badge_id: string | null
     linkedin_url: string
     mobilelocker_url: string | null
+    /** MLI-1461: Signed S3 URL for the attendee's photo, or `null` if none exists. */
+    photo_url: string | null
     clearbit_id: string
     /** Decoded Clearbit person data, or `null` if unavailable. */
     clearbit_data: object | null
