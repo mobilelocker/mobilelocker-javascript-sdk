@@ -2,6 +2,8 @@ import { apiClient, getEndpoint, isIOS, withRetry } from '../env'
 import { mapToCRMError, unsupportedEnvironmentError } from '../errors'
 import type { Customer } from '../types/customer'
 import type { CRMAccount, CRMAddress, CRMContact, CRMLead, CRMUser } from '../types/crm'
+import type { Page } from '../types/page'
+import { pagedListAPI } from '../utils/page'
 import { withStatusBooleans, WithStatusBooleans } from '../utils/status'
 
 export type CRMRefreshMode = 'incremental' | 'full'
@@ -20,20 +22,63 @@ export interface CRMQueryResult {
     done: boolean
 }
 
+// Cursor list routes share one host contract (MLI-1718 / MLJS-26). Bound once per entity.
+const accountsList = pagedListAPI<CRMAccount>('/crm/accounts', mapToCRMError)
+const addressesList = pagedListAPI<CRMAddress>('/crm/addresses', mapToCRMError)
+const contactsList = pagedListAPI<CRMContact>('/crm/contacts', mapToCRMError)
+const leadsList = pagedListAPI<CRMLead>('/crm/leads', mapToCRMError)
+const usersList = pagedListAPI<CRMUser>('/crm/users', mapToCRMError)
+
 /** @category CRM */
 export const crm = {
     /**
-     * Get all CRM accounts synced for the current user.
+     * Get one page of CRM accounts (cursor envelope).
      *
-     * @remarks Full-table load. Prefer filtering via {@link crm.query} when the set is large.
-     * @returns CRM account records.
+     * Requires Mobile Locker iOS 5.5.0+. Prefer {@link crm.eachAccountsPage} when
+     * walking the full set, or filter with {@link crm.query} (SOQL) when possible.
+     * Do not reassemble every page into one array for large tables (MLJS-26).
+     *
+     * Host: `GET /mobilelocker/api/crm/accounts?limit=&cursor=`
+     * → `{ data, meta: { cursor: { next, count } } }` ([MLI-1718](https://mobilelocker.atlassian.net/browse/MLI-1718)).
+     * Same envelope for addresses, contacts, leads, and users.
+     *
+     * @param limit - Page size (**1…5000**).
+     * @param cursor - From previous `meta.cursor.next`. Omit for the first page.
+     * @returns {@link Page} of {@link CRMAccount} records.
+     * @throws {@link MobileLockerError} with code `InvalidArgument` when `limit` is out of range.
      * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
      */
-    async getAccounts(): Promise<CRMAccount[]> {
-        try {
-            const { data } = await withRetry(() => apiClient.get<CRMAccount[]>(getEndpoint('/crm/accounts')))
-            return data
-        } catch (err) { throw mapToCRMError(err) }
+    getAccountsPage(limit: number, cursor?: string): Promise<Page<CRMAccount>> {
+        return accountsList.getPage(limit, cursor)
+    },
+
+    /**
+     * Walk CRM accounts page by page without loading the full table into memory.
+     *
+     * Replaces the removed `getAccounts()` (MLJS-26). Advances only via
+     * `meta.cursor.next`; stops when `next === null`. Prefer {@link crm.query}
+     * for filtered access. Do **not** push chunks into a growing array unless
+     * the set is known to be small. Requires iOS 5.5.0+.
+     *
+     * @param pageSize - Page size passed to {@link crm.getAccountsPage} (**1…5000**).
+     * @param handler - Called once per non-empty page; may be async.
+     * @throws {@link MobileLockerError} when `pageSize` is out of range.
+     * @throws {@link MobileLockerCRMError} on network/server error.
+     *
+     * @example
+     * ```js
+     * await mobilelocker.crm.eachAccountsPage(500, (chunk) => {
+     *   for (const account of chunk) {
+     *     // handle one account — never accumulate the full table
+     *   }
+     * })
+     * ```
+     */
+    eachAccountsPage(
+        pageSize: number,
+        handler: (chunk: CRMAccount[]) => void | Promise<void>,
+    ): Promise<void> {
+        return accountsList.eachPage(pageSize, handler)
     },
 
     /**
@@ -51,17 +96,21 @@ export const crm = {
     },
 
     /**
-     * Get all CRM addresses synced for the current user.
-     *
-     * @remarks Full-table load. Prefer filtering via {@link crm.query} when the set is large.
-     * @returns CRM address records.
-     * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
+     * Get one page of CRM addresses. Same cursor envelope as {@link crm.getAccountsPage}
+     * (iOS 5.5.0+, limit **1…5000**). Prefer {@link crm.eachAddressesPage} or {@link crm.query}.
      */
-    async getAddresses(): Promise<CRMAddress[]> {
-        try {
-            const { data } = await withRetry(() => apiClient.get<CRMAddress[]>(getEndpoint('/crm/addresses')))
-            return data
-        } catch (err) { throw mapToCRMError(err) }
+    getAddressesPage(limit: number, cursor?: string): Promise<Page<CRMAddress>> {
+        return addressesList.getPage(limit, cursor)
+    },
+
+    /**
+     * Walk CRM addresses page by page (`meta.cursor.next` only). Replaces removed `getAddresses()`.
+     */
+    eachAddressesPage(
+        pageSize: number,
+        handler: (chunk: CRMAddress[]) => void | Promise<void>,
+    ): Promise<void> {
+        return addressesList.eachPage(pageSize, handler)
     },
 
     /**
@@ -79,17 +128,30 @@ export const crm = {
     },
 
     /**
-     * Get all CRM contacts synced for the current user.
-     *
-     * @remarks Full-table load. Prefer filtering via {@link crm.query} when the set is large.
-     * @returns CRM contact records.
-     * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
+     * Get one page of CRM contacts. Same cursor envelope as {@link crm.getAccountsPage}
+     * (iOS 5.5.0+, limit **1…5000**). Prefer {@link crm.eachContactsPage} or {@link crm.query}.
      */
-    async getContacts(): Promise<CRMContact[]> {
-        try {
-            const { data } = await withRetry(() => apiClient.get<CRMContact[]>(getEndpoint('/crm/contacts')))
-            return data
-        } catch (err) { throw mapToCRMError(err) }
+    getContactsPage(limit: number, cursor?: string): Promise<Page<CRMContact>> {
+        return contactsList.getPage(limit, cursor)
+    },
+
+    /**
+     * Walk CRM contacts page by page (`meta.cursor.next` only). Replaces removed `getContacts()`.
+     *
+     * @example
+     * ```js
+     * await mobilelocker.crm.eachContactsPage(500, (chunk) => {
+     *   for (const contact of chunk) {
+     *     // handle one contact
+     *   }
+     * })
+     * ```
+     */
+    eachContactsPage(
+        pageSize: number,
+        handler: (chunk: CRMContact[]) => void | Promise<void>,
+    ): Promise<void> {
+        return contactsList.eachPage(pageSize, handler)
     },
 
     /**
@@ -107,17 +169,21 @@ export const crm = {
     },
 
     /**
-     * Get all CRM leads synced for the current user.
-     *
-     * @remarks Full-table load. Prefer filtering via {@link crm.query} when the set is large.
-     * @returns CRM lead records.
-     * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
+     * Get one page of CRM leads. Same cursor envelope as {@link crm.getAccountsPage}
+     * (iOS 5.5.0+, limit **1…5000**). Prefer {@link crm.eachLeadsPage} or {@link crm.query}.
      */
-    async getLeads(): Promise<CRMLead[]> {
-        try {
-            const { data } = await withRetry(() => apiClient.get<CRMLead[]>(getEndpoint('/crm/leads')))
-            return data
-        } catch (err) { throw mapToCRMError(err) }
+    getLeadsPage(limit: number, cursor?: string): Promise<Page<CRMLead>> {
+        return leadsList.getPage(limit, cursor)
+    },
+
+    /**
+     * Walk CRM leads page by page (`meta.cursor.next` only). Replaces removed `getLeads()`.
+     */
+    eachLeadsPage(
+        pageSize: number,
+        handler: (chunk: CRMLead[]) => void | Promise<void>,
+    ): Promise<void> {
+        return leadsList.eachPage(pageSize, handler)
     },
 
     /**
@@ -135,17 +201,21 @@ export const crm = {
     },
 
     /**
-     * Get all CRM users synced for the current team.
-     *
-     * @remarks Full-table load. Prefer filtering via {@link crm.query} when the set is large.
-     * @returns CRM user records.
-     * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
+     * Get one page of CRM users. Same cursor envelope as {@link crm.getAccountsPage}
+     * (iOS 5.5.0+, limit **1…5000**). Prefer {@link crm.eachUsersPage} or {@link crm.query}.
      */
-    async getUsers(): Promise<CRMUser[]> {
-        try {
-            const { data } = await withRetry(() => apiClient.get<CRMUser[]>(getEndpoint('/crm/users')))
-            return data
-        } catch (err) { throw mapToCRMError(err) }
+    getUsersPage(limit: number, cursor?: string): Promise<Page<CRMUser>> {
+        return usersList.getPage(limit, cursor)
+    },
+
+    /**
+     * Walk CRM users page by page (`meta.cursor.next` only). Replaces removed `getUsers()`.
+     */
+    eachUsersPage(
+        pageSize: number,
+        handler: (chunk: CRMUser[]) => void | Promise<void>,
+    ): Promise<void> {
+        return usersList.eachPage(pageSize, handler)
     },
 
     /**
@@ -290,6 +360,8 @@ export const crm = {
 
     /**
      * Execute a SOQL query against the connected CRM.
+     *
+     * Prefer this over full offline walks when you need filtered CRM data.
      *
      * @param soql - A valid SOQL SELECT statement.
      * @param parameters - Optional named bind parameters referenced in the SOQL string.

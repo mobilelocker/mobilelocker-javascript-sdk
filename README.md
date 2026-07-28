@@ -96,7 +96,7 @@ const card = await mobilelocker.congresses.getBusinessCard(cardID)
 
 ### contacts
 
-Read the current user's contacts. Address books can exceed 100k contacts — there is **no** `getAll()` (MLJS-24). Prefer `eachPage` so only one page is in memory at a time. Use `getChunked` only when you need a single page.
+Read the current user's contacts. Address books can exceed 100k contacts — there is **no** `getAll()` (MLJS-24). Prefer `eachPage` so only one page is in memory at a time. Single pages use the host **cursor envelope** (**iOS 5.5.0+**, MLJS-27 / [MLI-1718](https://mobilelocker.atlassian.net/browse/MLI-1718)): `?limit=1…5000&cursor=` → `{ data, meta: { cursor: { next, count } } }`.
 
 ```js
 const contact = await mobilelocker.contacts.get(contactID)
@@ -108,21 +108,43 @@ await mobilelocker.contacts.eachPage(500, (chunk) => {
     }
 })
 
-// Single page when you already know minID + limit
-const page = await mobilelocker.contacts.getChunked(minID, 500)
+// Single page (limit 1…5000; optional cursor from meta.cursor.next)
+const page = await mobilelocker.contacts.getPage(500)
+if (page.meta.cursor.next) {
+    const next = await mobilelocker.contacts.getPage(500, page.meta.cursor.next)
+}
 ```
 
 ### crm
 
 Interact with the connected CRM (Salesforce, etc.).
 
+There is **no** full-table list API (MLJS-26). Prefer filtered SOQL via `crm.query`. For offline walks, use cursor paging (**iOS 5.5.0+**, same envelope as contacts / [MLI-1718](https://mobilelocker.atlassian.net/browse/MLI-1718)). Do not reassemble every page into one array for large tables.
+
 ```js
-// Fetch all records of a type
-const accounts  = await mobilelocker.crm.getAccounts()
-const addresses = await mobilelocker.crm.getAddresses()
-const contacts  = await mobilelocker.crm.getContacts()
-const leads     = await mobilelocker.crm.getLeads()
-const users     = await mobilelocker.crm.getUsers()
+// Prefer SOQL for filtered access
+const results = await mobilelocker.crm.query(
+    'SELECT Id, Name FROM Account WHERE Name = :name',
+    { name: 'Acme' },
+)
+// results.rows, results.totalSize, results.done
+
+// Offline walk — process each page; do not rebuild a full array (iOS 5.5.0+)
+await mobilelocker.crm.eachAccountsPage(500, (chunk) => {
+    for (const account of chunk) {
+        // handle one account
+    }
+})
+await mobilelocker.crm.eachAddressesPage(500, (chunk) => { /* ... */ })
+await mobilelocker.crm.eachContactsPage(500, (chunk) => { /* ... */ })
+await mobilelocker.crm.eachLeadsPage(500, (chunk) => { /* ... */ })
+await mobilelocker.crm.eachUsersPage(500, (chunk) => { /* ... */ })
+
+// Single page (limit 1…5000; optional cursor from meta.cursor.next)
+const page = await mobilelocker.crm.getAccountsPage(500)
+if (page.meta.cursor.next) {
+    const next = await mobilelocker.crm.getAccountsPage(500, page.meta.cursor.next)
+}
 
 // Fetch a single record by ID
 const account = await mobilelocker.crm.getAccount(accountID)
@@ -144,10 +166,8 @@ await mobilelocker.crm.clearCurrentCustomers()
 const { status, customers } = await mobilelocker.crm.openCustomerPicker()
 if (status === 'selected') console.log(customers)
 
-// Sync and query
-const { status } = await mobilelocker.crm.refresh({ mode: 'incremental' })  // or 'full'
-const results = await mobilelocker.crm.query('SELECT Id, Name FROM Account WHERE Name = :name', { name: 'Acme' })
-// results.rows, results.totalSize, results.done
+// Sync
+const { status: refreshStatus } = await mobilelocker.crm.refresh({ mode: 'incremental' })  // or 'full'
 ```
 
 ### data
@@ -449,7 +469,7 @@ import mobilelocker, {
 } from '@mobilelocker/javascript-sdk'
 
 try {
-    const accounts = await mobilelocker.crm.getAccounts()
+    const account = await mobilelocker.crm.getAccount(accountID)
 } catch (err) {
     if (err instanceof MobileLockerCRMError) {
         if (err.code === CRMErrorCode.AuthExpired) {
