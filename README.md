@@ -19,13 +19,50 @@ When running outside of a Mobile Locker environment (e.g. local development), mo
 
 ---
 
+## ⚠️ SDK 2.0 hard break — action required
+
+**SDK 2.0 is a deliberate hard break.** There is **no** dual-mode, **no** grace period, and **no** silent fallback that still dumps full contact or CRM tables.
+
+**Mobile Locker iOS 5.5.0 is shipping soon** and will be in the wild with matching host changes. Presentations still on SDK **1.x** APIs (or still calling removed full-list methods) will **break or fail** on 5.5.0 devices.
+
+### What you must do
+
+1. **Upgrade the package to `@mobilelocker/javascript-sdk` 2.0** (see [Installation](#installation)).
+2. **Search your presentation JS** for removed APIs and rewrite to the new contracts (checklist below).
+3. **Test on Mobile Locker iOS 5.5.0+** before relying on production fleets that receive the app update.
+
+| Removed / changed (1.x → 2.0) | Use instead |
+|-------------------------------|-------------|
+| `contacts.getAll()` | `contacts.eachPage(pageSize, handler)` or `contacts.getPage(limit, cursor?)` |
+| `contacts.getChunked(minID, limit)` | `contacts.getPage(limit, cursor?)` — response is a **cursor envelope**, not a bare array |
+| `crm.getAccounts()` / `getAddresses()` / `getContacts()` / `getLeads()` / `getUsers()` | Prefer `crm.query` (SOQL). Offline walk: `crm.eachAccountsPage` (etc.) or `crm.getAccountsPage` |
+| Advancing pages via `min` / `after` / last row `id` heuristics | Advance **only** with `page.meta.cursor.next` until it is `null` |
+| `storage.getAllForPresentation()` | `storage.getAll()` (current presentation) or `storage.getAllAcrossPresentations()` |
+| `StorageEntry` camelCase aliases (`teamID`, …) | Snake_case only (`team_id`, …) |
+
+**Host list contract (iOS 5.5.0+):**
+
+```
+GET …?limit=1…5000&cursor=
+→ { data, meta: { cursor: { next, count } } }
+```
+
+Do **not** reassemble every page into one in-memory array for large address books or CRM tables. Process each page in the handler.
+
+Full detail: [CHANGELOG 2.0.0](./CHANGELOG.md#200--unreleased).
+
+---
+
 ## Installation
 
 ```bash
-npm install @mobilelocker/javascript-sdk
-# or
-yarn add @mobilelocker/javascript-sdk
+npm install @mobilelocker/javascript-sdk@2
+# or pin the major:
+# npm install @mobilelocker/javascript-sdk@^2.0.0
+# yarn add @mobilelocker/javascript-sdk@^2.0.0
 ```
+
+Require **Mobile Locker iOS 5.5.0+** for contacts/CRM list walks and the cursor envelope. Older hosts no longer offer unbound full dumps for those routes.
 
 ---
 
@@ -96,7 +133,7 @@ const card = await mobilelocker.congresses.getBusinessCard(cardID)
 
 ### contacts
 
-Read the current user's contacts. Address books can exceed 100k contacts — there is **no** `getAll()` (MLJS-24). Prefer `eachPage` so only one page is in memory at a time. Single pages use the host **cursor envelope** (**iOS 5.5.0+**, MLJS-27 / [MLI-1718](https://mobilelocker.atlassian.net/browse/MLI-1718)): `?limit=1…5000&cursor=` → `{ data, meta: { cursor: { next, count } } }`.
+Read the current user's contacts. Address books can exceed 100k contacts — there is **no** `getAll()` and **no** `getChunked(min, limit)` (**SDK 2.0 hard break** / iOS **5.5.0+**). Prefer `eachPage` so only one page is in memory at a time. Single pages use the host **cursor envelope** (MLJS-27 / [MLI-1718](https://mobilelocker.atlassian.net/browse/MLI-1718)): `?limit=1…5000&cursor=` → `{ data, meta: { cursor: { next, count } } }`.
 
 ```js
 const contact = await mobilelocker.contacts.get(contactID)
@@ -119,7 +156,7 @@ if (page.meta.cursor.next) {
 
 Interact with the connected CRM (Salesforce, etc.).
 
-There is **no** full-table list API (MLJS-26). Prefer filtered SOQL via `crm.query`. For offline walks, use cursor paging (**iOS 5.5.0+**, same envelope as contacts / [MLI-1718](https://mobilelocker.atlassian.net/browse/MLI-1718)). Do not reassemble every page into one array for large tables.
+There is **no** full-table list API (**SDK 2.0 hard break** / MLJS-26). Prefer filtered SOQL via `crm.query`. For offline walks, use cursor paging (**iOS 5.5.0+**, same envelope as contacts / [MLI-1718](https://mobilelocker.atlassian.net/browse/MLI-1718)). Do not reassemble every page into one array for large tables.
 
 ```js
 // Prefer SOQL for filtered access

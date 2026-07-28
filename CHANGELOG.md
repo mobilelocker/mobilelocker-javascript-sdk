@@ -13,16 +13,33 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [2.0.0] — Unreleased
 
-Major release in progress (not published yet). Breaking changes below (MLJS-24, MLJS-25, MLJS-26, MLJS-27).
+### ⚠️ Hard break — adopt 2.0 before iOS 5.5.0 is widespread
 
-Host list contract for contacts + CRM (iOS **5.5.0+**, [MLI-1718](https://mobilelocker.atlassian.net/browse/MLI-1718)):
+This is a **major version hard break**, not a soft deprecation. Mobile Locker **iOS 5.5.0** ships the matching host changes and will be **in the wild soon**. Presentations that stay on SDK **1.x** (or keep calling removed full-list APIs) will fail on updated devices.
+
+**Integrators must:**
+
+1. Upgrade to **`@mobilelocker/javascript-sdk` 2.0**.
+2. Update presentation JavaScript to the new APIs (contacts/CRM paging, storage renames, etc.).
+3. Verify on **iOS 5.5.0+**. There is **no** dual-mode and **no** unbounded full-table dump fallback for contacts or CRM lists.
+
+| If your code still does this… | You must change to… |
+|-------------------------------|---------------------|
+| `contacts.getAll()` | `contacts.eachPage` / `getPage` |
+| `contacts.getChunked(min, limit)` + bare array | `contacts.getPage(limit, cursor?)` → `{ data, meta.cursor }` |
+| `crm.getAccounts()` (and other full CRM lists) | `crm.query` and/or `crm.each*Page` / `get*Page` |
+| Page advance via `min` / `after` / last `.id` | `meta.cursor.next` only (`null` = done) |
+| `storage.getAllForPresentation()` | `getAll` / `getAllAcrossPresentations` |
+| `StorageEntry` camelCase fields | snake_case only |
+
+Breaking changes in this release: **MLJS-24, MLJS-25, MLJS-26, MLJS-27**. Host list contract (iOS **5.5.0+**, [MLI-1718](https://mobilelocker.atlassian.net/browse/MLI-1718)):
 
 ```
 GET …?limit={1…5000}&cursor={token?}
 → { data, meta: { cursor: { next: string | null, count: number } } }
 ```
 
-Walks stop when `meta.cursor.next === null`. Intermediate `min` / `after` + bare-array list shapes from early MLI-1717 notes are **not** used.
+Walks stop when `meta.cursor.next === null`. Intermediate `min` / `after` + bare-array list shapes are **not** supported.
 
 ### Added
 
