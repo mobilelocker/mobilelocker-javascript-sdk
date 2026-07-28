@@ -9,7 +9,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
-> **Semver:** Publish as **2.0.0** (public API removal).
+---
+
+## [2.0.0] — Unreleased
+
+Major release in progress on `develop` (not published yet). Breaking API change below.
 
 ### Added
 
