@@ -1,20 +1,8 @@
 import { apiClient, getEndpoint, withRetry } from '../env'
-import { MobileLockerError, GeneralErrorCode } from '../errors'
+import { mapToMobileLockerError } from '../errors'
 import type { Event } from '../types/event'
 import type { Attendee } from '../types/attendee'
 import type { BusinessCard } from '../types/businessCard'
-import axios from 'axios'
-
-function toError(err: unknown): MobileLockerError {
-    if (err instanceof MobileLockerError) return err
-    if (axios.isAxiosError(err) && !err.response) {
-        return new MobileLockerError('No internet connection', GeneralErrorCode.NotConnected)
-    }
-    return new MobileLockerError(
-        axios.isAxiosError(err) ? ((err.response?.data as { message?: string })?.message ?? err.message) : String(err),
-        GeneralErrorCode.ServerError,
-    )
-}
 
 /** @category CRM */
 export const congresses = {
@@ -29,7 +17,7 @@ export const congresses = {
             const { data } = await withRetry(() => apiClient.get<Event[]>(getEndpoint('/leadretrieval/events')))
             return data
         } catch (err) {
-            throw toError(err)
+            throw mapToMobileLockerError(err)
         }
     },
 
@@ -45,7 +33,7 @@ export const congresses = {
             const { data } = await withRetry(() => apiClient.get<Event>(getEndpoint(`/leadretrieval/events/${eventID}`)))
             return data
         } catch (err) {
-            throw toError(err)
+            throw mapToMobileLockerError(err)
         }
     },
 
@@ -63,7 +51,7 @@ export const congresses = {
             )
             return data
         } catch (err) {
-            throw toError(err)
+            throw mapToMobileLockerError(err)
         }
     },
 
@@ -81,7 +69,7 @@ export const congresses = {
             )
             return data
         } catch (err) {
-            throw toError(err)
+            throw mapToMobileLockerError(err)
         }
     },
 
@@ -96,7 +84,7 @@ export const congresses = {
             const { data } = await withRetry(() => apiClient.get<BusinessCard[]>(getEndpoint('/cards')))
             return data
         } catch (err) {
-            throw toError(err)
+            throw mapToMobileLockerError(err)
         }
     },
 
@@ -114,7 +102,7 @@ export const congresses = {
             )
             return data
         } catch (err) {
-            throw toError(err)
+            throw mapToMobileLockerError(err)
         }
     },
 }

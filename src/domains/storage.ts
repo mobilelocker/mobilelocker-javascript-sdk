@@ -1,16 +1,15 @@
+import axios from 'axios'
+import localforage from 'localforage'
 import { apiClient, getEndpoint, isMobileLocker, isIOS, withRetry } from '../env'
-import { MobileLockerError, GeneralErrorCode } from '../errors'
+import { mapToMobileLockerError } from '../errors'
 import { analytics } from './analytics'
 import { device } from './device'
-import localforage from 'localforage'
-import axios from 'axios'
 
 export interface StorageEntry {
     /** The key name used to store and retrieve this entry. */
     name: string
     /** The stored value. Can be any JSON-serializable type. */
     data: unknown
-    // snake_case — canonical field names, matching the backend Laravel response
     team_id: number
     user_id: number
     presentation_id: number | null
@@ -18,18 +17,6 @@ export interface StorageEntry {
     created_at: string | null
     /** ISO 8601 timestamp of the most recent update. */
     updated_at: string | null
-    // MLJS-14: camelCase aliases included temporarily for backward compatibility
-    // with presentations that used the previous SDK shape. Remove in a future release.
-    /** @deprecated Use {@link team_id} */
-    teamID?: number
-    /** @deprecated Use {@link user_id} */
-    userID?: number
-    /** @deprecated Use {@link presentation_id} */
-    presentationID?: number
-    /** @deprecated Use {@link created_at} */
-    createdAt?: string
-    /** @deprecated Use {@link updated_at} */
-    updatedAt?: string
 }
 
 export interface StorageFilter {
@@ -45,9 +32,7 @@ export interface StorageFilter {
     limit?: number
 }
 
-// MLJS-14: Internal type for snake_case server responses.
-// The iOS server returns snake_case keys; _fromServer() maps them to the
-// camelCase StorageEntry interface consumed by SDK callers.
+// Internal type for snake_case server responses.
 interface ServerEntry {
     uuid: string
     id: number
@@ -63,38 +48,20 @@ interface ServerEntry {
 const LOCALFORAGE_KEY = 'user_storage'
 const MAX_ATTEMPTS = 3
 
-// MLJS-14: Stored in localforage (not in the server store) so it is per-origin.
+// Stored in localforage (not in the server store) so it is per-origin.
 // If the origin changes (e.g. port changes between app versions), migration re-runs
 // for the new origin — harmlessly, since there will be no old entries to find there.
 const MIGRATION_FLAG_KEY = 'ml_storage_migration_v1'
 
-function toError(err: unknown): MobileLockerError {
-    if (err instanceof MobileLockerError) return err
-    if (axios.isAxiosError(err) && !err.response) {
-        return new MobileLockerError('No internet connection', GeneralErrorCode.NotConnected)
-    }
-    return new MobileLockerError(String(err), GeneralErrorCode.ServerError)
-}
-
-// MLJS-14: Maps a snake_case server entry to StorageEntry.
-// Both snake_case (canonical) and camelCase (deprecated aliases) are populated
-// during the transitional period so existing presentations reading either key style continue to work.
 function _fromServer(e: ServerEntry): StorageEntry {
     return {
         name: e.name,
         data: e.data,
-        // snake_case — canonical
         team_id: e.team_id,
         user_id: e.user_id,
         presentation_id: e.presentation_id,
         created_at: e.created_at,
         updated_at: e.updated_at,
-        // camelCase — deprecated aliases
-        teamID: e.team_id,
-        userID: e.user_id,
-        presentationID: e.presentation_id ?? 0,
-        createdAt: e.created_at ?? '',
-        updatedAt: e.updated_at ?? '',
     }
 }
 
@@ -102,7 +69,7 @@ async function _localGet(): Promise<StorageEntry[]> {
     return (await localforage.getItem<StorageEntry[]>(LOCALFORAGE_KEY)) ?? []
 }
 
-// MLJS-14: Cached version check — resolved once per page load so every save/delete
+// Cached version check — resolved once per page load so every save/delete
 // doesn't hit the /device endpoint. Returns true only on iOS 5.3.0+, which introduced
 // the SQLite-backed POST/PUT/DELETE routes (MLI-1387).
 let _sqliteRoutesAvailablePromise: Promise<boolean> | null = null
@@ -116,11 +83,11 @@ function _hasSQLiteRoutes(): Promise<boolean> {
     return _sqliteRoutesAvailablePromise
 }
 
-// MLJS-14: Migration state. Module-level so migration runs at most once per page load
+// Migration state. Module-level so migration runs at most once per page load
 // regardless of how many storage calls fire simultaneously on first access.
 let _migrationPromise: Promise<void> | null = null
 
-// MLJS-14: Ensures localStorage → SQLite migration has run before any iOS read or write.
+// Ensures localStorage → SQLite migration has run before any iOS read or write.
 // Only applicable on iOS where the port-collision localStorage problem exists.
 function _ensureMigrated(): Promise<void> {
     if (!isIOS()) return Promise.resolve()
@@ -130,10 +97,6 @@ function _ensureMigrated(): Promise<void> {
     return _migrationPromise
 }
 
-// MLJS-14: One-time migration of localStorage entries into the iOS SQLite store.
-// Reads all entries from localforage, POSTs each to the server, removes them
-// from localforage on success, then stores a migration flag so this only runs once.
-// Failure is non-fatal — normal storage operations proceed regardless.
 // Shared capturedata save path used by pre-5.3.0 iOS and CDN/Electron.
 // Posts the event then retries get() until the backend has processed it.
 async function _saveViaCapturedata(name: string, data: unknown): Promise<StorageEntry> {
@@ -175,10 +138,50 @@ async function _runMigration(): Promise<void> {
     }
 }
 
+// Hosts that implement GET …/item?name= must return HTTP 200 with a JSON body of
+// either the entry object or `null` (missing key). A 404 means the route is absent
+// (older apps) — we fall back to listing current-presentation entries once, then
+// cache that the item route is unavailable for the rest of the page load.
+let _storageItemRouteAvailable: boolean | null = null
+
+/**
+ * Single-entry read: prefer GET …/item?name= (MLJS-25).
+ * Falls back to listing the current presentation when the host lacks /item.
+ */
+async function _getByNameFromServer(name: string): Promise<StorageEntry | null> {
+    if (_storageItemRouteAvailable !== false) {
+        try {
+            const { data } = await withRetry(() =>
+                apiClient.get<ServerEntry | null>(getEndpoint('/user/user-storage-entries/item'), {
+                    params: { name },
+                }),
+            )
+            _storageItemRouteAvailable = true
+            return data ? _fromServer(data) : null
+        } catch (err) {
+            if (axios.isAxiosError(err) && err.response?.status === 404 && _storageItemRouteAvailable !== true) {
+                _storageItemRouteAvailable = false
+            } else {
+                throw err
+            }
+        }
+    }
+
+    const { data } = await withRetry(() =>
+        apiClient.get<ServerEntry[]>(getEndpoint('/user/user-storage-entries/current-presentation')),
+    )
+    const match = data.find(e => e.name === name)
+    return match ? _fromServer(match) : null
+}
+
 /** @category Storage */
 export const storage = {
     /**
      * Get a single storage entry by name for the current presentation and user.
+     *
+     * On Mobile Locker app hosts that implement
+     * `GET /user/user-storage-entries/item?name=`, this is a single-key read.
+     * Older hosts fall back to listing current-presentation entries.
      *
      * @param name - The key name of the entry to retrieve.
      * @returns The matching {@link StorageEntry}, or `null` if not found.
@@ -187,12 +190,12 @@ export const storage = {
     async get(name: string): Promise<StorageEntry | null> {
         try {
             if (isMobileLocker()) {
-                const entries = await storage.getAll()
-                return entries.find(e => e.name === name) ?? null
+                await _ensureMigrated()
+                return await _getByNameFromServer(name)
             }
             const all = await _localGet()
             return all.find(e => e.name === name) ?? null
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToMobileLockerError(err) }
     },
 
     /**
@@ -211,22 +214,25 @@ export const storage = {
                 return data.map(_fromServer)
             }
             return _localGet()
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToMobileLockerError(err) }
     },
 
     /**
-     * Get all storage entries for the current user across all presentations.
+     * Get all storage entries for the current user across every presentation.
+     *
+     * @remarks Previously misnamed `getAllForPresentation` (that name hit this same
+     * unrestricted list endpoint). Use {@link getAll} for the current presentation only.
      *
      * @returns Array of {@link StorageEntry} objects.
      * @throws {@link MobileLockerError} on network failure or server error.
      */
-    async getAllForPresentation(): Promise<StorageEntry[]> {
+    async getAllAcrossPresentations(): Promise<StorageEntry[]> {
         try {
             const { data } = await withRetry(() =>
                 apiClient.get<ServerEntry[]>(getEndpoint('/user/user-storage-entries')),
             )
             return data.map(_fromServer)
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToMobileLockerError(err) }
     },
 
     /**
@@ -242,7 +248,7 @@ export const storage = {
                 apiClient.get<ServerEntry[]>(getEndpoint(`/user/user-storage-entries/presentations/${presentationID}`)),
             )
             return data.map(_fromServer)
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToMobileLockerError(err) }
     },
 
     /**
@@ -270,7 +276,7 @@ export const storage = {
             if (filter?.since) entries = entries.filter(e => (e.updated_at ?? '') >= filter.since!)
             if (filter?.until) entries = entries.filter(e => (e.updated_at ?? '') <= filter.until!)
             return entries.slice(0, filter?.limit ?? 100)
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToMobileLockerError(err) }
     },
 
     /**
@@ -297,7 +303,7 @@ export const storage = {
                 e.name.toLowerCase().includes(lower) ||
                 JSON.stringify(e.data).toLowerCase().includes(lower),
             )
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToMobileLockerError(err) }
     },
 
     /**
@@ -319,7 +325,7 @@ export const storage = {
             if (isIOS()) {
                 await _ensureMigrated()
                 if (await _hasSQLiteRoutes()) {
-                    // MLJS-14: iOS 5.3.0+ — POST directly to the SQLite-backed route.
+                    // iOS 5.3.0+ — POST directly to the SQLite-backed route.
                     const { data: raw } = await withRetry(() =>
                         apiClient.post<ServerEntry>(getEndpoint('/user/user-storage-entries'), { name, data }),
                     )
@@ -336,7 +342,7 @@ export const storage = {
             const idx = all.findIndex(e => e.name === name)
             let entry: StorageEntry
             if (idx !== -1) {
-                all[idx] = { ...all[idx], data, updatedAt: now }
+                all[idx] = { ...all[idx], data, updated_at: now }
                 entry = all[idx]
             } else {
                 entry = { name, data, team_id: 0, user_id: 0, presentation_id: 0, created_at: now, updated_at: now }
@@ -344,7 +350,7 @@ export const storage = {
             }
             await localforage.setItem(LOCALFORAGE_KEY, all)
             return entry
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToMobileLockerError(err) }
     },
 
     /**
@@ -356,8 +362,7 @@ export const storage = {
     async delete(name: string): Promise<void> {
         try {
             if (isIOS()) {
-                // MLJS-14: Always post the capturedata event for backend audit trail.
-
+                // Always post the capturedata event for backend audit trail.
                 await analytics._post('user_storage', 'delete', name, {}, 'capturedata')
                 if (await _hasSQLiteRoutes()) {
                     // iOS 5.3.0+ — also delete the local SQLite record immediately so the
@@ -367,13 +372,12 @@ export const storage = {
                 return
             }
             if (isMobileLocker()) {
-
                 await analytics._post('user_storage', 'delete', name, {}, 'capturedata')
                 return
             }
             const all = await _localGet()
             await localforage.setItem(LOCALFORAGE_KEY, all.filter(e => e.name !== name))
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToMobileLockerError(err) }
     },
 
     /**

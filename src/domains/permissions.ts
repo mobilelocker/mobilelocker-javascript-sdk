@@ -1,6 +1,5 @@
 import { apiClient, getEndpoint, isIOS, withRetry } from '../env'
-import { MobileLockerError, GeneralErrorCode } from '../errors'
-import axios from 'axios'
+import { mapToMobileLockerError } from '../errors'
 
 export type PermissionStatus =
     | 'authorized' | 'authorized_always' | 'authorized_when_in_use'
@@ -22,15 +21,14 @@ export interface BiometricResult {
 const NOT_DETERMINED: PermissionResult = { status: 'not_determined', granted: false }
 const BIOMETRIC_UNAVAILABLE: BiometricResult = { available: false, biometric_type: 'unknown', error: null }
 
-function toError(err: unknown): MobileLockerError {
-    if (err instanceof MobileLockerError) return err
-    if (axios.isAxiosError(err) && !err.response) {
-        return new MobileLockerError('No internet connection', GeneralErrorCode.NotConnected)
+async function fetchPermission(path: string): Promise<PermissionResult> {
+    if (!isIOS()) return NOT_DETERMINED
+    try {
+        const { data } = await withRetry(() => apiClient.get<PermissionResult>(getEndpoint(path)))
+        return data
+    } catch (err) {
+        throw mapToMobileLockerError(err)
     }
-    return new MobileLockerError(
-        axios.isAxiosError(err) ? ((err.response?.data as { message?: string })?.message ?? err.message) : String(err),
-        GeneralErrorCode.ServerError,
-    )
 }
 
 /** @category Device */
@@ -42,11 +40,7 @@ export const permissions = {
      * @throws {@link MobileLockerError} on network failure or server error.
      */
     async camera(): Promise<PermissionResult> {
-        if (!isIOS()) return NOT_DETERMINED
-        try {
-            const { data } = await withRetry(() => apiClient.get<PermissionResult>(getEndpoint('/permissions/camera')))
-            return data
-        } catch (err) { throw toError(err) }
+        return fetchPermission('/permissions/camera')
     },
 
     /**
@@ -56,11 +50,7 @@ export const permissions = {
      * @throws {@link MobileLockerError} on network failure or server error.
      */
     async microphone(): Promise<PermissionResult> {
-        if (!isIOS()) return NOT_DETERMINED
-        try {
-            const { data } = await withRetry(() => apiClient.get<PermissionResult>(getEndpoint('/permissions/microphone')))
-            return data
-        } catch (err) { throw toError(err) }
+        return fetchPermission('/permissions/microphone')
     },
 
     /**
@@ -70,11 +60,7 @@ export const permissions = {
      * @throws {@link MobileLockerError} on network failure or server error.
      */
     async photoLibrary(): Promise<PermissionResult> {
-        if (!isIOS()) return NOT_DETERMINED
-        try {
-            const { data } = await withRetry(() => apiClient.get<PermissionResult>(getEndpoint('/permissions/photo-library')))
-            return data
-        } catch (err) { throw toError(err) }
+        return fetchPermission('/permissions/photo-library')
     },
 
     /**
@@ -84,11 +70,7 @@ export const permissions = {
      * @throws {@link MobileLockerError} on network failure or server error.
      */
     async location(): Promise<PermissionResult> {
-        if (!isIOS()) return NOT_DETERMINED
-        try {
-            const { data } = await withRetry(() => apiClient.get<PermissionResult>(getEndpoint('/permissions/location')))
-            return data
-        } catch (err) { throw toError(err) }
+        return fetchPermission('/permissions/location')
     },
 
     /**
@@ -98,11 +80,7 @@ export const permissions = {
      * @throws {@link MobileLockerError} on network failure or server error.
      */
     async bluetooth(): Promise<PermissionResult> {
-        if (!isIOS()) return NOT_DETERMINED
-        try {
-            const { data } = await withRetry(() => apiClient.get<PermissionResult>(getEndpoint('/permissions/bluetooth')))
-            return data
-        } catch (err) { throw toError(err) }
+        return fetchPermission('/permissions/bluetooth')
     },
 
     /**
@@ -116,6 +94,8 @@ export const permissions = {
         try {
             const { data } = await withRetry(() => apiClient.get<BiometricResult>(getEndpoint('/permissions/biometric')))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) {
+            throw mapToMobileLockerError(err)
+        }
     },
 }

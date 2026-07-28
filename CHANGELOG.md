@@ -13,11 +13,26 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [2.0.0] — Unreleased
 
-Major release in progress on `develop` (not published yet). Breaking API change below.
+Major release in progress (not published yet). Breaking changes below (MLJS-24, MLJS-25).
 
 ### Added
 
 - **`contacts.eachPage(pageSize, handler)`** (MLJS-24) — walks the address book via `getChunked` without encouraging a full in-memory rebuild. Process each page in the handler.
+- **`storage.getAllAcrossPresentations()`** (MLJS-25) — correctly named replacement for the misnamed full-user list API (see Removed).
+- **Typed CRM models** (MLJS-25) — `CRMAccount`, `CRMAddress`, `CRMContact`, `CRMLead`, `CRMUser` replace `unknown` on CRM list/get helpers (shapes match iOS `toJSON()`).
+- **`isAndroid()`** (MLJS-25) — exported on the public API next to `isIOS` / `isElectron`.
+- **General error codes** (MLJS-25) — `InvalidArgument`, `UnsupportedEnvironment`, `NotFound`.
+- Domain errors now **extend `MobileLockerError`** so `instanceof MobileLockerError` matches CRM / database / HTTP failures.
+- Shared error mappers: `mapToMobileLockerError`, `mapToCRMError`, `mapToDatabaseError`.
+- Package `exports` now includes a `types` condition pointing at `dist/index.d.ts`.
+- **`storage.get(name)`** prefers `GET /user/user-storage-entries/item?name=` (single-key host route; iOS MLJS-25) and falls back to listing current-presentation entries on older hosts.
+
+### Changed
+
+- Validation and platform-gate failures use `InvalidArgument` / `UnsupportedEnvironment` instead of `ServerError`.
+- Presentation not-found paths use `NotFound`.
+- CRM full-list helpers remain available but are documented as full-table loads; prefer `crm.query` for large sets.
+- `SDKLogDomain` includes `http`, `network`, `permissions`, and `localforage`.
 
 ### Removed
 
@@ -38,6 +53,17 @@ Major release in progress on `develop` (not published yet). Breaking API change 
   Low-level paging remains available as `contacts.getChunked(minID, limit)` when you need a single page.
 
   Native hosts can remove the unbound full-dump branch of `GET /mobilelocker/api/user-contacts` after presentations adopt this release.
+
+- **`storage.getAllForPresentation()`** (MLJS-25) — **breaking rename.** That method hit the unrestricted user storage list (all presentations), not “for the current presentation.” Use:
+  - `storage.getAll()` — current presentation
+  - `storage.getAllAcrossPresentations()` — all presentations for the user
+  - `storage.getForPresentation(id)` — one presentation by id
+
+- **`StorageEntry` camelCase aliases** (MLJS-25) — **breaking.** `teamID`, `userID`, `presentationID`, `createdAt`, `updatedAt` removed. Use snake_case only: `team_id`, `user_id`, `presentation_id`, `created_at`, `updated_at`.
+
+### Known risks (not changed in 2.0)
+
+- `crm.getAccounts` / `getContacts` / `getLeads` / etc. still load full synced tables (same class of memory risk as the old contacts dump for very large CRM sets). Prefer SOQL via `crm.query` when possible. Dedicated paging may land in a later release.
 
 ---
 

@@ -1,5 +1,5 @@
 import { apiClient, getEndpoint, isIOS, withRetry } from '../env'
-import { MobileLockerError, GeneralErrorCode } from '../errors'
+import { unsupportedEnvironmentError } from '../errors'
 import type { Attendee } from '../types/attendee'
 import type { BusinessCard } from '../types/businessCard'
 import { withStatusBooleans, WithStatusBooleans } from '../utils/status'
@@ -32,7 +32,7 @@ export const scanner = {
      */
     async scanBusinessCard(eventID?: number): Promise<ScanResult> {
         if (!isIOS()) {
-            throw new MobileLockerError('scanBusinessCard() is only supported in the iOS app', GeneralErrorCode.ServerError)
+            throw unsupportedEnvironmentError('scanBusinessCard()')
         }
         const { data } = await withRetry(() =>
             apiClient.post<ScanResult>(getEndpoint('/open-scanner'), eventID !== undefined ? { event_id: eventID } : {}),
@@ -54,7 +54,7 @@ export const scanner = {
      */
     async scanBadge(eventID: number): Promise<ScanResult> {
         if (!isIOS()) {
-            throw new MobileLockerError('scanBadge() is only supported in the iOS app', GeneralErrorCode.ServerError)
+            throw unsupportedEnvironmentError('scanBadge()')
         }
         const { data } = await withRetry(() =>
             apiClient.post<ScanResult>(getEndpoint('/leadretrieval/open-badge-scanner'), { event_id: eventID }),

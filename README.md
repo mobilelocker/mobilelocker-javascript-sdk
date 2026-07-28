@@ -6,15 +6,16 @@ The official JavaScript SDK for building interactive presentations and custom fe
 
 This SDK gives IVA developers programmatic access to the Mobile Locker platform from within a presentation — including user data, CRM records, analytics, device capabilities, storage, and more.
 
-The SDK works in two environments:
+The SDK works in these environments:
 
 | Environment      | Description                                                                     |
 |------------------|---------------------------------------------------------------------------------|
 | **iOS/iPadOS**   | Running inside the Mobile Locker iOS app (`isIOS() === true`)                   |
+| **Android**      | Running inside the Mobile Locker Android app (`isAndroid() === true`)           |
 | **Electron**     | Running inside the Mobile Locker Windows app (`isElectron() === true`)          |
 | **CDN**          | Loaded as part of a CDN-hosted presentation (`isCDN() === true`)                |
 
-When running outside of either environment (e.g. local development), most SDK calls are silently no-ops or return sensible local fallbacks. No errors are thrown — so you can develop locally without a live Mobile Locker context.
+When running outside of a Mobile Locker environment (e.g. local development), most SDK calls are silently no-ops or return sensible local fallbacks so you can develop without a live host.
 
 ---
 
@@ -57,8 +58,9 @@ Use these helpers to branch behavior based on where your code is running:
 import mobilelocker from '@mobilelocker/javascript-sdk'
 
 mobilelocker.isMobileLocker()  // true in any app or CDN context
-mobilelocker.isApp()           // true in the iOS app or Electron (Windows) app
+mobilelocker.isApp()           // true in iOS, Android, or Electron
 mobilelocker.isIOS()           // true specifically in the iOS or iPadOS app
+mobilelocker.isAndroid()       // true specifically in the Android app
 mobilelocker.isElectron()      // true in the Electron (Windows) app
 mobilelocker.isCDN()           // true when served from a CDN presentation URL
 ```
@@ -75,18 +77,21 @@ Track custom events within a presentation.
 
 ```js
 mobilelocker.analytics.logEvent(category, action, uri, data)
-mobilelocker.analytics.trackPageView(uri)
+// optional: data payload and internal method name
+mobilelocker.analytics.logEvent('product', 'view', '/slides/overview', { productId: 42 })
 ```
 
 ### congresses
 
-Access lead retrieval events and attendees (badge/card scanning).
+Access lead retrieval events, attendees, and business cards (badge/card scanning).
 
 ```js
 const events = await mobilelocker.congresses.list()
+const event = await mobilelocker.congresses.get(eventID)
 const attendees = await mobilelocker.congresses.getAttendees(eventID)
-const businessCards = await mobilelocker.congresses.getBusinessCards(eventID)
-await mobilelocker.congresses.submitLead(eventID, attendeeID, data)
+const attendee = await mobilelocker.congresses.getAttendee(attendeeID)
+const businessCards = await mobilelocker.congresses.getBusinessCards()
+const card = await mobilelocker.congresses.getBusinessCard(cardID)
 ```
 
 ### contacts
@@ -210,11 +215,14 @@ const description = await mobilelocker.database.describe('products.sqlite', 'pro
 
 ### device
 
-Read device and app metadata (iOS app only).
+Read device and app metadata (native app).
 
 ```js
-const info = await mobilelocker.device.getInfo()
+const info = await mobilelocker.device.get()
 // info.app.version, info.os.name, info.hardware.model, info.orientation, etc.
+if (await mobilelocker.device.isAtLeastVersion('5.3.0')) {
+  // feature gated on app version
+}
 ```
 
 ### http
@@ -249,10 +257,6 @@ const results = await mobilelocker.log.searchSdkLogs('timeout', { domain: 'datab
 // Session mode (synchronous)
 mobilelocker.log.liveMode()      // activate live session recording
 mobilelocker.log.practiceMode()  // deactivate (practice mode)
-
-// Manage log entries (async)
-await mobilelocker.log.deleteSdkLog(id)
-await mobilelocker.log.clearSdkLogs()
 ```
 
 ### localforage
@@ -376,12 +380,14 @@ mobilelocker.share.email(
 
 ### storage
 
-Persist arbitrary data tied to the current presentation/user context.
+Persist arbitrary data tied to the current presentation/user context. Field names are snake_case (`team_id`, `created_at`, …).
 
 ```js
-await mobilelocker.storage.set('scan-results', {leads: [...]})
-const entry = await mobilelocker.storage.get('scan-results')
-const entries = await mobilelocker.storage.getAll({name: 'scan-results'})
+await mobilelocker.storage.save('scan-results', { leads: [...] })
+const entry = await mobilelocker.storage.get('scan-results')       // single key
+const entries = await mobilelocker.storage.getAll()                // current presentation
+const all = await mobilelocker.storage.getAllAcrossPresentations() // all presentations for user
+const filtered = await mobilelocker.storage.query({ name: 'scan-results', limit: 10 })
 await mobilelocker.storage.delete('scan-results')
 ```
 
@@ -399,7 +405,6 @@ const result = await mobilelocker.ui.openVideo('/files/demo.mp4', {
 // result.status — 'completed' | 'dismissed' | 'failed'
 
 mobilelocker.ui.showToolbar()   // iOS app only
-mobilelocker.ui.hideToolbar()   // iOS app only
 ```
 
 ### user

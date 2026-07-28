@@ -1,5 +1,5 @@
 import { isMobileLocker } from '../env'
-import { MobileLockerError, GeneralErrorCode } from '../errors'
+import { invalidArgumentError } from '../errors'
 import { analytics } from './analytics'
 
 export interface ShareRecipient {
@@ -35,10 +35,10 @@ export const share = {
         sendReminders = true,
     ): void {
         if (!Array.isArray(recipients) || recipients.length === 0) {
-            throw new MobileLockerError('At least one recipient is required', GeneralErrorCode.ServerError)
+            throw invalidArgumentError('At least one recipient is required')
         }
         for (const r of recipients) {
-            if (!r.email) throw new MobileLockerError('Each recipient must have an email', GeneralErrorCode.ServerError)
+            if (!r.email) throw invalidArgumentError('Each recipient must have an email')
         }
         if (!isMobileLocker()) return
 

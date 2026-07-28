@@ -1,26 +1,14 @@
 import {apiClient, getEndpoint, isIOS, withRetry} from '../env'
-import {MobileLockerError, GeneralErrorCode} from '../errors'
+import {MobileLockerError, GeneralErrorCode, mapToMobileLockerError, unsupportedEnvironmentError} from '../errors'
 import type {Presentation} from '../types/presentation'
 import {analytics} from './analytics'
 import {withStatusBooleans, WithStatusBooleans} from '../utils/status'
-import axios from 'axios'
 
 export type DownloadStatus = 'queued' | 'already_installed' | 'not_available' | 'not_permitted'
 
 const DOWNLOAD_STATUSES = ['queued', 'already_installed', 'not_available', 'not_permitted'] as const
 
 export type DownloadResult = WithStatusBooleans<{ status: DownloadStatus }>
-
-function toError(err: unknown): MobileLockerError {
-    if (err instanceof MobileLockerError) return err
-    if (axios.isAxiosError(err) && !err.response) {
-        return new MobileLockerError('No internet connection', GeneralErrorCode.NotConnected)
-    }
-    return new MobileLockerError(
-        axios.isAxiosError(err) ? ((err.response?.data as { message?: string })?.message ?? err.message) : String(err),
-        GeneralErrorCode.ServerError,
-    )
-}
 
 /** @category Data */
 export const presentation = {
@@ -35,7 +23,7 @@ export const presentation = {
             const {data} = await withRetry(() => apiClient.get<Presentation>(getEndpoint('/presentation')))
             return data
         } catch (err) {
-            throw toError(err)
+            throw mapToMobileLockerError(err)
         }
     },
 
@@ -50,7 +38,7 @@ export const presentation = {
             const {data} = await withRetry(() => apiClient.get<unknown[]>(getEndpoint('/presentation/events')))
             return data
         } catch (err) {
-            throw toError(err)
+            throw mapToMobileLockerError(err)
         }
     },
 
@@ -90,7 +78,7 @@ export const presentation = {
             const {data} = await withRetry(() => apiClient.get<Presentation[]>(getEndpoint('/presentations')))
             return data
         } catch (err) {
-            throw toError(err)
+            throw mapToMobileLockerError(err)
         }
     },
 
@@ -108,7 +96,7 @@ export const presentation = {
             )
             return data
         } catch (err) {
-            throw toError(err)
+            throw mapToMobileLockerError(err)
         }
     },
 
@@ -126,7 +114,7 @@ export const presentation = {
             )
             return data
         } catch (err) {
-            throw toError(err)
+            throw mapToMobileLockerError(err)
         }
     },
 
@@ -141,7 +129,7 @@ export const presentation = {
             const {data} = await withRetry(() => apiClient.post<Presentation[]>(getEndpoint('/presentations/refresh')))
             return data
         } catch (err) {
-            throw toError(err)
+            throw mapToMobileLockerError(err)
         }
     },
 
@@ -157,7 +145,7 @@ export const presentation = {
             const {data} = await apiClient.post<{ status: DownloadStatus }>(getEndpoint('/presentation/download'), {id})
             return withStatusBooleans(data, DOWNLOAD_STATUSES)
         } catch (err) {
-            throw toError(err)
+            throw mapToMobileLockerError(err)
         }
     },
 
@@ -198,7 +186,7 @@ export const presentation = {
         } else {
             const all = await this.getAll()
             const match = all.find(p => p.external_id === externalID)
-            if (!match) throw new MobileLockerError(`No presentation found with external ID: ${externalID}`, GeneralErrorCode.ServerError)
+            if (!match) throw new MobileLockerError(`No presentation found with external ID: ${externalID}`, GeneralErrorCode.NotFound)
             this.openByID(match.id)
         }
     },
@@ -221,7 +209,7 @@ export const presentation = {
         } else {
             const all = await this.getAll()
             const match = all.find(p => p.name === name)
-            if (!match) throw new MobileLockerError(`No presentation found with name: ${name}`, GeneralErrorCode.ServerError)
+            if (!match) throw new MobileLockerError(`No presentation found with name: ${name}`, GeneralErrorCode.NotFound)
             this.openByID(match.id)
         }
     },
@@ -233,7 +221,7 @@ export const presentation = {
      * @throws {@link MobileLockerError} if called outside the iOS app.
      */
     openPicker(): void {
-        if (!isIOS()) throw new MobileLockerError('openPicker() is only supported in the iOS app', GeneralErrorCode.ServerError)
+        if (!isIOS()) throw unsupportedEnvironmentError('openPicker()')
         void apiClient.get(getEndpoint('/open-presentation-picker'))
     },
 }

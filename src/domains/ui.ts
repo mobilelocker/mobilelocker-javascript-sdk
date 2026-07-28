@@ -1,5 +1,5 @@
 import { apiClient, getEndpoint, isApp, isIOS, withRetry } from '../env'
-import { MobileLockerError, GeneralErrorCode } from '../errors'
+import { unsupportedEnvironmentError } from '../errors'
 import { analytics } from './analytics'
 import { withStatusBooleans, WithStatusBooleans } from '../utils/status'
 
@@ -74,7 +74,7 @@ export const ui = {
      */
     showToolbar(): void {
         if (!isIOS()) {
-            throw new MobileLockerError('showToolbar() is only supported in the iOS app', GeneralErrorCode.ServerError)
+            throw unsupportedEnvironmentError('showToolbar()')
         }
         void apiClient.post(getEndpoint('/menu/show'))
     },

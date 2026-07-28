@@ -1,3 +1,5 @@
+import axios from 'axios'
+
 /**
  * Error codes shared across all SDK domains.
  * Use these as named constants rather than raw strings.
@@ -7,11 +9,17 @@
  */
 export const GeneralErrorCode = {
     /** The device has no internet connection. */
-    NotConnected:   'not_connected',
+    NotConnected:           'not_connected',
     /** The Mobile Locker server or an upstream API returned an unexpected error. */
-    ServerError:    'server_error',
+    ServerError:            'server_error',
     /** The request exceeded the configured timeout. */
-    RequestTimeout: 'request_timeout',
+    RequestTimeout:         'request_timeout',
+    /** A caller-supplied argument failed validation. */
+    InvalidArgument:        'invalid_argument',
+    /** The method is not supported in the current environment (e.g. iOS-only API in browser). */
+    UnsupportedEnvironment: 'unsupported_environment',
+    /** The requested resource was not found. */
+    NotFound:               'not_found',
 } as const
 export type GeneralErrorCode = typeof GeneralErrorCode[keyof typeof GeneralErrorCode]
 
@@ -54,7 +62,9 @@ export const HTTPErrorCode = {
 export type HTTPErrorCode = typeof HTTPErrorCode[keyof typeof HTTPErrorCode]
 
 /**
- * Base error class thrown by SDK methods when no domain-specific error applies.
+ * Base error class thrown by SDK methods.
+ *
+ * Domain-specific errors extend this class so `instanceof MobileLockerError` matches all of them.
  *
  * @example
  * try {
@@ -66,10 +76,10 @@ export type HTTPErrorCode = typeof HTTPErrorCode[keyof typeof HTTPErrorCode]
  * }
  */
 export class MobileLockerError extends Error {
-    /** Machine-readable error code. Use {@link GeneralErrorCode} constants for comparisons. */
-    readonly code: GeneralErrorCode
+    /** Machine-readable error code. Prefer the `*ErrorCode` constants for comparisons. */
+    readonly code: string
 
-    constructor(message: string, code: GeneralErrorCode = GeneralErrorCode.ServerError) {
+    constructor(message: string, code: string = GeneralErrorCode.ServerError) {
         super(message)
         this.name = 'MobileLockerError'
         this.code = code
@@ -84,16 +94,14 @@ export class MobileLockerError extends Error {
  * Check `code` against {@link CRMErrorCode} constants to handle specific cases
  * such as expired auth or invalid SOQL.
  */
-export class MobileLockerCRMError extends Error {
-    /** Machine-readable error code. Use {@link CRMErrorCode} constants for comparisons. */
-    readonly code: CRMErrorCode
+export class MobileLockerCRMError extends MobileLockerError {
+    declare readonly code: CRMErrorCode
     /** The raw error message from the CRM, if available. */
     readonly crmMessage?: string
 
     constructor(message: string, code: CRMErrorCode, crmMessage?: string) {
-        super(message)
+        super(message, code)
         this.name = 'MobileLockerCRMError'
-        this.code = code
         this.crmMessage = crmMessage
     }
 }
@@ -104,16 +112,14 @@ export class MobileLockerCRMError extends Error {
  * Check `code` against {@link DatabaseErrorCode} constants to distinguish
  * path errors, write attempts, and query failures.
  */
-export class MobileLockerDatabaseError extends Error {
-    /** Machine-readable error code. Use {@link DatabaseErrorCode} constants for comparisons. */
-    readonly code: DatabaseErrorCode
+export class MobileLockerDatabaseError extends MobileLockerError {
+    declare readonly code: DatabaseErrorCode
     /** The raw SQLite error message, if available. */
     readonly sqliteMessage?: string
 
     constructor(message: string, code: DatabaseErrorCode, sqliteMessage?: string) {
-        super(message)
+        super(message, code)
         this.name = 'MobileLockerDatabaseError'
-        this.code = code
         this.sqliteMessage = sqliteMessage
     }
 }
@@ -123,14 +129,12 @@ export class MobileLockerDatabaseError extends Error {
  *
  * For non-2xx HTTP responses, see {@link MobileLockerHttpResponseError}.
  */
-export class MobileLockerHTTPError extends Error {
-    /** Machine-readable error code. Use {@link HTTPErrorCode} constants for comparisons. */
-    readonly code: HTTPErrorCode
+export class MobileLockerHTTPError extends MobileLockerError {
+    declare readonly code: HTTPErrorCode
 
     constructor(message: string, code: HTTPErrorCode) {
-        super(message)
+        super(message, code)
         this.name = 'MobileLockerHTTPError'
-        this.code = code
     }
 }
 
@@ -149,7 +153,7 @@ export class MobileLockerHTTPError extends Error {
  *   }
  * }
  */
-export class MobileLockerHttpResponseError extends Error {
+export class MobileLockerHttpResponseError extends MobileLockerError {
     /** HTTP status code (e.g. `404`, `422`, `500`). */
     readonly status: number
     /** HTTP status text (e.g. `'Not Found'`). */
@@ -160,11 +164,88 @@ export class MobileLockerHttpResponseError extends Error {
     readonly data: unknown
 
     constructor(status: number, statusText: string, headers: Record<string, string>, data: unknown) {
-        super(`HTTP ${status} ${statusText}`)
+        super(`HTTP ${status} ${statusText}`, GeneralErrorCode.ServerError)
         this.name = 'MobileLockerHttpResponseError'
         this.status = status
         this.statusText = statusText
         this.headers = headers
         this.data = data
     }
+}
+
+/** Extract a human-readable message from an Axios error body when present. */
+function axiosMessage(err: unknown): string {
+    if (!axios.isAxiosError(err)) return String(err)
+    const body = err.response?.data as { message?: string; error?: string } | undefined
+    return body?.message ?? body?.error ?? err.message
+}
+
+/**
+ * Map an unknown failure into {@link MobileLockerError}.
+ * Re-throws existing MobileLockerError instances unchanged.
+ */
+export function mapToMobileLockerError(err: unknown): MobileLockerError {
+    if (err instanceof MobileLockerError) return err
+    if (axios.isAxiosError(err) && !err.response) {
+        return new MobileLockerError('No internet connection', GeneralErrorCode.NotConnected)
+    }
+    return new MobileLockerError(axiosMessage(err), GeneralErrorCode.ServerError)
+}
+
+/**
+ * Map an unknown failure into {@link MobileLockerCRMError}.
+ */
+export function mapToCRMError(err: unknown): MobileLockerCRMError {
+    if (err instanceof MobileLockerCRMError) return err
+    if (err instanceof MobileLockerError) {
+        return new MobileLockerCRMError(err.message, err.code as CRMErrorCode)
+    }
+    if (axios.isAxiosError(err)) {
+        if (!err.response) return new MobileLockerCRMError('No internet connection', CRMErrorCode.NotConnected)
+        const status = err.response.status
+        const msg = axiosMessage(err)
+        if (status === 401 || status === 403) {
+            return new MobileLockerCRMError('CRM session expired', CRMErrorCode.AuthExpired)
+        }
+        if (status === 400) return new MobileLockerCRMError(msg, CRMErrorCode.SOQLInvalid, msg)
+        return new MobileLockerCRMError(msg, CRMErrorCode.ServerError)
+    }
+    return new MobileLockerCRMError(String(err), CRMErrorCode.ServerError)
+}
+
+/**
+ * Map an unknown failure into {@link MobileLockerDatabaseError}.
+ */
+export function mapToDatabaseError(err: unknown): MobileLockerDatabaseError {
+    if (err instanceof MobileLockerDatabaseError) return err
+    if (err instanceof MobileLockerError) {
+        return new MobileLockerDatabaseError(err.message, err.code as DatabaseErrorCode)
+    }
+    if (axios.isAxiosError(err)) {
+        if (!err.response) {
+            return new MobileLockerDatabaseError('No internet connection', DatabaseErrorCode.NotConnected)
+        }
+        const status = err.response.status
+        const body = err.response.data as { error?: string; sqlite_message?: string }
+        const msg = body?.error ?? err.message
+        const sqliteMsg = body?.sqlite_message
+        if (status === 400) return new MobileLockerDatabaseError(msg, DatabaseErrorCode.InvalidPath)
+        if (status === 403) return new MobileLockerDatabaseError(msg, DatabaseErrorCode.WriteNotPermitted)
+        if (status === 503) return new MobileLockerDatabaseError(msg, DatabaseErrorCode.NotReady)
+        return new MobileLockerDatabaseError(msg, DatabaseErrorCode.QueryFailed, sqliteMsg)
+    }
+    return new MobileLockerDatabaseError(String(err), DatabaseErrorCode.QueryFailed)
+}
+
+/** Error for methods that only work in a specific host environment. */
+export function unsupportedEnvironmentError(method: string, environment = 'the iOS app'): MobileLockerError {
+    return new MobileLockerError(
+        `${method} is only supported in ${environment}`,
+        GeneralErrorCode.UnsupportedEnvironment,
+    )
+}
+
+/** Error for invalid caller-supplied arguments. */
+export function invalidArgumentError(message: string): MobileLockerError {
+    return new MobileLockerError(message, GeneralErrorCode.InvalidArgument)
 }

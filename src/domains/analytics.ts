@@ -1,7 +1,7 @@
 import { apiClient, getEndpoint, isMobileLocker, isApp, userID, jwt, fallbackSessionId, fallbackSessionStartedAt, hitSessionReady, hitSessionNumericId } from '../env'
 import localforage from 'localforage'
 import { v4 as uuidv4 } from 'uuid'
-import { MobileLockerError, GeneralErrorCode } from '../errors'
+import { unsupportedEnvironmentError } from '../errors'
 
 const DEFAULT_METHOD = 'trackevent'
 
@@ -100,10 +100,7 @@ export const analytics = {
 /** @internal */
 export async function getLocalforageEvents(): Promise<unknown[]> {
     if (isMobileLocker()) {
-        throw new MobileLockerError(
-            'getLocalforageEvents() is only available outside the Mobile Locker app',
-            GeneralErrorCode.ServerError,
-        )
+        throw unsupportedEnvironmentError('getLocalforageEvents()', 'non-Mobile Locker environments')
     }
     return (await localforage.getItem<unknown[]>('deviceEvents')) ?? []
 }

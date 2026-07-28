@@ -3,9 +3,10 @@ import { analytics } from './analytics'
 import localforage from 'localforage'
 
 export type SDKLogLevel = 'debug' | 'info' | 'warn' | 'error'
-export type SDKLogDomain = 'analytics' | 'congresses' | 'contacts' | 'crm'
-    | 'data' | 'database' | 'device' | 'log'
-    | 'presentation' | 'scanner' | 'search' | 'session'
+export type SDKLogDomain =
+    | 'analytics' | 'congresses' | 'contacts' | 'crm'
+    | 'data' | 'database' | 'device' | 'http' | 'localforage' | 'log'
+    | 'network' | 'permissions' | 'presentation' | 'scanner' | 'search' | 'session'
     | 'share' | 'storage' | 'ui' | 'user'
     | 'sdk'
 

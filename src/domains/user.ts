@@ -1,6 +1,5 @@
 import { apiClient, getEndpoint, withRetry } from '../env'
-import { MobileLockerError, GeneralErrorCode } from '../errors'
-import axios from 'axios'
+import { mapToMobileLockerError } from '../errors'
 
 export type { User } from '../types/user'
 import type { User } from '../types/user'
@@ -22,11 +21,7 @@ export const user = {
             const { data } = await withRetry(() => apiClient.get<User>(getEndpoint('/user')))
             return data
         } catch (err) {
-            if (err instanceof MobileLockerError) throw err
-            if (axios.isAxiosError(err) && !err.response) {
-                throw new MobileLockerError('No internet connection', GeneralErrorCode.NotConnected)
-            }
-            throw new MobileLockerError(String(err), GeneralErrorCode.ServerError)
+            throw mapToMobileLockerError(err)
         }
     },
 }

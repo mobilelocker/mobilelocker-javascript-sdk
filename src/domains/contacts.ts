@@ -1,18 +1,6 @@
 import { apiClient, getEndpoint, withRetry } from '../env'
-import { MobileLockerError, GeneralErrorCode } from '../errors'
+import { mapToMobileLockerError, invalidArgumentError } from '../errors'
 import type { UserContact } from '../types/userContact'
-import axios from 'axios'
-
-function toError(err: unknown): MobileLockerError {
-    if (err instanceof MobileLockerError) return err
-    if (axios.isAxiosError(err) && !err.response) {
-        return new MobileLockerError('No internet connection', GeneralErrorCode.NotConnected)
-    }
-    return new MobileLockerError(
-        axios.isAxiosError(err) ? ((err.response?.data as { message?: string })?.message ?? err.message) : String(err),
-        GeneralErrorCode.ServerError,
-    )
-}
 
 /** @category CRM */
 export const contacts = {
@@ -28,7 +16,7 @@ export const contacts = {
             const { data } = await withRetry(() => apiClient.get<UserContact>(getEndpoint(`/user-contacts/${contactID}`)))
             return data
         } catch (err) {
-            throw toError(err)
+            throw mapToMobileLockerError(err)
         }
     },
 
@@ -51,7 +39,7 @@ export const contacts = {
             )
             return data
         } catch (err) {
-            throw toError(err)
+            throw mapToMobileLockerError(err)
         }
     },
 
@@ -80,10 +68,7 @@ export const contacts = {
         handler: (chunk: UserContact[]) => void | Promise<void>,
     ): Promise<void> {
         if (!Number.isInteger(pageSize) || pageSize < 1) {
-            throw new MobileLockerError(
-                'pageSize must be a positive integer',
-                GeneralErrorCode.ServerError,
-            )
+            throw invalidArgumentError('pageSize must be a positive integer')
         }
         let minID = 0
         for (;;) {

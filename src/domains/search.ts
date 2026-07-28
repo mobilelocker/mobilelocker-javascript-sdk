@@ -1,11 +1,10 @@
 import { apiClient, getEndpoint, withRetry } from '../env'
-import { MobileLockerError, GeneralErrorCode } from '../errors'
+import { mapToMobileLockerError } from '../errors'
 import type { Presentation } from '../types/presentation'
 import type { Customer } from '../types/customer'
 import type { UserContact } from '../types/userContact'
 import type { Attendee } from '../types/attendee'
 import type { BusinessCard } from '../types/businessCard'
-import axios from 'axios'
 
 export type SearchEntityType = 'presentations' | 'customers' | 'contacts' | 'attendees' | 'business_cards'
 
@@ -52,11 +51,7 @@ export const search = {
             )
             return data
         } catch (err) {
-            if (err instanceof MobileLockerError) throw err
-            if (axios.isAxiosError(err) && !err.response) {
-                throw new MobileLockerError('No internet connection', GeneralErrorCode.NotConnected)
-            }
-            throw new MobileLockerError(String(err), GeneralErrorCode.ServerError)
+            throw mapToMobileLockerError(err)
         }
     },
 }

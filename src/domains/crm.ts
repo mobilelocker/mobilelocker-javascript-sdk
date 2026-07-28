@@ -1,8 +1,8 @@
 import { apiClient, getEndpoint, isIOS, withRetry } from '../env'
-import { MobileLockerCRMError, MobileLockerError, CRMErrorCode, GeneralErrorCode } from '../errors'
+import { mapToCRMError, unsupportedEnvironmentError } from '../errors'
 import type { Customer } from '../types/customer'
+import type { CRMAccount, CRMAddress, CRMContact, CRMLead, CRMUser } from '../types/crm'
 import { withStatusBooleans, WithStatusBooleans } from '../utils/status'
-import axios from 'axios'
 
 export type CRMRefreshMode = 'incremental' | 'full'
 export type CRMRefreshStatus = 'started' | 'not_connected'
@@ -20,154 +20,146 @@ export interface CRMQueryResult {
     done: boolean
 }
 
-function toError(err: unknown): MobileLockerCRMError {
-    if (err instanceof MobileLockerCRMError) return err
-    if (axios.isAxiosError(err)) {
-        if (!err.response) return new MobileLockerCRMError('No internet connection', CRMErrorCode.NotConnected)
-        const status = err.response.status
-        const msg = (err.response.data as { message?: string })?.message ?? err.message
-        if (status === 401 || status === 403) return new MobileLockerCRMError('CRM session expired', CRMErrorCode.AuthExpired)
-        if (status === 400) return new MobileLockerCRMError(msg, CRMErrorCode.SOQLInvalid, msg)
-        return new MobileLockerCRMError(msg, CRMErrorCode.ServerError)
-    }
-    return new MobileLockerCRMError(String(err), CRMErrorCode.ServerError)
-}
-
 /** @category CRM */
 export const crm = {
     /**
      * Get all CRM accounts synced for the current user.
      *
-     * @returns Raw account records from the connected CRM.
+     * @remarks Full-table load. Prefer filtering via {@link crm.query} when the set is large.
+     * @returns CRM account records.
      * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
      */
-    async getAccounts(): Promise<unknown> {
+    async getAccounts(): Promise<CRMAccount[]> {
         try {
-            const { data } = await withRetry(() => apiClient.get<unknown>(getEndpoint('/crm/accounts')))
+            const { data } = await withRetry(() => apiClient.get<CRMAccount[]>(getEndpoint('/crm/accounts')))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 
     /**
      * Get a specific CRM account by ID.
      *
      * @param accountID - The CRM account ID to fetch.
-     * @returns Raw account record from the connected CRM.
+     * @returns CRM account record.
      * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
      */
-    async getAccount(accountID: string): Promise<unknown> {
+    async getAccount(accountID: string): Promise<CRMAccount> {
         try {
-            const { data } = await withRetry(() => apiClient.get<unknown>(getEndpoint(`/crm/accounts/${accountID}`)))
+            const { data } = await withRetry(() => apiClient.get<CRMAccount>(getEndpoint(`/crm/accounts/${accountID}`)))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 
     /**
      * Get all CRM addresses synced for the current user.
      *
-     * @returns Raw address records from the connected CRM.
+     * @remarks Full-table load. Prefer filtering via {@link crm.query} when the set is large.
+     * @returns CRM address records.
      * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
      */
-    async getAddresses(): Promise<unknown> {
+    async getAddresses(): Promise<CRMAddress[]> {
         try {
-            const { data } = await withRetry(() => apiClient.get<unknown>(getEndpoint('/crm/addresses')))
+            const { data } = await withRetry(() => apiClient.get<CRMAddress[]>(getEndpoint('/crm/addresses')))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 
     /**
      * Get a specific CRM address by ID.
      *
      * @param addressID - The CRM address ID to fetch.
-     * @returns Raw address record from the connected CRM.
+     * @returns CRM address record.
      * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
      */
-    async getAddress(addressID: string): Promise<unknown> {
+    async getAddress(addressID: string): Promise<CRMAddress> {
         try {
-            const { data } = await withRetry(() => apiClient.get<unknown>(getEndpoint(`/crm/addresses/${addressID}`)))
+            const { data } = await withRetry(() => apiClient.get<CRMAddress>(getEndpoint(`/crm/addresses/${addressID}`)))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 
     /**
      * Get all CRM contacts synced for the current user.
      *
-     * @returns Raw contact records from the connected CRM.
+     * @remarks Full-table load. Prefer filtering via {@link crm.query} when the set is large.
+     * @returns CRM contact records.
      * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
      */
-    async getContacts(): Promise<unknown> {
+    async getContacts(): Promise<CRMContact[]> {
         try {
-            const { data } = await withRetry(() => apiClient.get<unknown>(getEndpoint('/crm/contacts')))
+            const { data } = await withRetry(() => apiClient.get<CRMContact[]>(getEndpoint('/crm/contacts')))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 
     /**
      * Get a specific CRM contact by ID.
      *
      * @param contactID - The CRM contact ID to fetch.
-     * @returns Raw contact record from the connected CRM.
+     * @returns CRM contact record.
      * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
      */
-    async getContact(contactID: string): Promise<unknown> {
+    async getContact(contactID: string): Promise<CRMContact> {
         try {
-            const { data } = await withRetry(() => apiClient.get<unknown>(getEndpoint(`/crm/contacts/${contactID}`)))
+            const { data } = await withRetry(() => apiClient.get<CRMContact>(getEndpoint(`/crm/contacts/${contactID}`)))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 
     /**
      * Get all CRM leads synced for the current user.
      *
-     * @returns Raw lead records from the connected CRM.
+     * @remarks Full-table load. Prefer filtering via {@link crm.query} when the set is large.
+     * @returns CRM lead records.
      * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
      */
-    async getLeads(): Promise<unknown> {
+    async getLeads(): Promise<CRMLead[]> {
         try {
-            const { data } = await withRetry(() => apiClient.get<unknown>(getEndpoint('/crm/leads')))
+            const { data } = await withRetry(() => apiClient.get<CRMLead[]>(getEndpoint('/crm/leads')))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 
     /**
      * Get a specific CRM lead by ID.
      *
      * @param leadID - The CRM lead ID to fetch.
-     * @returns Raw lead record from the connected CRM.
+     * @returns CRM lead record.
      * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
      */
-    async getLead(leadID: string): Promise<unknown> {
+    async getLead(leadID: string): Promise<CRMLead> {
         try {
-            const { data } = await withRetry(() => apiClient.get<unknown>(getEndpoint(`/crm/leads/${leadID}`)))
+            const { data } = await withRetry(() => apiClient.get<CRMLead>(getEndpoint(`/crm/leads/${leadID}`)))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 
     /**
      * Get all CRM users synced for the current team.
      *
-     * @returns Raw user records from the connected CRM.
+     * @remarks Full-table load. Prefer filtering via {@link crm.query} when the set is large.
+     * @returns CRM user records.
      * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
      */
-    async getUsers(): Promise<unknown> {
+    async getUsers(): Promise<CRMUser[]> {
         try {
-            const { data } = await withRetry(() => apiClient.get<unknown>(getEndpoint('/crm/users')))
+            const { data } = await withRetry(() => apiClient.get<CRMUser[]>(getEndpoint('/crm/users')))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 
     /**
      * Get a specific CRM user by ID.
      *
      * @param userID - The CRM user ID to fetch.
-     * @returns Raw user record from the connected CRM.
+     * @returns CRM user record.
      * @throws {@link MobileLockerCRMError} on network failure, auth expiry, or server error.
      */
-    async getUser(userID: string): Promise<unknown> {
+    async getUser(userID: string): Promise<CRMUser> {
         try {
-            const { data } = await withRetry(() => apiClient.get<unknown>(getEndpoint(`/crm/users/${userID}`)))
+            const { data } = await withRetry(() => apiClient.get<CRMUser>(getEndpoint(`/crm/users/${userID}`)))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 
     /**
@@ -183,13 +175,11 @@ export const crm = {
      * if (status === 'selected') console.log(customers)
      */
     async openCustomerPicker(): Promise<PickerResult> {
-        if (!isIOS()) {
-            throw new MobileLockerError('openCustomerPicker() is only supported in the iOS app', GeneralErrorCode.ServerError)
-        }
+        if (!isIOS()) throw unsupportedEnvironmentError('openCustomerPicker()')
         try {
             const { data } = await withRetry(() => apiClient.post<{ status: PickerStatus; customers?: Customer[] }>(getEndpoint('/open-customer-picker')))
             return withStatusBooleans(data, PICKER_STATUSES)
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 
     /**
@@ -202,7 +192,7 @@ export const crm = {
         try {
             const { data } = await withRetry(() => apiClient.get<Customer[]>(getEndpoint('/crm/customers/current')))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 
     /**
@@ -215,7 +205,7 @@ export const crm = {
         try {
             const { data } = await withRetry(() => apiClient.get<Customer[]>(getEndpoint('/crm/customers/recent')))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 
     /**
@@ -231,7 +221,7 @@ export const crm = {
                 apiClient.get<{ isCurrent: boolean }>(getEndpoint('/crm/customers/is-current'), { params: { objectID } }),
             )
             return data.isCurrent
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 
     /**
@@ -243,7 +233,7 @@ export const crm = {
     async setCurrentCustomers(customerIDs: string[]): Promise<void> {
         try {
             await withRetry(() => apiClient.post(getEndpoint('/crm/customers/current'), { customerIDs }))
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 
     /**
@@ -255,7 +245,7 @@ export const crm = {
     async addCurrentCustomer(customerID: string): Promise<void> {
         try {
             await withRetry(() => apiClient.put(getEndpoint('/crm/customers/current/add'), { customerID }))
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 
     /**
@@ -267,7 +257,7 @@ export const crm = {
     async removeCurrentCustomer(customerID: string): Promise<void> {
         try {
             await withRetry(() => apiClient.put(getEndpoint('/crm/customers/current/remove'), { customerID }))
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 
     /**
@@ -278,7 +268,7 @@ export const crm = {
     async clearCurrentCustomers(): Promise<void> {
         try {
             await withRetry(() => apiClient.delete(getEndpoint('/crm/customers/current')))
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 
     /**
@@ -295,7 +285,7 @@ export const crm = {
         try {
             const { data } = await apiClient.post<{ status: CRMRefreshStatus }>(getEndpoint('/crm/refresh'), { mode: options?.mode ?? 'incremental' })
             return withStatusBooleans(data, REFRESH_STATUSES)
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 
     /**
@@ -315,6 +305,6 @@ export const crm = {
                 apiClient.post<CRMQueryResult>(getEndpoint('/crm/query'), { soql, parameters }),
             )
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToCRMError(err) }
     },
 }

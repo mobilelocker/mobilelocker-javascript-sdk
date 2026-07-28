@@ -1,7 +1,6 @@
 import { apiClient, getEndpoint, isMobileLocker, withRetry } from '../env'
-import { MobileLockerDatabaseError, DatabaseErrorCode } from '../errors'
+import { MobileLockerDatabaseError, DatabaseErrorCode, mapToDatabaseError } from '../errors'
 import type { DatabaseQueryResult, DatabaseTableDescription, DatabaseColumnInfo } from '../types/database'
-import axios from 'axios'
 
 function isOfflineError(err: unknown): boolean {
     return err instanceof TypeError && (
@@ -76,22 +75,6 @@ type SqlJsStatement = {
 
 type SqlJsDb = { prepare: (sql: string) => SqlJsStatement }
 
-function toError(err: unknown): MobileLockerDatabaseError {
-    if (err instanceof MobileLockerDatabaseError) return err
-    if (axios.isAxiosError(err)) {
-        if (!err.response) return new MobileLockerDatabaseError('No internet connection', DatabaseErrorCode.NotConnected)
-        const status = err.response.status
-        const body = err.response.data as { error?: string; sqlite_message?: string }
-        const msg = body?.error ?? err.message
-        const sqliteMsg = body?.sqlite_message
-        if (status === 400) return new MobileLockerDatabaseError(msg, DatabaseErrorCode.InvalidPath)
-        if (status === 403) return new MobileLockerDatabaseError(msg, DatabaseErrorCode.WriteNotPermitted)
-        if (status === 503) return new MobileLockerDatabaseError(msg, DatabaseErrorCode.NotReady)
-        return new MobileLockerDatabaseError(msg, DatabaseErrorCode.QueryFailed, sqliteMsg)
-    }
-    return new MobileLockerDatabaseError(String(err), DatabaseErrorCode.QueryFailed)
-}
-
 /** @category Data */
 export const database = {
     /**
@@ -106,7 +89,7 @@ export const database = {
         try {
             const { data } = await withRetry(() => apiClient.get<{ databases: string[] }>(getEndpoint('/database/list')))
             return data.databases ?? []
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToDatabaseError(err) }
     },
 
     /**
@@ -133,7 +116,7 @@ export const database = {
                     }),
                 )
                 return data
-            } catch (err) { throw toError(err) }
+            } catch (err) { throw mapToDatabaseError(err) }
         }
 
         // Dev fallback: sql.js
@@ -171,7 +154,7 @@ export const database = {
 
             return { name: masterRow.name, sql: masterRow.sql, columns }
         } catch (err) {
-            throw toError(err)
+            throw mapToDatabaseError(err)
         }
     },
 
@@ -207,7 +190,7 @@ export const database = {
                     apiClient.post<DatabaseQueryResult>(getEndpoint('/database/query'), { database: path, sql, parameters }),
                 )
                 return data
-            } catch (err) { throw toError(err) }
+            } catch (err) { throw mapToDatabaseError(err) }
         }
 
         // Dev fallback: sql.js
@@ -220,7 +203,7 @@ export const database = {
             stmt.free()
             return { rows, rows_affected: 0, last_insert_row_id: null }
         } catch (err) {
-            throw toError(err)
+            throw mapToDatabaseError(err)
         }
     },
 }

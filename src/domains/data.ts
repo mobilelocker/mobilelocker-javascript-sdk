@@ -1,22 +1,10 @@
 import { apiClient, getEndpoint, withRetry } from '../env'
-import { MobileLockerError, GeneralErrorCode } from '../errors'
+import { mapToMobileLockerError } from '../errors'
 import { analytics } from './analytics'
 import type { Product } from '../types/product'
 import type { Folder } from '../types/folder'
 import type { Label } from '../types/label'
 import type { Customer } from '../types/customer'
-import axios from 'axios'
-
-function toError(err: unknown): MobileLockerError {
-    if (err instanceof MobileLockerError) return err
-    if (axios.isAxiosError(err) && !err.response) {
-        return new MobileLockerError('No internet connection', GeneralErrorCode.NotConnected)
-    }
-    return new MobileLockerError(
-        axios.isAxiosError(err) ? ((err.response?.data as { message?: string })?.message ?? err.message) : String(err),
-        GeneralErrorCode.ServerError,
-    )
-}
 
 /** @category Data */
 export const data = {
@@ -49,7 +37,7 @@ export const data = {
         try {
             const { data } = await withRetry(() => apiClient.get<Product[]>(getEndpoint('/products')))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToMobileLockerError(err) }
     },
 
     /**
@@ -63,7 +51,7 @@ export const data = {
         try {
             const { data } = await withRetry(() => apiClient.get<Product>(getEndpoint(`/products/${id}`)))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToMobileLockerError(err) }
     },
 
     // ─── Labels ───────────────────────────────────────────────────────────────
@@ -78,7 +66,7 @@ export const data = {
         try {
             const { data } = await withRetry(() => apiClient.get<Label[]>(getEndpoint('/labels')))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToMobileLockerError(err) }
     },
 
     /**
@@ -92,7 +80,7 @@ export const data = {
         try {
             const { data } = await withRetry(() => apiClient.get<Label>(getEndpoint(`/labels/${id}`)))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToMobileLockerError(err) }
     },
 
     // ─── Folders ──────────────────────────────────────────────────────────────
@@ -107,7 +95,7 @@ export const data = {
         try {
             const { data } = await withRetry(() => apiClient.get<Folder[]>(getEndpoint('/folders')))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToMobileLockerError(err) }
     },
 
     /**
@@ -121,7 +109,7 @@ export const data = {
         try {
             const { data } = await withRetry(() => apiClient.get<Folder>(getEndpoint(`/folders/${id}`)))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToMobileLockerError(err) }
     },
 
     // ─── Customers ────────────────────────────────────────────────────────────
@@ -136,7 +124,7 @@ export const data = {
         try {
             const { data } = await withRetry(() => apiClient.get<Customer[]>(getEndpoint('/customers')))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToMobileLockerError(err) }
     },
 
     /**
@@ -150,6 +138,6 @@ export const data = {
         try {
             const { data } = await withRetry(() => apiClient.get<Customer>(getEndpoint(`/customers/${id}`)))
             return data
-        } catch (err) { throw toError(err) }
+        } catch (err) { throw mapToMobileLockerError(err) }
     },
 }
