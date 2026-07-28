@@ -7,6 +7,36 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [Unreleased]
+
+> **Semver:** Publish as **2.0.0** (public API removal).
+
+### Added
+
+- **`contacts.eachPage(pageSize, handler)`** (MLJS-24) — walks the address book via `getChunked` without encouraging a full in-memory rebuild. Process each page in the handler.
+
+### Removed
+
+- **`contacts.getAll()`** (MLJS-24 / [MLI-1708](https://mobilelocker.atlassian.net/browse/MLI-1708)) — **breaking.** Loading the entire address book in one call is unsafe for production users with 100k+ contacts (memory spike, presentation stall).
+
+  ```js
+  // Before
+  const contacts = await mobilelocker.contacts.getAll()
+
+  // After — process pages; do not push(...chunk) into one array
+  await mobilelocker.contacts.eachPage(500, (chunk) => {
+      for (const contact of chunk) {
+          // handle one contact
+      }
+  })
+  ```
+
+  Low-level paging remains available as `contacts.getChunked(minID, limit)` when you need a single page.
+
+  Native hosts can remove the unbound full-dump branch of `GET /mobilelocker/api/user-contacts` after presentations adopt this release.
+
+---
+
 ## [1.1.0] — 2026-06-01
 
 ### Added

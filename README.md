@@ -91,12 +91,20 @@ await mobilelocker.congresses.submitLead(eventID, attendeeID, data)
 
 ### contacts
 
-Read the current user's contacts.
+Read the current user's contacts. Address books can exceed 100k contacts — there is **no** `getAll()` (MLJS-24). Prefer `eachPage` so only one page is in memory at a time. Use `getChunked` only when you need a single page.
 
 ```js
-const contacts = await mobilelocker.contacts.getAll()
 const contact = await mobilelocker.contacts.get(contactID)
-const chunk = await mobilelocker.contacts.getChunked(minID, limit)
+
+// Walk the book page by page — process each chunk; do not rebuild a full array
+await mobilelocker.contacts.eachPage(500, (chunk) => {
+    for (const c of chunk) {
+        // render / index / filter this contact
+    }
+})
+
+// Single page when you already know minID + limit
+const page = await mobilelocker.contacts.getChunked(minID, 500)
 ```
 
 ### crm
