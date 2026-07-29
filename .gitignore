@@ -1,6 +1,9 @@
 # Build output
 dist/
 
+# Test coverage
+coverage/
+
 # Internal planning documents
 docs/
 
