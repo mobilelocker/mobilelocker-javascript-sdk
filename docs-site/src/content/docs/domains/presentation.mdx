@@ -1,0 +1,60 @@
+---
+title: Presentation
+description: Current presentation metadata, downloads, open, and lifecycle.
+---
+
+Work with the **current presentation** and the user's presentation library.
+
+:::tip[Live demo]
+Open the **Presentations** screen in the [SDK Demo IVA](../examples/demo-iva/) (`#/presentation`).
+:::
+
+## Current presentation
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+const presentation = await mobilelocker.presentation.get()
+```
+
+## Lifecycle
+
+```js
+mobilelocker.presentation.reload()
+mobilelocker.presentation.close()
+```
+
+## Library
+
+```js
+const all = await mobilelocker.presentation.getAll()
+const byId = await mobilelocker.presentation.getByID(id)
+const byName = await mobilelocker.presentation.getByName(name)
+const refreshed = await mobilelocker.presentation.refresh()
+```
+
+## Download & open
+
+```js
+const result = await mobilelocker.presentation.download(presentationID)
+// status helpers: isQueued, isAlreadyInstalled, isNotAvailable, isNotPermitted
+
+mobilelocker.presentation.openByID(id)
+await mobilelocker.presentation.openByName(name)
+await mobilelocker.presentation.openByExternalID(externalID)
+mobilelocker.presentation.openPicker()
+```
+
+## Events
+
+```js
+const events = await mobilelocker.presentation.getEvents()
+const deviceEvents = await mobilelocker.presentation.getDeviceEvents()
+```
+
+Session-scoped device events also exist on [`session`](session/).
+
+## API reference
+
+- Module: [`presentation`](../api/variables/presentation/)
+- Types: [`Presentation`](../api/interfaces/presentation/), [`DownloadResult`](../api/type-aliases/downloadresult/)

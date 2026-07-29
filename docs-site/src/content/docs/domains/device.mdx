@@ -1,0 +1,33 @@
+---
+title: Device
+description: Read app, OS, and hardware metadata from the native host.
+---
+
+Device and application metadata from the Mobile Locker native shell.
+
+## Get device info
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+const info = await mobilelocker.device.get()
+// info may be null outside the app
+// info.app.version, info.os.name, info.hardware.model, info.orientation, …
+```
+
+## Version gating
+
+```js
+if (await mobilelocker.device.isAtLeastVersion('5.6.0')) {
+  // Feature that depends on a specific app version
+}
+```
+
+Combine with [Environments](../guides/environments/) (`isIOS`, `isApp`, …) for feature switches. Everyday contacts/CRM cursor APIs do not need a special version check.
+
+
+
+## API reference
+
+- Module: [`device`](../api/variables/device/)
+- Types: [`DeviceInfo`](../api/interfaces/deviceinfo/), [`AppEnvironment`](../api/type-aliases/appenvironment/)

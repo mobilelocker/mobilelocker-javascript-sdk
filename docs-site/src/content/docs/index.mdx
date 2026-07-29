@@ -1,0 +1,75 @@
+---
+title: Mobile Locker JavaScript SDK
+description: Official JavaScript SDK for interactive presentations and custom features on Mobile Locker.
+template: splash
+hero:
+  tagline: Programmatic access to CRM, contacts, scanning, storage, analytics, and device APIs — from inside a Mobile Locker presentation.
+  image:
+    file: ../../assets/mobilelocker_logo.svg
+  actions:
+    - text: Get started
+      link: guides/getting-started/
+      icon: right-arrow
+    - text: Domains
+      link: domains/
+      icon: open-book
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+## What this SDK is for
+
+IVA and presentation developers use `@mobilelocker/javascript-sdk` to talk to the Mobile Locker host (iOS, Android, Electron) and CDN presentations — without hand-rolling bridge HTTP.
+
+## Start here
+
+<CardGrid stagger>
+	<Card title="Install" icon="puzzle">
+		npm / yarn package install and host requirements.
+		[Install →](guides/install/)
+	</Card>
+	<Card title="Getting started" icon="rocket">
+		JWT-injected presentations, first `user.get()`, and error handling.
+		[Start →](guides/getting-started/)
+	</Card>
+	<Card title="UMD in HTML" icon="seti:html">
+		Drop the UMD build into presentation HTML when you are not bundling.
+		[UMD guide →](guides/umd-html/)
+	</Card>
+	<Card title="SDK Demo IVA" icon="rocket">
+		Open the demo presentation in Mobile Locker (iOS). Source on GitHub: mobilelocker-sdk-demo.
+		[Demo guide →](examples/demo-iva/)
+	</Card>
+	<Card title="Changelog" icon="document">
+		Release notes for the package.
+		[Changelog →](guides/changelog/)
+	</Card>
+</CardGrid>
+
+## Domains
+
+Browse by task in the [domains overview](domains/), or jump in:
+
+<CardGrid>
+	<LinkCard title="User" href="domains/user/" description="Authenticated rep identity." />
+	<LinkCard title="Contacts" href="domains/contacts/" description="Cursor-paged address book." />
+	<LinkCard title="CRM" href="domains/crm/" description="SOQL, offline walks, current customers." />
+	<LinkCard title="Scanner" href="domains/scanner/" description="Badge and business card capture (iOS)." />
+	<LinkCard title="Storage" href="domains/storage/" description="Presentation-scoped persistence." />
+	<LinkCard title="Database" href="domains/database/" description="Query bundled SQLite." />
+	<LinkCard title="Presentation" href="domains/presentation/" description="Library, download, open, lifecycle." />
+	<LinkCard title="HTTP" href="domains/http/" description="Proxied HTTPS from the native app." />
+	<LinkCard title="Errors" href="domains/errors/" description="MobileLockerError and code constants." />
+	<LinkCard title="All domains" href="domains/" description="Full map of every module." />
+	<LinkCard title="API reference" href="api/" description="Generated signatures from TypeScript." />
+</CardGrid>
+
+## Product links
+
+<div class="ml-footer-links">
+	<a href="https://www.mobilelocker.com">Mobile Locker</a>
+	<a href="https://help.mobilelocker.com">Help Center</a>
+	<a href="https://github.com/mobilelocker/mobilelocker-javascript-sdk">GitHub</a>
+	<a href="llms.txt">llms.txt</a>
+</div>

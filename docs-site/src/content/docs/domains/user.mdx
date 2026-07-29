@@ -1,0 +1,21 @@
+---
+title: User
+description: Read the authenticated Mobile Locker user for the presentation session.
+---
+
+## Get current user
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+const user = await mobilelocker.user.get()
+// user.id, user.name, user.email, user.current_team_id, …
+console.log(`Hello, ${user.name}`)
+```
+
+This is the usual **first success path** after the host injects `?jwt=` — see [Getting started](../guides/getting-started/).
+
+## API reference
+
+- Module: [`user`](../api/variables/user/)
+- Type: [`User`](../api/interfaces/user/)

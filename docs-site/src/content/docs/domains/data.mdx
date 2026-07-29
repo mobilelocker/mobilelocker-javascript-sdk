@@ -1,0 +1,49 @@
+---
+title: Data
+description: Submit form captures and load products, labels, folders, and customers.
+---
+
+Platform reference data and form submission for presentations.
+
+:::tip[Live demo]
+Open the **MIRF** form screen in the [SDK Demo IVA](../examples/demo-iva/) (`#/mirf`) for a capture-style flow. Product-style content also appears under **Kazaamax** (`#/kazaamax`).
+:::
+
+## Submit a form (sync)
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+// Synchronous — fires capture to the host
+mobilelocker.data.submitForm('lead-form', {
+  firstName: 'Jane',
+  email: 'jane@example.com',
+})
+```
+
+## Products, labels, folders
+
+```js
+const products = await mobilelocker.data.getProducts()
+const product = await mobilelocker.data.getProduct(id)
+
+const labels = await mobilelocker.data.getLabels()
+const label = await mobilelocker.data.getLabel(id)
+
+const folders = await mobilelocker.data.getFolders()
+const folder = await mobilelocker.data.getFolder(id)
+```
+
+## Customers
+
+```js
+const customers = await mobilelocker.data.getCustomers()
+const customer = await mobilelocker.data.getCustomer(crmObjectID)
+```
+
+For CRM session “current customers” and Salesforce SOQL, prefer the [CRM](crm/) domain.
+
+## API reference
+
+- Module: [`data`](../api/variables/data/)
+- Types: [`Product`](../api/interfaces/product/), [`Label`](../api/interfaces/label/), [`Folder`](../api/interfaces/folder/), [`Customer`](../api/interfaces/customer/)

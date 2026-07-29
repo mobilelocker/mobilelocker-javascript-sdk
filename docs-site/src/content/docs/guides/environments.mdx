@@ -1,0 +1,78 @@
+---
+title: Environments
+description: Detect iOS, Android, Electron, CDN, and app vs CDN context.
+---
+
+Use environment helpers to branch UI and to avoid calling APIs that only exist on certain hosts.
+
+:::tip[Live demo]
+Open the **ML JS SDK** screen in the [SDK Demo IVA](../examples/demo-iva/) (`#/mljs`) for live flags, network, permissions, and device info.
+:::
+
+## Helpers
+
+| Helper | True when |
+|--------|-----------|
+| `isMobileLocker()` | Any Mobile Locker app **or** CDN presentation context |
+| `isApp()` | iOS, Android, or Electron native shell |
+| `isIOS()` | Mobile Locker iOS / iPadOS app |
+| `isAndroid()` | Mobile Locker Android app |
+| `isElectron()` | Mobile Locker Windows (Electron) app |
+| `isCDN()` | CDN-hosted presentation URL |
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+mobilelocker.isMobileLocker()
+mobilelocker.isApp()
+mobilelocker.isIOS()
+mobilelocker.isAndroid()
+mobilelocker.isElectron()
+mobilelocker.isCDN()
+```
+
+## Practical branching
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+async function openScannerIfPossible(eventID) {
+  // Badge / business-card scanners throw outside the iOS app
+  if (!mobilelocker.isIOS()) {
+    console.info('Scanner is iOS-only')
+    return null
+  }
+  return mobilelocker.scanner.scanBadge(eventID)
+}
+
+async function fetchRemote(url) {
+  // In the native app, http.* is proxied (no CORS). On CDN/browser, fetch CORS rules apply.
+  return mobilelocker.http.get(url)
+}
+```
+
+## Version gating
+
+Some host features require a minimum app version:
+
+```js
+if (mobilelocker.isApp() && (await mobilelocker.device.isAtLeastVersion('5.6.0'))) {
+  // Feature that depends on a specific app version
+}
+```
+
+Use `device.isAtLeastVersion` when you need to gate on a **specific** host capability. Everyday contacts/CRM cursor APIs are part of the current platform.
+
+## Outside Mobile Locker
+
+Local development in a normal browser: most bridge calls **no-op** or return local fallbacks so presentations can still load. Prefer `isMobileLocker()` before assuming host data is real.
+
+## API reference
+
+- [`isMobileLocker`](../api/functions/ismobilelocker/)
+- [`isIOS`](../api/functions/isios/)
+- [`isAndroid`](../api/functions/isandroid/)
+- [`isElectron`](../api/functions/iselectron/)
+- [`isCDN`](../api/functions/iscdn/)
+- [`isApp`](../api/functions/isapp/)
+- [`device`](../api/variables/device/)

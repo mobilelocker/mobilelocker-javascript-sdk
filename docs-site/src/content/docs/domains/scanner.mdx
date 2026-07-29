@@ -1,0 +1,78 @@
+---
+title: Scanner
+description: Business card and badge scanning on Mobile Locker iOS.
+---
+
+Open native camera scanners from a presentation. **iOS app only** — these methods throw `UnsupportedEnvironment` elsewhere.
+
+:::tip[Live demo]
+Open the **Scanner** screen in the [SDK Demo IVA](../examples/demo-iva/) (`#/scanner`) on an iOS device.
+:::
+
+## Business card
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+async function captureCard(eventID) {
+  if (!mobilelocker.isIOS()) {
+    throw new Error('Business card scanner requires the Mobile Locker iOS app')
+  }
+
+  const result = await mobilelocker.scanner.scanBusinessCard(eventID)
+
+  if (result.isSuccess) {
+    console.log(result.businessCard)
+    // Optional: persist for the presentation
+    await mobilelocker.storage.save('last-business-card', result.businessCard)
+    return result.businessCard
+  }
+
+  if (result.isCancelled) {
+    console.log('User cancelled')
+    return null
+  }
+
+  // isFailed
+  console.error(result.error)
+  return null
+}
+```
+
+`eventID` is optional for business cards (lead-retrieval event association when provided).
+
+## Badge (attendee)
+
+```js
+const result = await mobilelocker.scanner.scanBadge(eventID)
+
+if (result.isSuccess) {
+  console.log(result.attendee)
+}
+```
+
+`eventID` is **required** for badge scans.
+
+## Result shape
+
+Scans return a **status object** with boolean helpers (`isSuccess`, `isCancelled`, `isFailed`) from `withStatusBooleans`:
+
+| Field | When |
+|-------|------|
+| `status` | `'success' \| 'cancelled' \| 'failed'` |
+| `businessCard` | Card scan success |
+| `attendee` | Badge scan success |
+| `error` | Failure message |
+
+Always check `isSuccess` before reading `businessCard` / `attendee`.
+
+## Related domains
+
+- [`congresses`](../api/variables/congresses/) — events, attendees, stored business cards
+- [`contacts`](../api/variables/contacts/) — user address book (cursor paging in 2.0)
+- [Storage](../domains/storage/) — keep scan payloads with the presentation
+
+## API reference
+
+- Module: [`scanner`](../api/variables/scanner/)
+- Types: [`ScanResult`](../api/type-aliases/scanresult/), [`ScanStatus`](../api/type-aliases/scanstatus/)

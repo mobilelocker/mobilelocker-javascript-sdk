@@ -1,0 +1,117 @@
+---
+title: Errors
+description: MobileLockerError hierarchy, error codes, and handling patterns.
+---
+
+All domain failures share a common base so you can write one catch path for the SDK.
+
+## Base class
+
+```js
+import {
+  MobileLockerError,
+  MobileLockerCRMError,
+  GeneralErrorCode,
+  CRMErrorCode,
+} from '@mobilelocker/javascript-sdk'
+
+try {
+  await mobilelocker.crm.query('SELECT Id FROM Account')
+} catch (err) {
+  if (err instanceof MobileLockerError) {
+    console.error(err.code, err.message)
+
+    if (err.code === GeneralErrorCode.NotConnected) {
+      showOfflineBanner()
+      return
+    }
+
+    if (err instanceof MobileLockerCRMError) {
+      if (err.code === CRMErrorCode.AuthExpired) {
+        promptReauth()
+        return
+      }
+      if (err.code === CRMErrorCode.SOQLInvalid) {
+        console.error('Fix the query', err.crmMessage)
+        return
+      }
+    }
+  }
+  throw err
+}
+```
+
+`instanceof MobileLockerError` is **true** for CRM, database, and HTTP error subclasses.
+
+## Error classes
+
+| Class | Thrown by |
+|-------|-----------|
+| `MobileLockerError` | General SDK failures |
+| `MobileLockerCRMError` | `crm.*` |
+| `MobileLockerDatabaseError` | `database.*` |
+| `MobileLockerHTTPError` | `http.*` transport |
+| `MobileLockerHttpResponseError` | Non-success HTTP responses (when applicable) |
+
+## Code constants
+
+Prefer constants over raw strings:
+
+### `GeneralErrorCode`
+
+| Constant | Code |
+|----------|------|
+| `NotConnected` | `not_connected` |
+| `ServerError` | `server_error` |
+| `RequestTimeout` | `request_timeout` |
+| `InvalidArgument` | `invalid_argument` |
+| `UnsupportedEnvironment` | `unsupported_environment` |
+| `NotFound` | `not_found` |
+
+### `CRMErrorCode` (extends general)
+
+| Constant | Code |
+|----------|------|
+| `NotSupported` | `crm_not_supported` |
+| `AuthExpired` | `crm_auth_expired` |
+| `SOQLInvalid` | `soql_invalid` |
+
+### `DatabaseErrorCode` (extends general)
+
+| Constant | Code |
+|----------|------|
+| `NotReady` | `databases_not_ready` |
+| `InvalidPath` | `invalid_database_path` |
+| `WriteNotPermitted` | `write_not_permitted` |
+| `QueryFailed` | `query_failed` |
+
+### `HTTPErrorCode`
+
+Same set as general codes for HTTP transport failures.
+
+## Status objects (not thrown)
+
+Some APIs return **status unions** instead of throwing (scanner, picker, refresh):
+
+```js
+const result = await mobilelocker.scanner.scanBusinessCard()
+if (result.isSuccess) { /* ... */ }
+if (result.isCancelled) { /* ... */ }
+if (result.isFailed) { /* ... */ }
+```
+
+Those use `withStatusBooleans` helpers (`isSuccess`, …) on top of a `status` field.
+
+## Logging
+
+```js
+mobilelocker.log.error('CRM failed', { code: err.code, message: err.message })
+const sdkLogs = await mobilelocker.log.getSdkLogs({ level: 'error', domain: 'crm' })
+```
+
+## API reference
+
+- [`MobileLockerError`](../api/classes/mobilelockererror/)
+- [`MobileLockerCRMError`](../api/classes/mobilelockercrmerror/)
+- [`GeneralErrorCode`](../api/variables/generalerrorcode/)
+- [`CRMErrorCode`](../api/variables/crmerrorcode/)

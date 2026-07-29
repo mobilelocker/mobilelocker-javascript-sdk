@@ -1,0 +1,45 @@
+---
+title: Log
+description: Structured presentation logs and SDK log inspection.
+---
+
+Write structured logs from presentation code and inspect SDK-internal logs when debugging.
+
+## Enable debug mode (sync)
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+mobilelocker.log.setMode(true)
+mobilelocker.log.isEnabled() // boolean
+```
+
+## Write logs (sync)
+
+```js
+mobilelocker.log.debug('Fetching products', { category: 'oncology' })
+mobilelocker.log.info('Query returned 42 rows')
+mobilelocker.log.warn('Result set large — consider paginating')
+mobilelocker.log.error('Query failed', { error: err.message })
+```
+
+## Read SDK logs (async)
+
+```js
+const errors = await mobilelocker.log.getSdkLogs({ level: 'error', domain: 'crm' })
+const hits = await mobilelocker.log.searchSdkLogs('timeout', { domain: 'database' })
+```
+
+Filter fields include `level` and `domain` (see `SDKLogFilter` / `SDKLogDomain` in the API reference).
+
+## Live vs practice session
+
+```js
+mobilelocker.log.liveMode()       // activate live session recording
+mobilelocker.log.practiceMode() // practice mode
+```
+
+## API reference
+
+- Module: [`log`](../api/variables/log/)
+- Types: [`SDKLogEntry`](../api/interfaces/sdklogentry/), [`SDKLogFilter`](../api/interfaces/sdklogfilter/)

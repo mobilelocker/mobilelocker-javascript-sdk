@@ -1,0 +1,102 @@
+---
+title: Getting started
+description: First success path — load the SDK, greet the user, and handle errors.
+---
+
+The SDK **initializes automatically**. There is no `init()` call. At runtime, Mobile Locker injects authentication via the `?jwt=` query parameter on the presentation URL.
+
+## 1. Import the SDK
+
+**Bundled presentation (ESM):**
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+```
+
+**Script tag (UMD):** see [UMD in presentation HTML](../guides/umd-html/) — the global is `mobilelocker`.
+
+## 2. Confirm you are in Mobile Locker (optional)
+
+```js
+if (!mobilelocker.isMobileLocker()) {
+  console.warn('Not running inside Mobile Locker — bridge calls may no-op')
+}
+```
+
+More helpers: [Environments](../guides/environments/).
+
+## 3. First success path — greet the user
+
+```js
+import mobilelocker, {
+  MobileLockerError,
+  GeneralErrorCode,
+} from '@mobilelocker/javascript-sdk'
+
+async function boot() {
+  try {
+    const currentUser = await mobilelocker.user.get()
+    console.log(`Hello, ${currentUser.name}`)
+
+    // Optional: gate features on app version (native app)
+    if (mobilelocker.isApp()) {
+      const info = await mobilelocker.device.get()
+      console.log('App version', info.app?.version)
+    }
+  } catch (err) {
+    if (err instanceof MobileLockerError) {
+      if (err.code === GeneralErrorCode.NotConnected) {
+        console.warn('Offline — show a banner and retry later')
+        return
+      }
+      console.error('SDK error', err.code, err.message)
+      return
+    }
+    throw err
+  }
+}
+
+boot()
+```
+
+You should see the current user's name in the console when the presentation runs inside Mobile Locker with a valid session.
+
+## 4. Common next calls
+
+| Goal | Start here |
+|------|------------|
+| Query Salesforce / CRM | [CRM](../domains/crm/) |
+| Walk the address book | [Contacts](../domains/contacts/) |
+| Scan a badge or business card (iOS) | [Scanner](../domains/scanner/) |
+| Persist presentation data | [Storage](../domains/storage/) · [localforage](../domains/localforage/) |
+| Call your own HTTPS API | [HTTP](../domains/http/) |
+| Bundled SQLite | [Database](../domains/database/) |
+| Open PDF / video | [UI](../domains/ui/) |
+| Structured logging | [Log](../domains/log/) |
+| Full domain map | [Domains overview](../domains/) |
+| Interactive IVA demo | [SDK Demo IVA](../examples/demo-iva/) |
+
+## 5. Large lists use cursor paging
+
+Contacts and CRM offline lists return a **cursor envelope**. Walk page by page — do not load an entire large set into one array.
+
+```js
+// Process one page at a time
+await mobilelocker.contacts.eachPage(500, (chunk) => {
+  for (const contact of chunk) {
+    // render / index this contact
+  }
+})
+```
+
+Advance single pages with `page.meta.cursor.next` until it is `null`. Prefer `crm.query` (SOQL) when you only need a filtered CRM set. Details: [Contacts](../domains/contacts/), [CRM](../domains/crm/).
+
+## Error handling pattern
+
+Prefer `instanceof MobileLockerError` and `*ErrorCode` constants — see [Errors](../domains/errors/).
+
+## Next
+
+- [UMD in presentation HTML](../guides/umd-html/)
+- [CRM](../domains/crm/)
+- [API reference](../api/)

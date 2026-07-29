@@ -1,0 +1,58 @@
+---
+title: HTTP
+description: Make HTTPS requests from presentations — proxied in the native app to avoid CORS.
+---
+
+Call your own backends or third-party APIs from presentation code.
+
+## Behavior by environment
+
+| Environment | Transport |
+|-------------|-----------|
+| **Native app** (`isApp()`) | Request is posted to the host and executed with native networking — **no browser CORS** |
+| **CDN / browser** | Standard `fetch` — **CORS rules apply** |
+
+## Examples
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+// GET
+const response = await mobilelocker.http.get('https://api.example.com/data')
+// response.status, response.statusText, response.headers, response.data
+
+// POST
+const created = await mobilelocker.http.post('https://api.example.com/submit', {
+  body: { leadId: 42 },
+  headers: { 'X-Client': 'mobilelocker-presentation' },
+  timeout: 15_000,
+})
+```
+
+Other verbs: `http.put`, `http.patch`, `http.delete`, or `http.request({ method, url, body, … })`.
+
+## Options
+
+```ts
+{
+  headers?: Record<string, string>
+  timeout?: number          // default 30000
+  responseType?: 'json' | 'text' | 'blob'  // default 'json'
+  body?: unknown            // for write methods
+}
+```
+
+## Errors
+
+Failures throw `MobileLockerHTTPError` / `MobileLockerHttpResponseError` (see [Errors](../domains/errors/)). Timeouts and offline map to `request_timeout` / `not_connected`.
+
+## Tips
+
+- Prefer HTTPS endpoints your team owns
+- Do not embed long-lived secrets in presentation JS — use short-lived tokens or host-side auth when possible
+- For Mobile Locker platform data, use domain APIs (`crm`, `user`, `data`, …) instead of inventing REST paths
+
+## API reference
+
+- Module: [`http`](../api/variables/http/)
+- Types: [`HTTPResponse`](../api/interfaces/httpresponse/), [`HTTPRequestOptions`](../api/interfaces/httprequestoptions/)

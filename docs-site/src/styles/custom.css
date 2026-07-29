@@ -1,0 +1,92 @@
+/*
+ * Mobile Locker brand tokens from v2 StyleGuide.vue
+ * Logo anchors: navy #00334d, teal #0292b3
+ * UI primary: light #184784 / dark #4A90E2
+ */
+
+:root {
+	--sl-color-accent-low: #d6e2f2;
+	--sl-color-accent: #184784;
+	--sl-color-accent-high: #00334d;
+
+	--ml-brand-navy: #00334d;
+	--ml-brand-teal: #0292b3;
+	--ml-primary: #184784;
+	--ml-secondary: #072a5f;
+	--ml-accent: #ff9800;
+	--ml-canvas: #f6f8fb;
+	--ml-border: #e2e8f0;
+	--ml-text: #101828;
+	--ml-text-secondary: #4b5565;
+}
+
+:root[data-theme='dark'] {
+	--sl-color-accent-low: #0f2744;
+	--sl-color-accent: #4a90e2;
+	--sl-color-accent-high: #93c5fd;
+
+	--ml-primary: #4a90e2;
+	--ml-secondary: #3a5f8a;
+	--ml-canvas: #0b1220;
+	--ml-text: #f1f5f9;
+	--ml-text-secondary: #94a3b8;
+}
+
+/* Header branding */
+.site-title {
+	font-weight: 700;
+	color: var(--ml-brand-navy);
+}
+
+:root[data-theme='dark'] .site-title {
+	color: var(--sl-color-white);
+}
+
+.site-title img {
+	max-height: 1.85rem;
+	width: auto;
+}
+
+/* Hero / splash */
+.hero {
+	--sl-color-text-accent: var(--sl-color-accent);
+}
+
+.hero .tagline {
+	max-width: 40rem;
+}
+
+/* Callout: teal accent bar for notes that should feel on-brand */
+.starlight-aside--note {
+	border-inline-start-color: var(--ml-brand-teal);
+}
+
+/* Code blocks: slightly softer canvas */
+.expressive-code {
+	--ec-frm-edBg: var(--sl-color-gray-6);
+}
+
+/* Sidebar group labels */
+.sidebar-content .group-label .large {
+	letter-spacing: 0.02em;
+}
+
+/* Footer product links row */
+.ml-footer-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem 1.25rem;
+	margin-top: 2rem;
+	padding-top: 1rem;
+	border-top: 1px solid var(--sl-color-gray-5);
+	font-size: 0.875rem;
+}
+
+.ml-footer-links a {
+	color: var(--sl-color-accent);
+	text-decoration: none;
+}
+
+.ml-footer-links a:hover {
+	text-decoration: underline;
+}

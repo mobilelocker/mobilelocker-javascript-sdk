@@ -1,0 +1,25 @@
+---
+title: Network
+description: Check connectivity before online-only work.
+---
+
+## Status
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+const status = await mobilelocker.network.getStatus()
+// status.connected — boolean
+// status.type — 'wifi' | 'cellular' | 'wired' | 'none'
+
+if (!status.connected) {
+  // show offline UI; avoid CRM refresh / remote HTTP
+}
+```
+
+Pair with [Errors](errors/) (`NotConnected`) when calls fail after a race with connectivity loss.
+
+## API reference
+
+- Module: [`network`](../api/variables/network/)
+- Types: [`NetworkStatus`](../api/interfaces/networkstatus/), [`NetworkConnectionType`](../api/type-aliases/networkconnectiontype/)

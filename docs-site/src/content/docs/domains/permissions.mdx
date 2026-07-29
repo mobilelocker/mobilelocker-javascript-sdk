@@ -1,0 +1,50 @@
+---
+title: Permissions
+description: Query camera, mic, photos, location, bluetooth, and biometrics (iOS).
+---
+
+Check iOS permission state before opening camera/scanner flows. Methods return a **safe default** outside the iOS app rather than throwing.
+
+## Common permissions
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+const camera = await mobilelocker.permissions.camera()
+const microphone = await mobilelocker.permissions.microphone()
+const photoLibrary = await mobilelocker.permissions.photoLibrary()
+const location = await mobilelocker.permissions.location()
+const bluetooth = await mobilelocker.permissions.bluetooth()
+
+// { status, granted }
+if (!camera.granted) {
+  // prompt user via host settings / UI
+}
+```
+
+### Status values
+
+Common: `'authorized' | 'denied' | 'restricted' | 'not_determined' | 'unknown'`
+
+Also:
+
+- Location: `'authorized_always' | 'authorized_when_in_use'`
+- Photo library: `'limited'`
+
+## Biometrics
+
+```js
+const biometric = await mobilelocker.permissions.biometric()
+// { available, biometric_type, error? }
+// biometric_type: 'face_id' | 'touch_id' | 'optic_id' | 'none' | 'unknown'
+```
+
+## Related
+
+- [Scanner](scanner/) — requires camera permission in practice
+- [Environments](../guides/environments/) — `isIOS()`
+
+## API reference
+
+- Module: [`permissions`](../api/variables/permissions/)
+- Types: [`PermissionResult`](../api/interfaces/permissionresult/), [`BiometricResult`](../api/interfaces/biometricresult/)

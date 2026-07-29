@@ -1,0 +1,22 @@
+---
+title: Session
+description: Read device events recorded during the current session.
+---
+
+:::tip[Live demo]
+Open the **Events** screen in the [SDK Demo IVA](../examples/demo-iva/) (`#/events`).
+:::
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+const events = await mobilelocker.session.getDeviceEvents()
+```
+
+Use this for session-scoped timelines. Presentation-level event helpers also live on [`presentation`](presentation/) (`getEvents`, `getDeviceEvents`).
+
+Live vs practice recording is controlled via [`log.liveMode` / `log.practiceMode`](log/).
+
+## API reference
+
+- Module: [`session`](../api/variables/session/)

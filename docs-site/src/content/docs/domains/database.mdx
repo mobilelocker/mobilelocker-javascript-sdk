@@ -1,0 +1,60 @@
+---
+title: Database
+description: Query SQLite databases bundled with the current presentation.
+---
+
+Run **read-only SELECT** queries against SQLite files shipped with the presentation.
+
+## List databases
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+const databases = await mobilelocker.database.list()
+// e.g. ['products.sqlite', 'search/fts.db']
+```
+
+## Query
+
+Positional parameters:
+
+```js
+const result = await mobilelocker.database.query(
+  'products.sqlite',
+  'SELECT * FROM products WHERE category = ?',
+  ['widgets'],
+)
+// result.rows
+// result.rows_affected  — 0 for SELECT
+// result.last_insert_row_id
+```
+
+Named parameters:
+
+```js
+const result = await mobilelocker.database.query(
+  'products.sqlite',
+  'SELECT * FROM products WHERE category = :category AND approved = :approved',
+  { category: 'oncology', approved: 1 },
+)
+```
+
+## Describe a table
+
+```js
+const description = await mobilelocker.database.describe('products.sqlite', 'products')
+// description.name, description.sql, description.columns[]
+```
+
+## Constraints
+
+- **SELECT only** — writes throw `WriteNotPermitted` (`DatabaseErrorCode`)
+- Path must be an allowed presentation database file (`InvalidPath` otherwise)
+- Databases may still be copying open on cold start (`NotReady` after retries)
+
+See [Errors](errors/) for `MobileLockerDatabaseError` codes.
+
+## API reference
+
+- Module: [`database`](../api/variables/database/)
+- Types: [`DatabaseQueryResult`](../api/interfaces/databasequeryresult/), [`DatabaseTableDescription`](../api/interfaces/databasetabledescription/)

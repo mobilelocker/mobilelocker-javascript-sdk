@@ -1,0 +1,40 @@
+---
+title: Search
+description: Search presentations, customers, contacts, attendees, and business cards.
+---
+
+:::tip[Live demo]
+Open the **Search** screen in the [SDK Demo IVA](../examples/demo-iva/) (`#/search`).
+:::
+
+## Query
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+const results = await mobilelocker.search.query('Acme', {
+  types: ['customers', 'presentations'],
+  limit: 10,
+})
+
+// results.customers.results
+// results.presentations.results
+// …per requested type
+```
+
+### Options
+
+| Field | Notes |
+|-------|--------|
+| `types` | Subset of `'presentations' \| 'customers' \| 'contacts' \| 'attendees' \| 'business_cards'` |
+| `limit` | Max hits per type (host-dependent defaults apply if omitted) |
+
+## Tips
+
+- Use search for **discovery UIs**; use [contacts](contacts/) / [CRM](crm/) paging when you must walk large sets systematically
+- Combine with [Storage](storage/) if you cache recent query strings per presentation
+
+## API reference
+
+- Module: [`search`](../api/variables/search/)
+- Types: [`SearchOptions`](../api/interfaces/searchoptions/), [`SearchResults`](../api/interfaces/searchresults/)

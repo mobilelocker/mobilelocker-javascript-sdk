@@ -4,8 +4,9 @@ dist/
 # Test coverage
 coverage/
 
-# Internal planning documents
-docs/
+# Legacy TypeDoc HTML (repo root only — bare "docs/" would also ignore
+# docs-site/src/content/docs/** and drop all Starlight content from commits)
+/docs/
 
 # Dependencies
 node_modules/
@@ -28,3 +29,10 @@ npm-debug.log*
 .env
 .env.local
 .env.*.local
+
+# Starlight generated / local (rebuild with yarn docs:api / docs:build)
+docs-site/src/content/docs/api/
+docs-site/src/content/docs/guides/changelog.md
+docs-site/public/llms.txt
+docs-site/dist/
+docs-site/.astro/

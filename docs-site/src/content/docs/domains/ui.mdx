@@ -1,0 +1,42 @@
+---
+title: UI
+description: Open PDFs and videos; show the native toolbar (iOS).
+---
+
+Presentation UI helpers. Some methods are **iOS app only**.
+
+## PDF
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+mobilelocker.ui.openPDF('/files/brochure.pdf', 'Product Brochure')
+```
+
+## Video
+
+```js
+const result = await mobilelocker.ui.openVideo('/files/demo.mp4', {
+  autoplay: true,
+  showControls: true,
+})
+
+if (result.isCompleted) { /* finished */ }
+if (result.isDismissed) { /* user closed early */ }
+if (result.isFailed) {
+  console.error(result.error)
+}
+```
+
+## Toolbar (iOS)
+
+```js
+if (mobilelocker.isIOS()) {
+  mobilelocker.ui.showToolbar()
+}
+```
+
+## API reference
+
+- Module: [`ui`](../api/variables/ui/)
+- Types: [`VideoOptions`](../api/interfaces/videooptions/), [`VideoResult`](../api/type-aliases/videoresult/)

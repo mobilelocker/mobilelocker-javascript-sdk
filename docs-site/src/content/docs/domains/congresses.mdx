@@ -1,0 +1,43 @@
+---
+title: Congresses
+description: Lead-retrieval events, attendees, and stored business cards.
+---
+
+Access **lead retrieval** events and related records captured at congresses / events.
+
+## Events
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+const events = await mobilelocker.congresses.list()
+const event = await mobilelocker.congresses.get(eventID)
+```
+
+## Attendees
+
+```js
+const attendees = await mobilelocker.congresses.getAttendees(eventID)
+const attendee = await mobilelocker.congresses.getAttendee(attendeeID)
+```
+
+## Business cards
+
+```js
+const cards = await mobilelocker.congresses.getBusinessCards()
+const card = await mobilelocker.congresses.getBusinessCard(cardID)
+```
+
+## Capture vs read
+
+| Goal | Use |
+|------|-----|
+| Open camera to scan a badge/card | [Scanner](scanner/) (`scanner.scanBadge` / `scanBusinessCard`) |
+| Read events and already-stored cards/attendees | `congresses.*` |
+
+Pass an `eventID` into scanner APIs when you want the capture associated with a lead-retrieval event.
+
+## API reference
+
+- Module: [`congresses`](../api/variables/congresses/)
+- Types: [`Event`](../api/interfaces/event/), [`Attendee`](../api/interfaces/attendee/), [`BusinessCard`](../api/interfaces/businesscard/)

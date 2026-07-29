@@ -1,0 +1,58 @@
+---
+title: Contacts
+description: Page through the user address book with cursor APIs.
+---
+
+Read the **current user's** contacts (address book). Books can exceed **100k** rows — always walk with **cursor paging**. Process one page at a time; do not rebuild the full book in memory.
+
+## Fetch one contact
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+const contact = await mobilelocker.contacts.get(contactID)
+```
+
+## Walk page by page (preferred)
+
+Host envelope:
+
+```
+GET …?limit=1…5000&cursor=
+→ { data, meta: { cursor: { next, count } } }
+```
+
+```js
+await mobilelocker.contacts.eachPage(500, (chunk) => {
+  for (const c of chunk) {
+    // render / index / filter this contact only
+  }
+})
+```
+
+## Single page
+
+```js
+const page = await mobilelocker.contacts.getPage(500)
+// page.data — UserContact[]
+// page.meta.cursor.next — string | null
+// page.meta.cursor.count
+
+if (page.meta.cursor.next) {
+  const next = await mobilelocker.contacts.getPage(500, page.meta.cursor.next)
+}
+```
+
+`limit` / `pageSize` must be an integer **1…5000** or the SDK throws `InvalidArgument`.
+
+## Related
+
+- [CRM](crm/) — CRM contacts are a different domain (`crm.getContact` / SOQL)
+- [Scanner](scanner/) — capture new leads on device
+- [Search](search/) — cross-entity search including contacts
+- [Errors](errors/) — `MobileLockerError` / `InvalidArgument`
+
+## API reference
+
+- Module: [`contacts`](../api/variables/contacts/)
+- Types: [`UserContact`](../api/interfaces/usercontact/), [`Page`](../api/interfaces/page/)

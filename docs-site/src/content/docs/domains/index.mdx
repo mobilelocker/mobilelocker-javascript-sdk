@@ -1,0 +1,54 @@
+---
+title: Domains overview
+description: Map of Mobile Locker JavaScript SDK domains and when to use each.
+---
+
+The SDK is organized into **domains** — focused modules on the default export (`mobilelocker.crm`, `mobilelocker.storage`, …).
+
+See many of these live in the **[SDK Demo IVA](../examples/demo-iva/)** (Vue presentation that maps each major screen to a domain).
+
+## By job to be done
+
+| I need to… | Start here |
+|------------|------------|
+| Greet the rep / read identity | [User](user/) |
+| Query Salesforce / manage current customers | [CRM](crm/) |
+| Walk the address book safely | [Contacts](contacts/) |
+| Scan a badge or business card | [Scanner](scanner/) · [Congresses](congresses/) |
+| Persist presentation data | [Storage](storage/) · [localforage](localforage/) |
+| Call my HTTPS API | [HTTP](http/) |
+| Log analytics events | [Analytics](analytics/) |
+| Query bundled SQLite | [Database](database/) |
+| Products / forms / labels | [Data](data/) |
+| Open PDFs/videos | [UI](ui/) |
+| Share or email | [Share](share/) |
+| Search across entities | [Search](search/) |
+| Gate on app version / OS | [Device](device/) · [Environments](../guides/environments/) |
+| Handle failures | [Errors](errors/) |
+| Debug | [Log](log/) · [Network](network/) |
+
+## Full list
+
+- [Analytics](analytics/)
+- [Congresses](congresses/)
+- [Contacts](contacts/)
+- [CRM](crm/)
+- [Data](data/)
+- [Database](database/)
+- [Device](device/)
+- [Errors](errors/)
+- [HTTP](http/)
+- [localforage](localforage/)
+- [Log](log/)
+- [Network](network/)
+- [Permissions](permissions/)
+- [Presentation](presentation/)
+- [Scanner](scanner/)
+- [Search](search/)
+- [Session](session/)
+- [Share](share/)
+- [Storage](storage/)
+- [UI](ui/)
+- [User](user/)
+
+Generated signatures for every export live under [API reference](../api/).

@@ -1,0 +1,63 @@
+---
+title: Storage
+description: Persist data for the current presentation and user context.
+---
+
+Store JSON-serializable data tied to the **current presentation / user** context. Field names on entries are **snake_case** (`team_id`, `created_at`, …).
+
+## Save and load
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+await mobilelocker.storage.save('scan-results', { leads: [{ id: 1 }] })
+
+const entry = await mobilelocker.storage.get('scan-results')
+// entry.name, entry.data, entry.team_id, entry.presentation_id, …
+
+const allHere = await mobilelocker.storage.getAll() // current presentation
+const across = await mobilelocker.storage.getAllAcrossPresentations() // all for user
+
+await mobilelocker.storage.delete('scan-results')
+```
+
+## Query
+
+```js
+const filtered = await mobilelocker.storage.query({
+  name: 'scan-results',
+  limit: 10,
+  // presentationID, since, until also supported
+})
+```
+
+## Field names
+
+`StorageEntry` fields are **snake_case** only: `team_id`, `user_id`, `presentation_id`, `created_at`, `updated_at`.
+
+| Method | Scope |
+|--------|--------|
+| `storage.getAll()` | Current presentation |
+| `storage.getAllAcrossPresentations()` | All presentations for the user |
+| `storage.getForPresentation(id)` | One presentation by id |
+
+## localforage vs storage
+
+| API | Use when |
+|-----|----------|
+| [`storage`](../api/variables/storage/) | Named server-backed entries with presentation/user metadata |
+| [`localforage`](../api/variables/localforage/) | Drop-in key-value store that survives WKWebView port changes on iOS |
+
+```js
+await mobilelocker.localforage.setItem('user-prefs', { theme: 'dark' })
+const prefs = await mobilelocker.localforage.getItem('user-prefs')
+```
+
+Prefer `mobilelocker.localforage` over raw browser `localforage` in presentations so data is not lost when the WebView origin/port changes.
+
+## API reference
+
+- [`storage`](../api/variables/storage/)
+- [`StorageEntry`](../api/interfaces/storageentry/)
+- [`StorageFilter`](../api/interfaces/storagefilter/)
+- [`localforage`](../api/variables/localforage/)

@@ -6,6 +6,12 @@ on:
     paths:
       - 'src/**'
       - 'typedoc.json'
+      - 'docs-site/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'yarn.lock'
+      - 'CHANGELOG.md'
+      - '.github/workflows/docs.yml'
 
 permissions:
   contents: read
@@ -30,17 +36,24 @@ jobs:
           node-version: 22
           cache: yarn
 
-      - name: Install dependencies
+      - name: Install root dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Generate docs
-        run: yarn docs
+      - name: Install docs-site dependencies
+        run: yarn --cwd docs-site install --frozen-lockfile
+
+      - name: Generate API markdown and build Starlight
+        run: yarn docs:build
+        env:
+          # Ensure Astro uses GitHub Pages base path
+          GITHUB_ACTIONS: 'true'
+          NODE_ENV: production
 
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs
+          path: docs-site/dist
 
       - uses: actions/deploy-pages@v4
         id: deployment

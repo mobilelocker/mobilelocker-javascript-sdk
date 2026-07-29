@@ -1,0 +1,103 @@
+---
+title: CRM
+description: Query CRM data with SOQL, walk offline tables with cursor paging, manage current customers.
+---
+
+Interact with the team's connected CRM (Salesforce, etc.) from a presentation.
+
+:::tip[Live demo]
+Open the **CRM** screen in the [SDK Demo IVA](../examples/demo-iva/) (`#/crm`) for SOQL, current customers, picker, refresh, and cursor-paged entity walks.
+:::
+
+Prefer filtered **SOQL** via `crm.query` when you can. For offline walks of large tables, use **cursor paging** and process one page at a time — do not reassemble every page into one giant array.
+
+## Prefer SOQL for filtered access
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+const results = await mobilelocker.crm.query(
+  'SELECT Id, Name FROM Account WHERE Name = :name',
+  { name: 'Acme' },
+)
+// results.rows, results.totalSize, results.done
+```
+
+## Offline walks (cursor envelope)
+
+Host list contract:
+
+```
+GET …?limit=1…5000&cursor=
+→ { data, meta: { cursor: { next, count } } }
+```
+
+Advance **only** with `meta.cursor.next` until it is `null`.
+
+```js
+// Process each page; do not push chunks into a growing array for large tables
+await mobilelocker.crm.eachAccountsPage(500, (chunk) => {
+  for (const account of chunk) {
+    // handle one account
+  }
+})
+
+await mobilelocker.crm.eachContactsPage(500, async (chunk) => {
+  /* ... */
+})
+```
+
+Single page:
+
+```js
+const page = await mobilelocker.crm.getAccountsPage(500)
+if (page.meta.cursor.next) {
+  const next = await mobilelocker.crm.getAccountsPage(500, page.meta.cursor.next)
+}
+```
+
+| Entity | One page | Full walk |
+|--------|----------|-----------|
+| Accounts | `getAccountsPage` | `eachAccountsPage` |
+| Addresses | `getAddressesPage` | `eachAddressesPage` |
+| Contacts | `getContactsPage` | `eachContactsPage` |
+| Leads | `getLeadsPage` | `eachLeadsPage` |
+| Users | `getUsersPage` | `eachUsersPage` |
+
+## Fetch by ID
+
+```js
+const account = await mobilelocker.crm.getAccount(accountID)
+const contact = await mobilelocker.crm.getContact(contactID)
+const lead = await mobilelocker.crm.getLead(leadID)
+```
+
+## Current customers & picker
+
+```js
+const current = await mobilelocker.crm.getCurrentCustomers()
+await mobilelocker.crm.setCurrentCustomers([id1, id2])
+await mobilelocker.crm.addCurrentCustomer(id)
+await mobilelocker.crm.clearCurrentCustomers()
+
+// iOS app only — native customer picker
+const result = await mobilelocker.crm.openCustomerPicker()
+if (result.isSelected) {
+  console.log(result.customers)
+}
+```
+
+## Refresh
+
+```js
+const { status } = await mobilelocker.crm.refresh({ mode: 'incremental' }) // or 'full'
+```
+
+## Errors
+
+CRM failures throw `MobileLockerCRMError` (extends `MobileLockerError`). See [Errors](../domains/errors/) and `CRMErrorCode` (`crm_auth_expired`, `soql_invalid`, …).
+
+## API reference
+
+- Module: [`crm`](../api/variables/crm/)
+- Types: [`CRMQueryResult`](../api/interfaces/crmqueryresult/), [`CRMAccount`](../api/interfaces/crmaccount/), …

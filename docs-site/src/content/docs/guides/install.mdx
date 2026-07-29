@@ -1,0 +1,36 @@
+---
+title: Install
+description: Install @mobilelocker/javascript-sdk via npm or yarn.
+---
+
+## Package
+
+```bash
+npm install @mobilelocker/javascript-sdk
+# or
+yarn add @mobilelocker/javascript-sdk
+```
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+// or named imports
+import { user, crm, isIOS } from '@mobilelocker/javascript-sdk'
+```
+
+## Presentation HTML (no bundler)
+
+If your presentation loads scripts with `<script>` tags, use the **UMD** build instead of npm. See [UMD in presentation HTML](../guides/umd-html/).
+
+## Requirements
+
+| Requirement | Notes |
+|-------------|--------|
+| **Node.js 18+** | For package installs / tooling |
+| **Mobile Locker host** | Most bridge APIs need the app or CDN presentation context |
+
+Outside Mobile Locker (local browser), many calls are no-ops or return safe fallbacks so you can develop offline.
+
+## Next
+
+- [Getting started](../guides/getting-started/)
+- [Environments](../guides/environments/)

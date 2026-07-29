@@ -1,0 +1,38 @@
+---
+title: Analytics
+description: Log custom presentation events for Mobile Locker analytics.
+---
+
+Track custom events from inside a presentation. `logEvent` is **synchronous**.
+
+## Log an event
+
+```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
+mobilelocker.analytics.logEvent('product', 'view', '/slides/overview')
+
+mobilelocker.analytics.logEvent('product', 'view', '/slides/overview', {
+  productId: 42,
+  source: 'menu',
+})
+```
+
+| Argument | Role |
+|----------|------|
+| `category` | High-level grouping (e.g. `product`, `form`) |
+| `action` | Verb (e.g. `view`, `submit`) |
+| `uri` | Location or resource path in the presentation |
+| `data` | Optional JSON-serializable payload |
+
+## When to use
+
+- Slide / asset views that matter for engagement reports
+- Custom CTA clicks and form milestones
+- Anything you want correlated with the host analytics pipeline
+
+Prefer domain APIs for real data (`crm`, `user`, …). Use analytics for **instrumentation**, not as a data store.
+
+## API reference
+
+- Module: [`analytics`](../api/variables/analytics/)

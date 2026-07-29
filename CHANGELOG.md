@@ -13,38 +13,25 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [2.0.0] — Unreleased
 
-### ⚠️ Hard break — adopt 2.0 before iOS 5.5.0 is widespread
+### Highlights
 
-This is a **major version hard break**, not a soft deprecation. Mobile Locker **iOS 5.5.0** ships the matching host changes and will be **in the wild soon**. Presentations that stay on SDK **1.x** (or keep calling removed full-list APIs) will fail on updated devices.
+Major release focused on **safe list access** for large contacts/CRM tables, clearer storage APIs, and stronger typing/errors.
 
-**Integrators must:**
-
-1. Upgrade to **`@mobilelocker/javascript-sdk` 2.0**.
-2. Update presentation JavaScript to the new APIs (contacts/CRM paging, storage renames, etc.).
-3. Verify on **iOS 5.5.0+**. There is **no** dual-mode and **no** unbounded full-table dump fallback for contacts or CRM lists.
-
-| If your code still does this… | You must change to… |
-|-------------------------------|---------------------|
-| `contacts.getAll()` | `contacts.eachPage` / `getPage` |
-| `contacts.getChunked(min, limit)` + bare array | `contacts.getPage(limit, cursor?)` → `{ data, meta.cursor }` |
-| `crm.getAccounts()` (and other full CRM lists) | `crm.query` and/or `crm.each*Page` / `get*Page` |
-| Page advance via `min` / `after` / last `.id` | `meta.cursor.next` only (`null` = done) |
-| `storage.getAllForPresentation()` | `getAll` / `getAllAcrossPresentations` |
-| `StorageEntry` camelCase fields | snake_case only |
-
-Breaking changes in this release: **MLJS-24, MLJS-25, MLJS-26, MLJS-27**. Host list contract (iOS **5.5.0+**, [MLI-1718](https://mobilelocker.atlassian.net/browse/MLI-1718)):
+**List host contract** ([MLI-1718](https://mobilelocker.atlassian.net/browse/MLI-1718)):
 
 ```
 GET …?limit={1…5000}&cursor={token?}
 → { data, meta: { cursor: { next: string | null, count: number } } }
 ```
 
-Walks stop when `meta.cursor.next === null`. Intermediate `min` / `after` + bare-array list shapes are **not** supported.
+Walks stop when `meta.cursor.next === null`. Prefer page-by-page processing (or SOQL for filtered CRM). Do not load unbounded full tables into memory.
+
+Breaking changes in this release: **MLJS-24, MLJS-25, MLJS-26, MLJS-27**.
 
 ### Added
 
 - **`Page<T>` / `PageMeta` / `PageCursor`** — shared cursor-envelope types for list APIs.
-- **Contacts cursor paging** (MLJS-27 / [MLI-1718](https://mobilelocker.atlassian.net/browse/MLI-1718)) — requires **Mobile Locker iOS 5.5.0+**.
+- **Contacts cursor paging** (MLJS-27 / [MLI-1718](https://mobilelocker.atlassian.net/browse/MLI-1718)).
   - `contacts.getPage(limit, cursor?)` → `Page<UserContact>`
   - `contacts.eachPage(pageSize, handler)` — advances only via `meta.cursor.next`
 - **CRM list paging** (MLJS-26 / [MLI-1718](https://mobilelocker.atlassian.net/browse/MLI-1718)) — same envelope for offline CRM tables. Prefer filtered SOQL via `crm.query` when possible.
@@ -83,7 +70,7 @@ Walks stop when `meta.cursor.next === null`. Intermediate `min` / `after` + bare
   const contacts = await mobilelocker.contacts.getAll()
   // or: await mobilelocker.contacts.getChunked(minID, 500)
 
-  // After — process pages; do not push(...chunk) into one array (iOS 5.5.0+)
+  // After — process pages; do not push(...chunk) into one array
   await mobilelocker.contacts.eachPage(500, (chunk) => {
       for (const contact of chunk) {
           // handle one contact
@@ -97,7 +84,7 @@ Walks stop when `meta.cursor.next === null`. Intermediate `min` / `after` + bare
       : null
   ```
 
-  Native hosts remove the unbound full-dump and intermediate `min`/`after` bare-array branches of list routes after presentations adopt this release.
+  Host list routes use the cursor envelope only (no unbound full-dump or `min`/`after` bare-array shapes).
 
 - **`crm.getAccounts()` / `getAddresses()` / `getContacts()` / `getLeads()` / `getUsers()`** (MLJS-26 / [MLI-1718](https://mobilelocker.atlassian.net/browse/MLI-1718)) — **breaking.** Full-table CRM list loads are unsafe for large offline sets (same class of memory risk as the old contacts dump). Single-id getters (`getAccount`, etc.) and `crm.query` are unchanged.
 
@@ -111,7 +98,7 @@ Walks stop when `meta.cursor.next === null`. Intermediate `min` / `after` + bare
       { name: 'Acme' },
   )
 
-  // After — offline walk (iOS 5.5.0+); process pages; do not rebuild one array
+  // After — offline walk; process pages; do not rebuild one array
   await mobilelocker.crm.eachAccountsPage(500, (chunk) => {
       for (const account of chunk) {
           // handle one account
@@ -124,8 +111,6 @@ Walks stop when `meta.cursor.next === null`. Intermediate `min` / `after` + bare
       ? await mobilelocker.crm.getAccountsPage(500, page.meta.cursor.next)
       : null
   ```
-
-  Minimum host for CRM / contacts list walks: **iOS 5.5.0**. There is no unbounded fallback on older hosts.
 
 - **`storage.getAllForPresentation()`** (MLJS-25) — **breaking rename.** That method hit the unrestricted user storage list (all presentations), not “for the current presentation.” Use:
   - `storage.getAll()` — current presentation

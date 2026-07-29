@@ -1,0 +1,81 @@
+---
+title: UMD in presentation HTML
+description: Load the Mobile Locker JavaScript SDK with a script tag in presentation HTML.
+---
+
+Many Mobile Locker presentations are plain HTML/JS without a bundler. Use the **UMD** build so the SDK attaches to a global.
+
+## Build artifact
+
+After `yarn build` in the SDK repo (or from the published package):
+
+| File | Role |
+|------|------|
+| `dist/index.umd.js` | Browser global **`mobilelocker`** |
+| `dist/index.esm.js` | ESM (`import`) |
+| `dist/index.js` | CommonJS |
+
+Vite lib name is `mobilelocker` (see `vite.config.ts`).
+
+## Script tag
+
+Host `index.umd.js` with your presentation assets (or your CDN), then:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>My presentation</title>
+  </head>
+  <body>
+    <h1>Hello</h1>
+
+    <script src="./vendor/mobilelocker-javascript-sdk/index.umd.js"></script>
+    <script>
+      // Global default export object
+      const ml = mobilelocker.default || mobilelocker
+
+      async function boot() {
+        if (!ml.isMobileLocker()) {
+          console.warn('Open this presentation inside Mobile Locker to exercise the bridge')
+        }
+
+        try {
+          const user = await ml.user.get()
+          document.querySelector('h1').textContent = 'Hello, ' + (user.name || 'there')
+        } catch (err) {
+          console.error(err)
+        }
+      }
+
+      boot()
+    </script>
+  </body>
+</html>
+```
+
+:::tip[Default vs named]
+Depending on bundler interop, UMD may expose `mobilelocker.default` as the full SDK object **and** named properties on `mobilelocker`. Prefer `const ml = mobilelocker.default || mobilelocker` for a stable handle.
+:::
+
+## npm package path
+
+If you install the package and copy the file into the presentation:
+
+```bash
+cp node_modules/@mobilelocker/javascript-sdk/dist/index.umd.js ./vendor/
+```
+
+Or point a build step at `node_modules/@mobilelocker/javascript-sdk/dist/index.umd.js`.
+
+## What still works the same
+
+- No `init()` — JWT comes from the presentation URL
+- Same domain APIs: `ml.crm`, `ml.scanner`, `ml.storage`, …
+- Same environment helpers: `ml.isIOS()`, `ml.isElectron()`, …
+
+## Next
+
+- [Getting started](../guides/getting-started/)
+- [Environments](../guides/environments/)
