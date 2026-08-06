@@ -3,13 +3,18 @@ title: Mobile Locker JavaScript SDK
 description: Official JavaScript SDK for interactive presentations and custom features on Mobile Locker.
 template: splash
 hero:
-  tagline: Programmatic access to CRM, contacts, scanning, storage, analytics, and device APIs — from inside a Mobile Locker presentation.
+  title: JavaScript SDK for Mobile Locker presentations
+  tagline: Call CRM, contacts, scanning, storage, analytics, and device APIs from inside a Mobile Locker presentation on iOS, Android, Electron, or CDN.
   image:
-    file: ../../assets/mobilelocker_logo.svg
+    file: ../../assets/demo/mljs-environments-hero.png
+    alt: SDK Demo IVA runtime panel showing environment flags, network status, and permissions
   actions:
     - text: Get started
       link: guides/getting-started/
       icon: right-arrow
+    - text: Install
+      link: guides/install/
+      variant: secondary
     - text: Domains
       link: domains/
       icon: open-book
@@ -20,56 +25,107 @@ import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 
 ## What this SDK is for
 
-IVA and presentation developers use `@mobilelocker/javascript-sdk` to talk to the Mobile Locker host (iOS, Android, Electron) and CDN presentations — without hand-rolling bridge HTTP.
+`@mobilelocker/javascript-sdk` is the official package for IVA and presentation developers. It talks to the Mobile Locker host so you do not hand-roll bridge HTTP for common platform capabilities.
+
+The SDK initializes automatically. There is no `init()` call. At runtime, Mobile Locker injects authentication through the `?jwt=` query parameter on the presentation URL.
+
+## Where it runs
+
+| Environment | Host |
+|-------------|------|
+| **iOS / iPadOS** | Mobile Locker iOS app |
+| **Android** | Mobile Locker Android app |
+| **Electron** | Mobile Locker Windows app |
+| **CDN** | CDN-hosted presentation |
+
+Outside a Mobile Locker environment (for example local development), most bridge calls are no-ops or return local fallbacks so you can still build the presentation.
+
+Details: [Environments](guides/environments/).
 
 ## Start here
 
-<CardGrid stagger>
-	<Card title="Install" icon="puzzle">
-		npm / yarn package install and host requirements.
-		[Install →](guides/install/)
-	</Card>
-	<Card title="Getting started" icon="rocket">
-		JWT-injected presentations, first `user.get()`, and error handling.
-		[Start →](guides/getting-started/)
-	</Card>
-	<Card title="UMD in HTML" icon="seti:html">
-		Drop the UMD build into presentation HTML when you are not bundling.
-		[UMD guide →](guides/umd-html/)
-	</Card>
-	<Card title="SDK Demo IVA" icon="rocket">
-		Open the demo presentation in Mobile Locker (iOS). Source on GitHub: mobilelocker-sdk-demo.
-		[Demo guide →](examples/demo-iva/)
-	</Card>
-	<Card title="Changelog" icon="document">
-		Release notes for the package.
-		[Changelog →](guides/changelog/)
-	</Card>
-</CardGrid>
+Pick a path based on how you ship the presentation. Each card links to the full guide.
+
+<div class="ml-start-grid">
+	<CardGrid>
+		<Card title="Install" icon="puzzle">
+			Add `@mobilelocker/javascript-sdk@2` to a bundled presentation, or load the UMD build when you do not use a bundler.
+
+			- Package managers: npm or yarn
+			- Node.js 18+ for installs and tooling
+			- Mobile Locker host required for bridge APIs
+			- iOS 5.5.0+ for contacts/CRM cursor list walks
+
+			[Install guide →](guides/install/)
+		</Card>
+		<Card title="Getting started" icon="rocket">
+			First success path after the package is available in your presentation.
+
+			- No `init()` call; the SDK starts on load
+			- Auth via the `?jwt=` query parameter Mobile Locker injects
+			- Call `user.get()` and handle `MobileLockerError`
+			- Optional environment checks (`isMobileLocker`, `isIOS`, and related helpers)
+
+			[Getting started →](guides/getting-started/)
+		</Card>
+		<Card title="UMD in HTML" icon="seti:html">
+			For plain HTML/JS presentations that load scripts with tags instead of ESM imports.
+
+			- Artifact: `dist/index.umd.js`
+			- Global: `mobilelocker` (prefer `mobilelocker.default || mobilelocker`)
+			- Same domains as the npm package once the script is loaded
+
+			[UMD guide →](guides/umd-html/)
+		</Card>
+		<Card title="SDK Demo IVA" icon="laptop">
+			Interactive Visual Aid that exercises the SDK inside the Mobile Locker app (not as a standalone website).
+
+			- Open the demo presentation in the Mobile Locker iOS app
+			- Source and issues: github.com/mobilelocker/mobilelocker-sdk-demo
+			- Pair screens with the domain guides for full API contracts
+
+			[Demo guide →](examples/demo-iva/)
+		</Card>
+		<Card title="Changelog" icon="document">
+			Release notes for `@mobilelocker/javascript-sdk`, including the 2.0 hard break from unbound contacts/CRM list dumps.
+
+			- What changed between versions
+			- Host version notes where documented
+			- Migration pointers for removed 1.x list APIs
+
+			[Changelog →](guides/changelog/)
+		</Card>
+	</CardGrid>
+</div>
 
 ## Domains
 
-Browse by task in the [domains overview](domains/), or jump in:
+Browse by task in the [domains overview](domains/), or jump straight to a module.
 
-<CardGrid>
-	<LinkCard title="User" href="domains/user/" description="Authenticated rep identity." />
-	<LinkCard title="Contacts" href="domains/contacts/" description="Cursor-paged address book." />
-	<LinkCard title="CRM" href="domains/crm/" description="SOQL, offline walks, current customers." />
-	<LinkCard title="Scanner" href="domains/scanner/" description="Badge and business card capture (iOS)." />
-	<LinkCard title="Storage" href="domains/storage/" description="Presentation-scoped persistence." />
-	<LinkCard title="Database" href="domains/database/" description="Query bundled SQLite." />
-	<LinkCard title="Presentation" href="domains/presentation/" description="Library, download, open, lifecycle." />
-	<LinkCard title="HTTP" href="domains/http/" description="Proxied HTTPS from the native app." />
-	<LinkCard title="Errors" href="domains/errors/" description="MobileLockerError and code constants." />
-	<LinkCard title="All domains" href="domains/" description="Full map of every module." />
-	<LinkCard title="API reference" href="api/" description="Generated signatures from TypeScript." />
-</CardGrid>
+<div class="ml-domain-grid">
+	<CardGrid>
+		<LinkCard title="User" href="domains/user/" description="Authenticated rep identity via user.get()." />
+		<LinkCard title="Contacts" href="domains/contacts/" description="Cursor-paged address book (getPage / eachPage)." />
+		<LinkCard title="CRM" href="domains/crm/" description="SOQL, offline walks, current customers, picker." />
+		<LinkCard title="Scanner" href="domains/scanner/" description="Badge and business card capture on iOS." />
+		<LinkCard title="Storage" href="domains/storage/" description="Presentation-scoped server-backed entries." />
+		<LinkCard title="Database" href="domains/database/" description="Read-only queries against bundled SQLite." />
+		<LinkCard title="Presentation" href="domains/presentation/" description="Library, download, open, and lifecycle." />
+		<LinkCard title="HTTP" href="domains/http/" description="Proxied HTTPS from the native app (or fetch on CDN)." />
+		<LinkCard title="Errors" href="domains/errors/" description="MobileLockerError and *ErrorCode constants." />
+		<LinkCard title="All domains" href="domains/" description="Full map of every module and public methods." />
+		<LinkCard title="API reference" href="api/" description="Generated TypeScript signatures from the package." />
+	</CardGrid>
+</div>
 
 ## Product links
 
 <div class="ml-footer-links">
 	<a href="https://www.mobilelocker.com">Mobile Locker</a>
+	<span class="ml-footer-sep" aria-hidden="true">·</span>
 	<a href="https://help.mobilelocker.com">Help Center</a>
+	<span class="ml-footer-sep" aria-hidden="true">·</span>
 	<a href="https://github.com/mobilelocker/mobilelocker-javascript-sdk">GitHub</a>
+	<span class="ml-footer-sep" aria-hidden="true">·</span>
 	<a href="llms.txt">llms.txt</a>
 </div>

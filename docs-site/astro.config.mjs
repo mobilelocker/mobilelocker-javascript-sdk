@@ -39,6 +39,10 @@ export default defineConfig({
 				},
 			],
 			customCss: ['./src/styles/custom.css'],
+			components: {
+				// Higher-res hero images (default Starlight uses 400x400).
+				Hero: './src/components/Hero.astro',
+			},
 			editLink: {
 				baseUrl: 'https://github.com/mobilelocker/mobilelocker-javascript-sdk/edit/develop/docs-site/',
 			},
@@ -81,7 +85,7 @@ export default defineConfig({
 						},
 						{
 							label: 'Content & data',
-							collapsed: false,
+							collapsed: true,
 							items: [
 								{ label: 'Presentation', slug: 'domains/presentation' },
 								{ label: 'Data', slug: 'domains/data' },
@@ -92,7 +96,7 @@ export default defineConfig({
 						},
 						{
 							label: 'Persistence & network',
-							collapsed: false,
+							collapsed: true,
 							items: [
 								{ label: 'Storage', slug: 'domains/storage' },
 								{ label: 'localforage', slug: 'domains/localforage' },
@@ -102,7 +106,7 @@ export default defineConfig({
 						},
 						{
 							label: 'Device & UI',
-							collapsed: false,
+							collapsed: true,
 							items: [
 								{ label: 'Device', slug: 'domains/device' },
 								{ label: 'Permissions', slug: 'domains/permissions' },

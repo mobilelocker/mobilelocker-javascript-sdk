@@ -1,8 +1,12 @@
 /*
- * Mobile Locker brand tokens from v2 StyleGuide.vue
- * Logo anchors: navy #00334d, teal #0292b3
- * UI primary: light #184784 / dark #4A90E2
+ * Mobile Locker docs chrome
+ * Tokens from StyleGuide.vue / vuetify theme (MLD-10385):
+ * logo navy #00334d, teal #0292b3; primary light #184784 / dark #4A90E2
  */
+
+/* -------------------------------------------------------------------------- */
+/* Tokens                                                                     */
+/* -------------------------------------------------------------------------- */
 
 :root {
 	--sl-color-accent-low: #d6e2f2;
@@ -12,12 +16,29 @@
 	--ml-brand-navy: #00334d;
 	--ml-brand-teal: #0292b3;
 	--ml-primary: #184784;
+	--ml-primary-fill: #184784;
 	--ml-secondary: #072a5f;
 	--ml-accent: #ff9800;
 	--ml-canvas: #f6f8fb;
+	--ml-surface: #ffffff;
+	--ml-surface-soft: #f8fafc;
+	--ml-card: #ffffff;
 	--ml-border: #e2e8f0;
+	--ml-border-soft: #cbd5e1;
 	--ml-text: #101828;
 	--ml-text-secondary: #4b5565;
+	--ml-icon: #4b5565;
+
+	--ml-radius-lg: 8px;
+	--ml-radius-card: 12px;
+	--ml-btn-height: 36px;
+	--ml-btn-font-size: 0.875rem;
+	--ml-btn-padding-x: 1rem;
+	--ml-shadow-hover: 0 8px 16px rgba(0, 51, 77, 0.08);
+	--ml-shadow-hero:
+		0 1px 2px rgba(0, 51, 77, 0.04),
+		0 18px 44px rgba(0, 51, 77, 0.12);
+	--ml-focus-ring: 2px solid var(--ml-primary);
 }
 
 :root[data-theme='dark'] {
@@ -26,13 +47,97 @@
 	--sl-color-accent-high: #93c5fd;
 
 	--ml-primary: #4a90e2;
+	--ml-primary-fill: #3a5f8a;
 	--ml-secondary: #3a5f8a;
+	--ml-accent: #ffb74d;
 	--ml-canvas: #0b1220;
+	--ml-surface: #111a2c;
+	--ml-surface-soft: #17223a;
+	--ml-card: #16213a;
+	--ml-border: #232a36;
+	--ml-border-soft: #373d48;
 	--ml-text: #f1f5f9;
 	--ml-text-secondary: #94a3b8;
+	--ml-icon: #7c90ac;
+	--ml-shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.28);
+	--ml-shadow-hero:
+		0 1px 2px rgba(0, 0, 0, 0.25),
+		0 18px 44px rgba(0, 0, 0, 0.4);
 }
 
-/* Header branding */
+/* -------------------------------------------------------------------------- */
+/* Buttons (StyleGuide / _buttons.scss)                                       */
+/* -------------------------------------------------------------------------- */
+
+.sl-link-button {
+	border-radius: var(--ml-radius-lg);
+	min-height: var(--ml-btn-height);
+	padding: 0 var(--ml-btn-padding-x);
+	font-size: var(--ml-btn-font-size);
+	font-weight: 500;
+	line-height: 1.25;
+	letter-spacing: normal;
+	text-transform: none;
+	box-sizing: border-box;
+}
+
+@media (min-width: 50rem) {
+	.sl-link-button {
+		font-size: var(--ml-btn-font-size);
+		padding: 0 var(--ml-btn-padding-x);
+	}
+}
+
+.sl-link-button.primary {
+	background: var(--ml-primary-fill);
+	border-color: var(--ml-primary-fill);
+	color: #ffffff;
+}
+
+.sl-link-button.primary:hover {
+	color: #ffffff;
+	filter: brightness(1.06);
+}
+
+.sl-link-button.secondary {
+	border: 1px solid var(--ml-border);
+	background: var(--ml-surface-soft);
+	color: var(--ml-text-secondary);
+}
+
+.sl-link-button.secondary:hover {
+	border-color: var(--ml-primary);
+	color: var(--ml-primary);
+	background: var(--ml-surface);
+}
+
+.sl-link-button.minimal {
+	min-height: auto;
+	padding-inline: 0;
+	font-weight: 500;
+	color: var(--ml-primary);
+}
+
+.sl-link-button.minimal:hover {
+	color: var(--ml-primary);
+	text-decoration: underline;
+}
+
+.sl-link-button:focus-visible {
+	outline: var(--ml-focus-ring);
+	outline-offset: 2px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Shell: header, sidebar, page                                               */
+/* -------------------------------------------------------------------------- */
+
+header.header {
+	border-bottom-color: var(--ml-border);
+	background-color: color-mix(in srgb, var(--ml-surface) 92%, transparent);
+	backdrop-filter: blur(8px);
+}
+
 .site-title {
 	font-weight: 700;
 	color: var(--ml-brand-navy);
@@ -43,50 +148,443 @@
 }
 
 .site-title img {
-	max-height: 1.85rem;
+	max-height: 1.75rem;
 	width: auto;
 }
 
-/* Hero / splash */
-.hero {
-	--sl-color-text-accent: var(--sl-color-accent);
+.sidebar-content .group-label .large {
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	font-size: 0.7rem;
+	font-weight: 700;
+	color: var(--ml-text-secondary);
 }
 
-.hero .tagline {
-	max-width: 40rem;
+/* Active item: Starlight uses accent fill; label must stay light on that fill */
+.sidebar-content a[aria-current='page'],
+.sidebar-content [aria-current='page'],
+.sidebar-content a[aria-current='page']:hover,
+.sidebar-content [aria-current='page']:hover,
+.sidebar-content a[aria-current='page']:focus,
+.sidebar-content [aria-current='page']:focus {
+	background-color: var(--ml-primary-fill);
+	color: #ffffff;
+	font-weight: 600;
 }
 
-/* Callout: teal accent bar for notes that should feel on-brand */
+/* Soft canvas behind non-splash content */
+.page {
+	background-color: var(--ml-canvas);
+}
+
+.main-frame {
+	background-color: transparent;
+}
+
+.content-panel {
+	border-top-color: var(--ml-border);
+}
+
+.sl-container > .content-panel:first-child {
+	background: transparent;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Splash hero                                                                */
+/* -------------------------------------------------------------------------- */
+
+[data-has-hero] .page {
+	background:
+		radial-gradient(
+			ellipse 90% 55% at 50% -15%,
+			color-mix(in srgb, var(--ml-brand-teal) 12%, transparent),
+			transparent 70%
+		),
+		radial-gradient(
+			ellipse 45% 35% at 100% 0%,
+			color-mix(in srgb, var(--ml-primary) 8%, transparent),
+			transparent 55%
+		),
+		var(--ml-canvas);
+}
+
+:root[data-theme='dark'] [data-has-hero] .page {
+	background:
+		radial-gradient(
+			ellipse 90% 55% at 50% -15%,
+			color-mix(in srgb, var(--ml-brand-teal) 16%, transparent),
+			transparent 70%
+		),
+		radial-gradient(
+			ellipse 45% 35% at 100% 0%,
+			color-mix(in srgb, var(--ml-primary) 14%, transparent),
+			transparent 55%
+		),
+		var(--ml-canvas);
+}
+
+[data-has-hero] .hero > img,
+[data-has-hero] .hero .hero-html {
+	border-radius: var(--ml-radius-card);
+	border: 1px solid var(--ml-border);
+	box-shadow: var(--ml-shadow-hero);
+	background: var(--ml-surface);
+}
+
+[data-has-hero] .hero .tagline {
+	color: var(--ml-text-secondary);
+}
+
+[data-has-hero] .sl-markdown-content {
+	max-width: 54rem;
+}
+
+[data-has-hero] .sl-markdown-content > h2 {
+	margin-top: 2.5rem;
+	margin-bottom: 0.65rem;
+	font-size: 1.25rem;
+	font-weight: 700;
+	letter-spacing: -0.01em;
+	color: var(--ml-text);
+}
+
+[data-has-hero] .sl-markdown-content > h2 + p {
+	color: var(--ml-text-secondary);
+	font-size: 0.9375rem;
+	margin-top: 0;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Typography & content chrome                                                */
+/* -------------------------------------------------------------------------- */
+
+.sl-markdown-content :not(a, strong, em, del, span, input, code) + :is(h1, h2, h3, h4, h5, h6) {
+	color: var(--ml-text);
+}
+
+.sl-markdown-content table {
+	font-size: 0.875rem;
+	border-collapse: separate;
+	border-spacing: 0;
+	border: 1px solid var(--ml-border);
+	border-radius: var(--ml-radius-lg);
+	overflow: hidden;
+	background: var(--ml-card);
+}
+
+.sl-markdown-content thead tr:first-child th {
+	background: var(--ml-surface-soft);
+	color: var(--ml-text-secondary);
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+.sl-markdown-content th,
+.sl-markdown-content td {
+	border-bottom: 1px solid var(--ml-border);
+	border-inline-end: 1px solid var(--ml-border);
+	padding: 0.65rem 0.85rem;
+}
+
+.sl-markdown-content tr:last-child td {
+	border-bottom: none;
+}
+
+.sl-markdown-content th:last-child,
+.sl-markdown-content td:last-child {
+	border-inline-end: none;
+}
+
+.sl-markdown-content a:not(.sl-link-button):not(.sl-link-card a) {
+	color: var(--ml-primary);
+}
+
+.sl-markdown-content code:not(:where(pre *)) {
+	border-radius: 4px;
+	background: var(--ml-surface-soft);
+	border: 1px solid var(--ml-border);
+	padding: 0.1em 0.35em;
+	font-size: 0.9em;
+}
+
+/* Asides */
+.starlight-aside {
+	border-radius: var(--ml-radius-lg);
+}
+
 .starlight-aside--note {
 	border-inline-start-color: var(--ml-brand-teal);
 }
 
-/* Code blocks: slightly softer canvas */
+.starlight-aside--tip {
+	border-inline-start-color: var(--ml-primary);
+}
+
+.starlight-aside--caution,
+.starlight-aside--danger {
+	border-inline-start-color: var(--ml-accent);
+}
+
+/* Code blocks */
 .expressive-code {
-	--ec-frm-edBg: var(--sl-color-gray-6);
+	--ec-frm-edBg: var(--ml-surface-soft);
+	--ec-brdCol: var(--ml-border);
+	--ec-brdRad: var(--ml-radius-lg);
 }
 
-/* Sidebar group labels */
-.sidebar-content .group-label .large {
-	letter-spacing: 0.02em;
+.expressive-code .frame {
+	box-shadow: none;
 }
 
-/* Footer product links row */
-.ml-footer-links {
+/* Pagination */
+.pagination-links a {
+	border-radius: var(--ml-radius-card);
+	border-color: var(--ml-border);
+	background: var(--ml-card);
+	box-shadow: none;
+	transition:
+		border-color 150ms ease-in-out,
+		box-shadow 150ms ease-in-out,
+		transform 150ms ease-in-out;
+}
+
+.pagination-links a:hover {
+	border-color: color-mix(in srgb, var(--ml-primary) 35%, var(--ml-border));
+	box-shadow: var(--ml-shadow-hover);
+	transform: translateY(-1px);
+}
+
+/* Search / selects in header */
+site-search button[data-open-modal],
+.social-icons a {
+	border-radius: var(--ml-radius-lg);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Cards (StyleGuide .sg-card)                                                */
+/* -------------------------------------------------------------------------- */
+
+.card {
+	--sl-card-border: var(--ml-border);
+	--sl-card-bg: var(--ml-surface-soft);
+	border: 1px solid var(--ml-border);
+	border-radius: var(--ml-radius-card);
+	background-color: var(--ml-card);
+	padding: 16px;
+	gap: 0.75rem;
+	box-shadow: none;
+	height: 100%;
+	transition:
+		transform 150ms ease-in-out,
+		box-shadow 150ms ease-in-out,
+		border-color 150ms ease-in-out;
+}
+
+.card:nth-child(n) {
+	--sl-card-border: var(--ml-border);
+	--sl-card-bg: var(--ml-surface-soft);
+}
+
+.card .title {
+	font-weight: 700;
+	font-size: 0.9375rem;
+	line-height: 1.3;
+	color: var(--ml-text);
+	gap: 0.625rem;
+}
+
+.card .icon {
+	border: 1px solid var(--ml-border);
+	background-color: var(--ml-surface-soft);
+	color: var(--ml-primary);
+	padding: 0.35em;
+	border-radius: var(--ml-radius-lg);
+	box-sizing: content-box;
+}
+
+.card .body {
+	margin: 0;
+	font-size: 0.8125rem;
+	line-height: 1.5;
+	color: var(--ml-text-secondary);
 	display: flex;
-	flex-wrap: wrap;
-	gap: 0.75rem 1.25rem;
-	margin-top: 2rem;
-	padding-top: 1rem;
-	border-top: 1px solid var(--sl-color-gray-5);
-	font-size: 0.875rem;
+	flex-direction: column;
+	flex: 1;
 }
 
-.ml-footer-links a {
-	color: var(--sl-color-accent);
+.card .body p {
+	margin-block: 0 0.5rem;
+}
+
+.card .body p:last-child {
+	margin-bottom: 0;
+	margin-top: auto;
+	padding-top: 0.35rem;
+}
+
+.card .body ul {
+	margin: 0.25rem 0 0.5rem;
+	padding-inline-start: 1.15rem;
+	flex: 1;
+}
+
+.card .body li {
+	margin-block: 0.2rem;
+}
+
+.card .body li::marker {
+	color: var(--ml-brand-teal);
+}
+
+.card .body a {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	font-weight: 600;
+	font-size: 0.8125rem;
+	color: var(--ml-primary);
 	text-decoration: none;
 }
 
-.ml-footer-links a:hover {
+.card .body a:hover {
 	text-decoration: underline;
+}
+
+.card:hover {
+	border-color: color-mix(in srgb, var(--ml-primary) 35%, var(--ml-border));
+	box-shadow: var(--ml-shadow-hover);
+	transform: translateY(-2px);
+}
+
+.ml-start-grid .card-grid {
+	gap: 1rem;
+}
+
+@media (min-width: 50rem) {
+	.ml-start-grid .card-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 1rem;
+	}
+}
+
+@media (min-width: 72rem) {
+	/* Five start cards: 2+2+1 reads uneven; allow 3-up on wide splash */
+	[data-has-hero] .ml-start-grid .card-grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+.ml-start-grid .card {
+	min-height: 100%;
+}
+
+/* Link cards */
+.sl-link-card {
+	border: 1px solid var(--ml-border);
+	border-radius: var(--ml-radius-card);
+	background-color: var(--ml-card);
+	padding: 16px;
+	box-shadow: none;
+	transition:
+		transform 150ms ease-in-out,
+		box-shadow 150ms ease-in-out,
+		border-color 150ms ease-in-out;
+}
+
+.sl-link-card .title {
+	font-weight: 700;
+	font-size: 0.9375rem;
+	color: var(--ml-text);
+}
+
+.sl-link-card .description {
+	font-size: 0.8125rem;
+	color: var(--ml-text-secondary);
+	line-height: 1.45;
+}
+
+.sl-link-card .icon {
+	color: var(--ml-icon);
+}
+
+.sl-link-card:hover {
+	background: var(--ml-card);
+	border-color: color-mix(in srgb, var(--ml-primary) 35%, var(--ml-border));
+	box-shadow: var(--ml-shadow-hover);
+	transform: translateY(-2px);
+}
+
+.sl-link-card:hover .icon {
+	color: var(--ml-primary);
+}
+
+.sl-link-card:focus-within {
+	outline: var(--ml-focus-ring);
+	outline-offset: 2px;
+}
+
+/* Domain grid: slightly denser descriptions */
+.ml-domain-grid .card-grid {
+	gap: 0.75rem;
+}
+
+@media (min-width: 50rem) {
+	.ml-domain-grid .card-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (min-width: 72rem) {
+	[data-has-hero] .ml-domain-grid .card-grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+/* -------------------------------------------------------------------------- */
+/* Splash footer product links                                                */
+/* -------------------------------------------------------------------------- */
+
+.ml-footer-links {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem 0.35rem;
+	margin-top: 2.5rem;
+	padding: 1rem 0 0.25rem;
+	border-top: 1px solid var(--ml-border);
+	font-size: 0.8125rem;
+}
+
+.ml-footer-links a {
+	color: var(--ml-primary);
+	text-decoration: none;
+	font-weight: 500;
+	padding: 0.25rem 0.5rem;
+	border-radius: var(--ml-radius-lg);
+}
+
+.ml-footer-links a:hover {
+	background: var(--ml-surface-soft);
+	text-decoration: none;
+}
+
+.ml-footer-links a:focus-visible {
+	outline: var(--ml-focus-ring);
+	outline-offset: 2px;
+}
+
+.ml-footer-links .ml-footer-sep {
+	color: var(--ml-border-soft);
+	user-select: none;
+	padding-inline: 0.15rem;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Right-to-left / a11y helpers                                               */
+/* -------------------------------------------------------------------------- */
+
+:focus-visible {
+	outline-color: var(--ml-primary);
 }
