@@ -1,16 +1,47 @@
 ---
 title: HTTP
-description: Make HTTPS requests from presentations — proxied in the native app to avoid CORS.
+description: External HTTPS via native proxy or fetch — matching src/domains/http.ts.
 ---
 
 Call your own backends or third-party APIs from presentation code.
+
+**Public surface (`http`):** `get` · `post` · `put` · `patch` · `delete` · `request`
 
 ## Behavior by environment
 
 | Environment | Transport |
 |-------------|-----------|
-| **Native app** (`isApp()`) | Request is posted to the host and executed with native networking — **no browser CORS** |
+| **Native app** (`isApp()`) | Proxied through the host (`POST …/http/request`) — **no browser CORS** |
 | **CDN / browser** | Standard `fetch` — **CORS rules apply** |
+
+## Signatures
+
+```ts
+get(url: string, options?: HTTPOptions): Promise<HTTPResponse>
+post(url: string, body?: unknown, options?: HTTPOptions): Promise<HTTPResponse>
+put(url: string, body?: unknown, options?: HTTPOptions): Promise<HTTPResponse>
+patch(url: string, body?: unknown, options?: HTTPOptions): Promise<HTTPResponse>
+delete(url: string, options?: HTTPOptions): Promise<HTTPResponse>
+request(url: string, options?: HTTPRequestOptions): Promise<HTTPResponse>
+
+interface HTTPOptions {
+  headers?: Record<string, string>
+  timeout?: number              // default 30_000
+  responseType?: 'json' | 'text' | 'blob'  // default 'json'
+}
+
+interface HTTPRequestOptions extends HTTPOptions {
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+  body?: unknown
+}
+
+interface HTTPResponse {
+  status: number
+  statusText: string
+  headers: Record<string, string>
+  data: unknown
+}
+```
 
 ## Examples
 
@@ -21,38 +52,40 @@ import mobilelocker from '@mobilelocker/javascript-sdk'
 const response = await mobilelocker.http.get('https://api.example.com/data')
 // response.status, response.statusText, response.headers, response.data
 
-// POST
-const created = await mobilelocker.http.post('https://api.example.com/submit', {
-  body: { leadId: 42 },
-  headers: { 'X-Client': 'mobilelocker-presentation' },
-  timeout: 15_000,
+// POST — body is the second argument; options are the third
+const created = await mobilelocker.http.post(
+  'https://api.example.com/submit',
+  { leadId: 42 },
+  {
+    headers: { 'X-Client': 'mobilelocker-presentation' },
+    timeout: 15_000,
+  },
+)
+
+// Full control
+const res = await mobilelocker.http.request('https://api.example.com/item/1', {
+  method: 'PUT',
+  body: { name: 'Updated' },
+  responseType: 'json',
 })
-```
-
-Other verbs: `http.put`, `http.patch`, `http.delete`, or `http.request({ method, url, body, … })`.
-
-## Options
-
-```ts
-{
-  headers?: Record<string, string>
-  timeout?: number          // default 30000
-  responseType?: 'json' | 'text' | 'blob'  // default 'json'
-  body?: unknown            // for write methods
-}
 ```
 
 ## Errors
 
-Failures throw `MobileLockerHTTPError` / `MobileLockerHttpResponseError` (see [Errors](../domains/errors/)). Timeouts and offline map to `request_timeout` / `not_connected`.
+| Situation | Thrown |
+|-----------|--------|
+| Network failure / timeout / offline (browser path) | `MobileLockerHTTPError` (`request_timeout`, `not_connected`, …) |
+| Non-2xx HTTP status (browser path) | `MobileLockerHttpResponseError` — inspect `status`, `statusText`, `headers`, `data` |
+
+See [Errors](errors/).
 
 ## Tips
 
 - Prefer HTTPS endpoints your team owns
-- Do not embed long-lived secrets in presentation JS — use short-lived tokens or host-side auth when possible
-- For Mobile Locker platform data, use domain APIs (`crm`, `user`, `data`, …) instead of inventing REST paths
+- Do not embed long-lived secrets in presentation JS
+- For Mobile Locker platform data, use domain APIs (`crm`, `user`, `data`, …) instead of inventing host REST paths
 
 ## API reference
 
 - Module: [`http`](../api/variables/http/)
-- Types: [`HTTPResponse`](../api/interfaces/httpresponse/), [`HTTPRequestOptions`](../api/interfaces/httprequestoptions/)
+- Types: [`HTTPResponse`](../api/interfaces/httpresponse/), [`HTTPOptions`](../api/interfaces/httpoptions/), [`HTTPRequestOptions`](../api/interfaces/httprequestoptions/)

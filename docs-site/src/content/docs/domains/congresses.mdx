@@ -1,11 +1,19 @@
 ---
 title: Congresses
-description: Lead-retrieval events, attendees, and stored business cards.
+description: Lead retrieval events, attendees, business cards — matching src/domains/congresses.ts.
 ---
 
-Access **lead retrieval** events and related records captured at congresses / events.
+**Public surface (`congresses`):**  
+`list` · `get` · `getAttendees` · `getAttendee` · `getBusinessCards` · `getBusinessCard`
+
+Failures throw **`MobileLockerError`**.
 
 ## Events
+
+```ts
+list(): Promise<Event[]>
+get(eventID: number): Promise<Event>
+```
 
 ```js
 import mobilelocker from '@mobilelocker/javascript-sdk'
@@ -16,6 +24,11 @@ const event = await mobilelocker.congresses.get(eventID)
 
 ## Attendees
 
+```ts
+getAttendees(eventID: number): Promise<Attendee[]>
+getAttendee(attendeeID: string): Promise<Attendee>
+```
+
 ```js
 const attendees = await mobilelocker.congresses.getAttendees(eventID)
 const attendee = await mobilelocker.congresses.getAttendee(attendeeID)
@@ -23,19 +36,20 @@ const attendee = await mobilelocker.congresses.getAttendee(attendeeID)
 
 ## Business cards
 
+```ts
+getBusinessCards(): Promise<BusinessCard[]>
+getBusinessCard(cardID: string): Promise<BusinessCard>
+```
+
 ```js
 const cards = await mobilelocker.congresses.getBusinessCards()
 const card = await mobilelocker.congresses.getBusinessCard(cardID)
 ```
 
-## Capture vs read
+## Related
 
-| Goal | Use |
-|------|-----|
-| Open camera to scan a badge/card | [Scanner](scanner/) (`scanner.scanBadge` / `scanBusinessCard`) |
-| Read events and already-stored cards/attendees | `congresses.*` |
-
-Pass an `eventID` into scanner APIs when you want the capture associated with a lead-retrieval event.
+- [Scanner](scanner/) — capture badge/card (iOS)
+- [Search](search/) — includes `attendees` and `business_cards`
 
 ## API reference
 

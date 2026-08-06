@@ -1,19 +1,19 @@
 ---
 title: Domains overview
-description: Map of Mobile Locker JavaScript SDK domains and when to use each.
+description: Map of Mobile Locker JavaScript SDK domains and public methods from TypeScript.
 ---
 
-The SDK is organized into **domains** — focused modules on the default export (`mobilelocker.crm`, `mobilelocker.storage`, …).
+The SDK is organized into **domains** on the default export (`mobilelocker.crm`, `mobilelocker.storage`, …). Named exports mirror the same objects.
 
-See many of these live in the **[SDK Demo IVA](../examples/demo-iva/)** (Vue presentation that maps each major screen to a domain).
+See many of these live in the **[SDK Demo IVA](../examples/demo-iva/)**.
 
 ## By job to be done
 
 | I need to… | Start here |
 |------------|------------|
-| Greet the rep / read identity | [User](user/) |
+| Greet the rep / read identity | [User](user/) — `user.get()` |
 | Query Salesforce / manage current customers | [CRM](crm/) |
-| Walk the address book safely | [Contacts](contacts/) |
+| Walk the address book safely | [Contacts](contacts/) — `eachPage` / `getPage` |
 | Scan a badge or business card | [Scanner](scanner/) · [Congresses](congresses/) |
 | Persist presentation data | [Storage](storage/) · [localforage](localforage/) |
 | Call my HTTPS API | [HTTP](http/) |
@@ -25,30 +25,34 @@ See many of these live in the **[SDK Demo IVA](../examples/demo-iva/)** (Vue pre
 | Search across entities | [Search](search/) |
 | Gate on app version / OS | [Device](device/) · [Environments](../guides/environments/) |
 | Handle failures | [Errors](errors/) |
-| Debug | [Log](log/) · [Network](network/) |
+| Debug / live mode | [Log](log/) · [Network](network/) · [Session](session/) |
 
-## Full list
+## Full list and public methods
 
-- [Analytics](analytics/)
-- [Congresses](congresses/)
-- [Contacts](contacts/)
-- [CRM](crm/)
-- [Data](data/)
-- [Database](database/)
-- [Device](device/)
-- [Errors](errors/)
-- [HTTP](http/)
-- [localforage](localforage/)
-- [Log](log/)
-- [Network](network/)
-- [Permissions](permissions/)
-- [Presentation](presentation/)
-- [Scanner](scanner/)
-- [Search](search/)
-- [Session](session/)
-- [Share](share/)
-- [Storage](storage/)
-- [UI](ui/)
-- [User](user/)
+| Domain | Public methods / surface |
+|--------|---------------------------|
+| [Analytics](analytics/) | `logEvent` |
+| [Congresses](congresses/) | `list`, `get`, `getAttendees`, `getAttendee`, `getBusinessCards`, `getBusinessCard` |
+| [Contacts](contacts/) | `get`, `getPage`, `eachPage` |
+| [CRM](crm/) | Cursor pages/walks + by-id for accounts/addresses/contacts/leads/users; `query`; customers; `openCustomerPicker`; `refresh` |
+| [Data](data/) | `submitForm`, products/labels/folders/customers getters |
+| [Database](database/) | `list`, `describe`, `query` |
+| [Device](device/) | `get`, `isAtLeastVersion` |
+| [Errors](errors/) | Classes + `*ErrorCode` constants (named exports) |
+| [HTTP](http/) | `get`, `post`, `put`, `patch`, `delete`, `request` |
+| [localforage](localforage/) | localForage data API |
+| [Log](log/) | `setMode`, `isEnabled`, `liveMode`, `practiceMode`, `getSdkLogs`, `searchSdkLogs`, `debug`/`info`/`warn`/`error` |
+| [Network](network/) | `getStatus` |
+| [Permissions](permissions/) | `camera`, `microphone`, `photoLibrary`, `location`, `bluetooth`, `biometric` |
+| [Presentation](presentation/) | `get`, events, library, `download`, open helpers, `openPicker` |
+| [Scanner](scanner/) | `scanBusinessCard`, `scanBadge` |
+| [Search](search/) | `query` |
+| [Session](session/) | `getDeviceEvents`, `hitSessionId` |
+| [Share](share/) | `presentation`, `email` |
+| [Storage](storage/) | `get`, `getAll`, `getAllAcrossPresentations`, `getForPresentation`, `query`, `search`, `save`, `delete` |
+| [UI](ui/) | `openPDF`, `showToolbar`, `openVideo` |
+| [User](user/) | `get` |
+
+Also on the default export (not domain modules): environment helpers (`isIOS`, …), `MobileLockerError`, and `notificationLevels`.
 
 Generated signatures for every export live under [API reference](../api/).

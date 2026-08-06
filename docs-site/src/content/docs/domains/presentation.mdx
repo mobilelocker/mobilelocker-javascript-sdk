@@ -1,30 +1,47 @@
 ---
 title: Presentation
-description: Current presentation metadata, downloads, open, and lifecycle.
+description: Current presentation, library, download, open — matching src/domains/presentation.ts.
 ---
-
-Work with the **current presentation** and the user's presentation library.
 
 :::tip[Live demo]
 Open the **Presentations** screen in the [SDK Demo IVA](../examples/demo-iva/) (`#/presentation`).
 :::
 
+**Public surface (`presentation`):**  
+`get` · `getEvents` · `getDeviceEvents` · `reload` · `close` ·  
+`getAll` · `getByID` · `getByName` · `refresh` · `download` ·  
+`openByID` · `openByExternalID` · `openByName` · `openPicker`
+
 ## Current presentation
+
+```ts
+get(): Promise<Presentation>
+getEvents(): Promise<unknown[]>
+getDeviceEvents(): Promise<unknown[]>  // alias of getEvents
+reload(): void
+close(): void  // logs analytics event method 'close-presentation'
+```
 
 ```js
 import mobilelocker from '@mobilelocker/javascript-sdk'
 
 const presentation = await mobilelocker.presentation.get()
-```
+const events = await mobilelocker.presentation.getEvents()
 
-## Lifecycle
-
-```js
 mobilelocker.presentation.reload()
 mobilelocker.presentation.close()
 ```
 
+Session-scoped device events: [`session.getDeviceEvents`](session/).
+
 ## Library
+
+```ts
+getAll(): Promise<Presentation[]>
+getByID(id: number): Promise<Presentation>
+getByName(name: string): Promise<Presentation>  // case-sensitive
+refresh(): Promise<Presentation[]>
+```
 
 ```js
 const all = await mobilelocker.presentation.getAll()
@@ -33,28 +50,48 @@ const byName = await mobilelocker.presentation.getByName(name)
 const refreshed = await mobilelocker.presentation.refresh()
 ```
 
-## Download & open
+## Download
+
+```ts
+download(id: number): Promise<DownloadResult>
+// DownloadResult = WithStatusBooleans<{ status: DownloadStatus }>
+// DownloadStatus = 'queued' | 'already_installed' | 'not_available' | 'not_permitted'
+// booleans: isQueued, isAlreadyInstalled, isNotAvailable, isNotPermitted
+```
 
 ```js
 const result = await mobilelocker.presentation.download(presentationID)
-// status helpers: isQueued, isAlreadyInstalled, isNotAvailable, isNotPermitted
-
-mobilelocker.presentation.openByID(id)
-await mobilelocker.presentation.openByName(name)
-await mobilelocker.presentation.openByExternalID(externalID)
-mobilelocker.presentation.openPicker()
+if (result.isQueued || result.status === 'queued') {
+  // download started
+}
 ```
 
-## Events
+## Open
+
+```ts
+openByID(id: number): void
+openByExternalID(externalID: string): Promise<void>
+openByName(name: string): Promise<void>
+openPicker(): void  // iOS only — throws UnsupportedEnvironment elsewhere
+```
+
+| Method | iOS | Browser / non-iOS |
+|--------|-----|-------------------|
+| `openByID` | Host open | `window.open` web content URL |
+| `openByExternalID` / `openByName` | Host open | Resolve via `getAll()`, then `openByID`; throws `NotFound` if missing |
+| `openPicker` | Native picker | Throws |
 
 ```js
-const events = await mobilelocker.presentation.getEvents()
-const deviceEvents = await mobilelocker.presentation.getDeviceEvents()
-```
+mobilelocker.presentation.openByID(42)
+await mobilelocker.presentation.openByName('Kazaamax Rebate Calculator Demo')
+await mobilelocker.presentation.openByExternalID('a0B1234567890')
 
-Session-scoped device events also exist on [`session`](session/).
+if (mobilelocker.isIOS()) {
+  mobilelocker.presentation.openPicker()
+}
+```
 
 ## API reference
 
 - Module: [`presentation`](../api/variables/presentation/)
-- Types: [`Presentation`](../api/interfaces/presentation/), [`DownloadResult`](../api/type-aliases/downloadresult/)
+- Types: [`Presentation`](../api/interfaces/presentation/), [`DownloadResult`](../api/type-aliases/downloadresult/), [`DownloadStatus`](../api/type-aliases/downloadstatus/)

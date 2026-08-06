@@ -1,27 +1,39 @@
 ---
 title: Data
-description: Submit form captures and load products, labels, folders, and customers.
+description: Form capture, products, labels, folders, customers — matching src/domains/data.ts.
 ---
 
-Platform reference data and form submission for presentations.
-
-:::tip[Live demo]
-Open the **MIRF** form screen in the [SDK Demo IVA](../examples/demo-iva/) (`#/mirf`) for a capture-style flow. Product-style content also appears under **Kazaamax** (`#/kazaamax`).
-:::
+**Public surface (`data`):**  
+`submitForm` · `getProducts` · `getProduct` · `getLabels` · `getLabel` ·  
+`getFolders` · `getFolder` · `getCustomers` · `getCustomer`
 
 ## Submit a form (sync)
+
+```ts
+submitForm(formName: string, formInput: Record<string, unknown>): void
+```
+
+Posts via analytics as category `'data-capture'`, method `'capturedata'`.
 
 ```js
 import mobilelocker from '@mobilelocker/javascript-sdk'
 
-// Synchronous — fires capture to the host
 mobilelocker.data.submitForm('lead-form', {
   firstName: 'Jane',
   email: 'jane@example.com',
 })
 ```
 
-## Products, labels, folders
+## Products / labels / folders
+
+```ts
+getProducts(): Promise<Product[]>
+getProduct(id: number): Promise<Product>
+getLabels(): Promise<Label[]>
+getLabel(id: number): Promise<Label>
+getFolders(): Promise<Folder[]>
+getFolder(id: number): Promise<Folder>
+```
 
 ```js
 const products = await mobilelocker.data.getProducts()
@@ -34,14 +46,19 @@ const folders = await mobilelocker.data.getFolders()
 const folder = await mobilelocker.data.getFolder(id)
 ```
 
-## Customers
+## Customers (platform list)
+
+```ts
+getCustomers(): Promise<Customer[]>
+getCustomer(id: string): Promise<Customer>  // CRM object ID
+```
 
 ```js
 const customers = await mobilelocker.data.getCustomers()
 const customer = await mobilelocker.data.getCustomer(crmObjectID)
 ```
 
-For CRM session “current customers” and Salesforce SOQL, prefer the [CRM](crm/) domain.
+For **session current/recent customers** and the native picker, use [`crm`](crm/) (`getCurrentCustomers`, `openCustomerPicker`, …).
 
 ## API reference
 

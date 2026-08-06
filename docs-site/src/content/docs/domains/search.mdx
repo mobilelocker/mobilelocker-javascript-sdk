@@ -1,40 +1,60 @@
 ---
 title: Search
-description: Search presentations, customers, contacts, attendees, and business cards.
+description: Cross-entity search — matching src/domains/search.ts.
 ---
 
 :::tip[Live demo]
 Open the **Search** screen in the [SDK Demo IVA](../examples/demo-iva/) (`#/search`).
 :::
 
+**Public surface (`search`):** `query`
+
+## Types
+
+```ts
+type SearchEntityType =
+  | 'presentations'
+  | 'customers'
+  | 'contacts'
+  | 'attendees'
+  | 'business_cards'
+
+interface SearchOptions {
+  types?: SearchEntityType[]  // default: all types
+  limit?: number              // max results per entity type; default 5
+}
+
+interface SearchResults {
+  presentations:  { results: Presentation[]; total_count: number }
+  customers:      { results: Customer[]; total_count: number }
+  contacts:       { results: UserContact[]; total_count: number }
+  attendees:      { results: (Attendee & { event_name: string })[]; total_count: number }
+  business_cards: { results: BusinessCard[]; total_count: number }
+}
+```
+
 ## Query
+
+```ts
+query(text: string, options?: SearchOptions): Promise<SearchResults>
+```
 
 ```js
 import mobilelocker from '@mobilelocker/javascript-sdk'
 
 const results = await mobilelocker.search.query('Acme', {
-  types: ['customers', 'presentations'],
+  types: ['customers', 'contacts'],
   limit: 10,
 })
 
-// results.customers.results
-// results.presentations.results
-// …per requested type
+results.customers.results.forEach((c) => console.log(c.name))
+results.contacts.results.forEach((c) => console.log(c))
+// results.presentations / attendees / business_cards same shape
 ```
 
-### Options
-
-| Field | Notes |
-|-------|--------|
-| `types` | Subset of `'presentations' \| 'customers' \| 'contacts' \| 'attendees' \| 'business_cards'` |
-| `limit` | Max hits per type (host-dependent defaults apply if omitted) |
-
-## Tips
-
-- Use search for **discovery UIs**; use [contacts](contacts/) / [CRM](crm/) paging when you must walk large sets systematically
-- Combine with [Storage](storage/) if you cache recent query strings per presentation
+Failures throw **`MobileLockerError`**.
 
 ## API reference
 
 - Module: [`search`](../api/variables/search/)
-- Types: [`SearchOptions`](../api/interfaces/searchoptions/), [`SearchResults`](../api/interfaces/searchresults/)
+- Types: [`SearchResults`](../api/interfaces/searchresults/), [`SearchOptions`](../api/interfaces/searchoptions/), [`SearchEntityType`](../api/type-aliases/searchentitytype/)

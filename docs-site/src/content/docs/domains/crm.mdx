@@ -1,17 +1,34 @@
 ---
 title: CRM
-description: Query CRM data with SOQL, walk offline tables with cursor paging, manage current customers.
+description: SOQL query, cursor-paged offline walks, current customers, picker, and refresh — matching src/domains/crm.ts.
 ---
 
-Interact with the team's connected CRM (Salesforce, etc.) from a presentation.
+Interact with the team's connected CRM from a presentation.
 
 :::tip[Live demo]
 Open the **CRM** screen in the [SDK Demo IVA](../examples/demo-iva/) (`#/crm`) for SOQL, current customers, picker, refresh, and cursor-paged entity walks.
 :::
 
-Prefer filtered **SOQL** via `crm.query` when you can. For offline walks of large tables, use **cursor paging** and process one page at a time — do not reassemble every page into one giant array.
+**Public surface (`crm`):**  
+`getAccountsPage` · `eachAccountsPage` · `getAccount` ·  
+`getAddressesPage` · `eachAddressesPage` · `getAddress` ·  
+`getContactsPage` · `eachContactsPage` · `getContact` ·  
+`getLeadsPage` · `eachLeadsPage` · `getLead` ·  
+`getUsersPage` · `eachUsersPage` · `getUser` ·  
+`openCustomerPicker` · `getCurrentCustomers` · `getRecentCustomers` ·  
+`isCurrentCustomer` · `setCurrentCustomers` · `addCurrentCustomer` ·  
+`removeCurrentCustomer` · `clearCurrentCustomers` · `refresh` · `query`
+
+Entity IDs for CRM records are **`string`** (e.g. Salesforce IDs). Offline list APIs require **Mobile Locker iOS 5.5.0+**. Prefer filtered **`crm.query` (SOQL)** when you only need a subset. There is **no** `getAccounts()` / `getContacts()` full-list API (removed in SDK 2.0).
+
+CRM failures throw **`MobileLockerCRMError`** (extends `MobileLockerError`). See [Errors](errors/).
 
 ## Prefer SOQL for filtered access
+
+```ts
+query(soql: string, parameters?: Record<string, unknown>): Promise<CRMQueryResult>
+// CRMQueryResult: { rows: Record<string, unknown>[]; totalSize: number; done: boolean }
+```
 
 ```js
 import mobilelocker from '@mobilelocker/javascript-sdk'
@@ -25,79 +42,119 @@ const results = await mobilelocker.crm.query(
 
 ## Offline walks (cursor envelope)
 
-Host list contract:
+Host list contract (same for accounts, addresses, contacts, leads, users):
 
 ```
 GET …?limit=1…5000&cursor=
 → { data, meta: { cursor: { next, count } } }
 ```
 
-Advance **only** with `meta.cursor.next` until it is `null`.
+```ts
+getAccountsPage(limit: number, cursor?: string): Promise<Page<CRMAccount>>
+eachAccountsPage(
+  pageSize: number,
+  handler: (chunk: CRMAccount[]) => void | Promise<void>,
+): Promise<void>
+// Same pattern for Addresses, Contacts, Leads, Users
+```
+
+`limit` / `pageSize` must be an integer **1…5000** or the SDK throws `InvalidArgument`. Advance **only** with `meta.cursor.next` until it is `null`. Process one page at a time — do not reassemble large tables into one array.
 
 ```js
-// Process each page; do not push chunks into a growing array for large tables
 await mobilelocker.crm.eachAccountsPage(500, (chunk) => {
   for (const account of chunk) {
     // handle one account
   }
 })
 
-await mobilelocker.crm.eachContactsPage(500, async (chunk) => {
-  /* ... */
-})
-```
-
-Single page:
-
-```js
 const page = await mobilelocker.crm.getAccountsPage(500)
 if (page.meta.cursor.next) {
   const next = await mobilelocker.crm.getAccountsPage(500, page.meta.cursor.next)
 }
 ```
 
-| Entity | One page | Full walk |
-|--------|----------|-----------|
-| Accounts | `getAccountsPage` | `eachAccountsPage` |
-| Addresses | `getAddressesPage` | `eachAddressesPage` |
-| Contacts | `getContactsPage` | `eachContactsPage` |
-| Leads | `getLeadsPage` | `eachLeadsPage` |
-| Users | `getUsersPage` | `eachUsersPage` |
-
-## Fetch by ID
+| Entity | One page | Full walk | By ID |
+|--------|----------|-----------|-------|
+| Accounts | `getAccountsPage` | `eachAccountsPage` | `getAccount(id: string)` |
+| Addresses | `getAddressesPage` | `eachAddressesPage` | `getAddress(id: string)` |
+| Contacts | `getContactsPage` | `eachContactsPage` | `getContact(id: string)` |
+| Leads | `getLeadsPage` | `eachLeadsPage` | `getLead(id: string)` |
+| Users | `getUsersPage` | `eachUsersPage` | `getUser(id: string)` |
 
 ```js
 const account = await mobilelocker.crm.getAccount(accountID)
+const address = await mobilelocker.crm.getAddress(addressID)
 const contact = await mobilelocker.crm.getContact(contactID)
 const lead = await mobilelocker.crm.getLead(leadID)
+const user = await mobilelocker.crm.getUser(userID)
 ```
 
-## Current customers & picker
+## Customer picker (iOS only)
+
+```ts
+openCustomerPicker(): Promise<PickerResult>
+// PickerResult = WithStatusBooleans<{ status: 'selected' | 'cancelled'; customers?: Customer[] }>
+// booleans: isSelected, isCancelled
+```
+
+Throws `UnsupportedEnvironment` outside the iOS app.
 
 ```js
-const current = await mobilelocker.crm.getCurrentCustomers()
-await mobilelocker.crm.setCurrentCustomers([id1, id2])
-await mobilelocker.crm.addCurrentCustomer(id)
-await mobilelocker.crm.clearCurrentCustomers()
-
-// iOS app only — native customer picker
 const result = await mobilelocker.crm.openCustomerPicker()
+// Prefer either style — both exist on the result:
+if (result.status === 'selected') {
+  console.log(result.customers)
+}
 if (result.isSelected) {
   console.log(result.customers)
 }
 ```
 
-## Refresh
+## Current / recent customers
 
-```js
-const { status } = await mobilelocker.crm.refresh({ mode: 'incremental' }) // or 'full'
+```ts
+getCurrentCustomers(): Promise<Customer[]>
+getRecentCustomers(): Promise<Customer[]>
+isCurrentCustomer(objectID: string): Promise<boolean>
+setCurrentCustomers(customerIDs: string[]): Promise<void>
+addCurrentCustomer(customerID: string): Promise<void>
+removeCurrentCustomer(customerID: string): Promise<void>
+clearCurrentCustomers(): Promise<void>
 ```
 
-## Errors
+```js
+const current = await mobilelocker.crm.getCurrentCustomers()
+const recent = await mobilelocker.crm.getRecentCustomers()
+const isCurrent = await mobilelocker.crm.isCurrentCustomer(objectID)
 
-CRM failures throw `MobileLockerCRMError` (extends `MobileLockerError`). See [Errors](../domains/errors/) and `CRMErrorCode` (`crm_auth_expired`, `soql_invalid`, …).
+await mobilelocker.crm.setCurrentCustomers([id1, id2])
+await mobilelocker.crm.addCurrentCustomer(id)
+await mobilelocker.crm.removeCurrentCustomer(id)
+await mobilelocker.crm.clearCurrentCustomers()
+```
+
+## Refresh
+
+```ts
+refresh(options?: { mode?: 'incremental' | 'full' }): Promise<CRMRefreshResult>
+// CRMRefreshResult = WithStatusBooleans<{ status: 'started' | 'not_connected' }>
+// booleans: isStarted, isNotConnected
+// Default mode: 'incremental'
+```
+
+```js
+const { status, isStarted, isNotConnected } = await mobilelocker.crm.refresh({
+  mode: 'incremental', // or 'full'
+})
+```
+
+## Related
+
+- [Contacts](contacts/) — user address book (different domain from CRM contacts)
+- [Errors](errors/) — `MobileLockerCRMError`, `CRMErrorCode`
+- [Scanner](scanner/) — capture leads on device
 
 ## API reference
 
 - Module: [`crm`](../api/variables/crm/)
-- Types: [`CRMQueryResult`](../api/interfaces/crmqueryresult/), [`CRMAccount`](../api/interfaces/crmaccount/), …
+- Types: [`CRMQueryResult`](../api/interfaces/crmqueryresult/), [`PickerResult`](../api/type-aliases/pickerresult/), [`CRMRefreshResult`](../api/type-aliases/crmrefreshresult/), [`Page`](../api/interfaces/page/), [`CRMAccount`](../api/interfaces/crmaccount/), …

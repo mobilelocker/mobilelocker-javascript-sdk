@@ -1,7 +1,13 @@
 ---
 title: User
-description: Read the authenticated Mobile Locker user for the presentation session.
+description: Authenticated Mobile Locker user — matching src/domains/user.ts and types/user.ts.
 ---
+
+**Public surface (`user`):** `get`
+
+```ts
+get(): Promise<User>
+```
 
 ## Get current user
 
@@ -9,11 +15,51 @@ description: Read the authenticated Mobile Locker user for the presentation sess
 import mobilelocker from '@mobilelocker/javascript-sdk'
 
 const user = await mobilelocker.user.get()
-// user.id, user.name, user.email, user.current_team_id, …
 console.log(`Hello, ${user.name}`)
 ```
 
-This is the usual **first success path** after the host injects `?jwt=` — see [Getting started](../guides/getting-started/).
+This is the usual **first success path** after the host injects `?jwt=` — see [Getting started](../guides/getting-started/). Failures throw **`MobileLockerError`**.
+
+## `User` shape
+
+Mirrors the host `GRDBUser` JSON (`src/types/user.ts`). Fields are **snake_case**:
+
+| Field | Type | Notes |
+|-------|------|--------|
+| `id` | `number` | |
+| `first_name` | `string` | |
+| `last_name` | `string` | |
+| `name` | `string` | Display name |
+| `email` | `string` | |
+| `sender_email` | `string \| null` | |
+| `phone` | `string \| null` | |
+| `country` | `string` | |
+| `timezone` | `string` | |
+| `current_team_id` | `number` | |
+| `ask_for_review` | `boolean` | |
+| `scanner_enabled` | `boolean` | |
+| `calendar_url` | `string \| null` | |
+| `locale` | `string` | |
+| `title` | `string` | |
+| `region` | `string` | |
+| `district` | `string` | |
+| `territory` | `string` | |
+| `salesforce_profile_id` | `string \| null` | |
+| `salesforce_profile_name` | `string \| null` | |
+| `default_greeting_type` | `string` | |
+| `current_team_role` | `string` | |
+| `is_employee` | `boolean` | |
+| `is_super_admin` | `boolean` | |
+| `is_debug_mode` | `boolean` | |
+| `max_records_from_crm` | `number` | |
+| `can_use_haystack` | `boolean` | |
+| `can_use_metabase` | `boolean` | |
+| `is_current_user` | `boolean` | Authenticated user vs team member record |
+
+```js
+const u = await mobilelocker.user.get()
+// u.id, u.email, u.current_team_id, u.scanner_enabled, …
+```
 
 ## API reference
 

@@ -1,9 +1,19 @@
 ---
 title: Analytics
-description: Log custom presentation events for Mobile Locker analytics.
+description: Custom presentation events — matching src/domains/analytics.ts.
 ---
 
-Track custom events from inside a presentation. `logEvent` is **synchronous**.
+**Public surface (`analytics`):** `logEvent` (sync; fire-and-forget)
+
+```ts
+logEvent(
+  category: string,
+  action: string,
+  uri: string,
+  data?: unknown,
+  method?: string, // default 'trackevent'
+): void
+```
 
 ## Log an event
 
@@ -16,22 +26,28 @@ mobilelocker.analytics.logEvent('product', 'view', '/slides/overview', {
   productId: 42,
   source: 'menu',
 })
+
+// Optional 5th arg: internal tracking method (default 'trackevent')
+// Other domains pass 'capturedata', 'showpdf', etc. when posting through analytics.
 ```
 
 | Argument | Role |
 |----------|------|
-| `category` | High-level grouping (e.g. `product`, `form`) |
+| `category` | High-level grouping (e.g. `product`, `form`, `share`) |
 | `action` | Verb (e.g. `view`, `submit`) |
 | `uri` | Location or resource path in the presentation |
-| `data` | Optional JSON-serializable payload |
+| `data` | Optional payload |
+| `method` | Internal host method name; defaults to `'trackevent'` |
+
+Outside Mobile Locker, events are buffered locally (IndexedDB). Inside the app, they post to the host bridge.
 
 ## When to use
 
-- Slide / asset views that matter for engagement reports
+- Slide / asset views for engagement reports
 - Custom CTA clicks and form milestones
-- Anything you want correlated with the host analytics pipeline
+- Instrumentation — **not** as a general-purpose data store
 
-Prefer domain APIs for real data (`crm`, `user`, …). Use analytics for **instrumentation**, not as a data store.
+Prefer domain APIs for real data (`crm`, `user`, `data.submitForm`, …).
 
 ## API reference
 

@@ -1,25 +1,28 @@
 ---
 title: Install
-description: Install @mobilelocker/javascript-sdk via npm or yarn.
+description: Install @mobilelocker/javascript-sdk and host requirements.
 ---
 
 ## Package
 
 ```bash
-npm install @mobilelocker/javascript-sdk
-# or
-yarn add @mobilelocker/javascript-sdk
+npm install @mobilelocker/javascript-sdk@2
+# or pin the major:
+# npm install @mobilelocker/javascript-sdk@^2.0.0
+# yarn add @mobilelocker/javascript-sdk@^2.0.0
 ```
 
 ```js
 import mobilelocker from '@mobilelocker/javascript-sdk'
 // or named imports
-import { user, crm, isIOS } from '@mobilelocker/javascript-sdk'
+import { user, crm, isIOS, MobileLockerError, GeneralErrorCode } from '@mobilelocker/javascript-sdk'
 ```
 
 ## Presentation HTML (no bundler)
 
 If your presentation loads scripts with `<script>` tags, use the **UMD** build instead of npm. See [UMD in presentation HTML](../guides/umd-html/).
+
+Artifact: `dist/index.umd.js` → global **`mobilelocker`** (prefer `mobilelocker.default || mobilelocker`).
 
 ## Requirements
 
@@ -27,8 +30,21 @@ If your presentation loads scripts with `<script>` tags, use the **UMD** build i
 |-------------|--------|
 | **Node.js 18+** | For package installs / tooling |
 | **Mobile Locker host** | Most bridge APIs need the app or CDN presentation context |
+| **iOS 5.5.0+** | Required for contacts/CRM **cursor list** walks (`getPage` / `eachPage` / `get*Page` / `each*Page`) |
+| **iOS 5.3.0+** | Native `localforage` / improved storage routes when available |
 
 Outside Mobile Locker (local browser), many calls are no-ops or return safe fallbacks so you can develop offline.
+
+## SDK 2.0 hard break
+
+SDK 2.0 removes unbound full-list contacts/CRM dumps. Presentations still calling removed 1.x APIs will break on matching hosts. See [Getting started](../guides/getting-started/) (cursor paging) and [CHANGELOG](../guides/changelog/).
+
+| Removed (1.x) | Use instead |
+|---------------|-------------|
+| `contacts.getAll()` | `contacts.eachPage` / `contacts.getPage` |
+| `contacts.getChunked(min, limit)` | `contacts.getPage(limit, cursor?)` |
+| `crm.getAccounts()` (etc. full lists) | `crm.query` or `eachAccountsPage` / `getAccountsPage` |
+| `storage.getAllForPresentation()` | `storage.getAll()` or `getAllAcrossPresentations()` |
 
 ## Next
 

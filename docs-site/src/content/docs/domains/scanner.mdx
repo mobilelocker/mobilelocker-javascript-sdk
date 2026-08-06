@@ -1,47 +1,56 @@
 ---
 title: Scanner
-description: Business card and badge scanning on Mobile Locker iOS.
+description: Business card and badge scanning (iOS) — matching src/domains/scanner.ts.
 ---
 
-Open native camera scanners from a presentation. **iOS app only** — these methods throw `UnsupportedEnvironment` elsewhere.
+**Public surface (`scanner`):** `scanBusinessCard` · `scanBadge`
+
+**iOS app only** — both methods throw `UnsupportedEnvironment` (`unsupported_environment`) outside iOS.
 
 :::tip[Live demo]
 Open the **Scanner** screen in the [SDK Demo IVA](../examples/demo-iva/) (`#/scanner`) on an iOS device.
 :::
 
+## Types
+
+```ts
+type ScanStatus = 'success' | 'cancelled' | 'failed'
+
+type ScanResult = WithStatusBooleans<
+  | { status: 'success'; attendee: Attendee }
+  | { status: 'success'; businessCard: BusinessCard }
+  | { status: 'cancelled' }
+  | { status: 'failed'; error: string }
+>
+// booleans: isSuccess, isCancelled, isFailed
+```
+
 ## Business card
+
+```ts
+scanBusinessCard(eventID?: number): Promise<ScanResult>
+```
 
 ```js
 import mobilelocker from '@mobilelocker/javascript-sdk'
 
-async function captureCard(eventID) {
-  if (!mobilelocker.isIOS()) {
-    throw new Error('Business card scanner requires the Mobile Locker iOS app')
-  }
+const result = await mobilelocker.scanner.scanBusinessCard(eventID) // eventID optional
 
-  const result = await mobilelocker.scanner.scanBusinessCard(eventID)
-
-  if (result.isSuccess) {
-    console.log(result.businessCard)
-    // Optional: persist for the presentation
-    await mobilelocker.storage.save('last-business-card', result.businessCard)
-    return result.businessCard
-  }
-
-  if (result.isCancelled) {
-    console.log('User cancelled')
-    return null
-  }
-
-  // isFailed
+if (result.isSuccess) {
+  console.log(result.businessCard)
+  await mobilelocker.storage.save('last-business-card', result.businessCard)
+} else if (result.isCancelled) {
+  // user cancelled
+} else if (result.isFailed) {
   console.error(result.error)
-  return null
 }
 ```
 
-`eventID` is optional for business cards (lead-retrieval event association when provided).
-
 ## Badge (attendee)
+
+```ts
+scanBadge(eventID: number): Promise<ScanResult>  // eventID required
+```
 
 ```js
 const result = await mobilelocker.scanner.scanBadge(eventID)
@@ -51,26 +60,13 @@ if (result.isSuccess) {
 }
 ```
 
-`eventID` is **required** for badge scans.
+Always check `isSuccess` / `status === 'success'` before reading `businessCard` or `attendee`.
 
-## Result shape
+## Related
 
-Scans return a **status object** with boolean helpers (`isSuccess`, `isCancelled`, `isFailed`) from `withStatusBooleans`:
-
-| Field | When |
-|-------|------|
-| `status` | `'success' \| 'cancelled' \| 'failed'` |
-| `businessCard` | Card scan success |
-| `attendee` | Badge scan success |
-| `error` | Failure message |
-
-Always check `isSuccess` before reading `businessCard` / `attendee`.
-
-## Related domains
-
-- [`congresses`](../api/variables/congresses/) — events, attendees, stored business cards
-- [`contacts`](../api/variables/contacts/) — user address book (cursor paging in 2.0)
-- [Storage](../domains/storage/) — keep scan payloads with the presentation
+- [Congresses](congresses/) — events, attendees, stored cards
+- [Contacts](contacts/) — user address book
+- [Storage](storage/) — persist scan payloads
 
 ## API reference
 

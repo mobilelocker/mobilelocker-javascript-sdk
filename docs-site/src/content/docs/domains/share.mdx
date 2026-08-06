@@ -1,11 +1,39 @@
 ---
 title: Share
-description: Share presentations and send email from the host.
+description: Share presentation and send email — matching src/domains/share.ts.
 ---
 
-Share APIs are **synchronous** host bridges.
+**Public surface (`share`):** `presentation` · `email`
 
-## Share a presentation
+Both methods are **synchronous** (fire analytics/`capturedata` events). `presentation` is a no-op outside Mobile Locker after validating args.
+
+## Types
+
+```ts
+interface ShareRecipient {
+  email: string
+  name?: string
+}
+```
+
+Top-level constants on the default export (also used by share):
+
+```js
+mobilelocker.notificationLevels
+// NOTIFY_NONE: 0, NOTIFY_FIRST: 1, NOTIFY_EVERY: 2, NOTIFY_WEEKLY: 3, NOTIFY_MONTHLY: 4
+```
+
+## Share presentation
+
+```ts
+presentation(
+  recipients: ShareRecipient[],
+  notificationLevel?: number,  // default 2 (NOTIFY_EVERY)
+  sendReminders?: boolean,     // default true
+): void
+```
+
+Throws `InvalidArgument` if `recipients` is empty or any recipient lacks `email`.
 
 ```js
 import mobilelocker from '@mobilelocker/javascript-sdk'
@@ -13,29 +41,32 @@ import mobilelocker from '@mobilelocker/javascript-sdk'
 mobilelocker.share.presentation(
   [{ email: 'jane@example.com', name: 'Jane' }],
   mobilelocker.notificationLevels.NOTIFY_FIRST,
+  true,
 )
 ```
 
-### Notification levels
+## Email
 
-| Constant | Value | Meaning |
-|----------|-------|---------|
-| `NOTIFY_NONE` | 0 | No notifications |
-| `NOTIFY_FIRST` | 1 | Notify on first open only |
-| `NOTIFY_EVERY` | 2 | Notify on every open |
-| `NOTIFY_WEEKLY` | 3 | Weekly digest |
-| `NOTIFY_MONTHLY` | 4 | Monthly digest |
-
-Available on the default export as `mobilelocker.notificationLevels`.
-
-## Send email
+```ts
+email(
+  to: string | { name?: string; email: string },
+  subject: string,
+  body?: string | null,        // default null
+  attachment?: string | null,  // default null
+  template?: string | null,    // default null
+  formData?: unknown,          // default null
+): void
+```
 
 ```js
 mobilelocker.share.email(
   { name: 'Jane', email: 'jane@example.com' },
   'Thanks for stopping by',
-  'It was great to meet you.',
+  'It was great meeting you at the conference.',
 )
+
+// string recipient also valid
+mobilelocker.share.email('jane@example.com', 'Subject', 'Body text')
 ```
 
 ## API reference

@@ -1,11 +1,18 @@
 ---
 title: Database
-description: Query SQLite databases bundled with the current presentation.
+description: Read-only SQLite against presentation files — matching src/domains/database.ts.
 ---
 
-Run **read-only SELECT** queries against SQLite files shipped with the presentation.
+**Public surface (`database`):** `list` · `describe` · `query`
+
+Failures throw **`MobileLockerDatabaseError`**. See [Errors](errors/) for `DatabaseErrorCode`.
 
 ## List databases
+
+```ts
+list(): Promise<string[]>
+// Outside Mobile Locker → []
+```
 
 ```js
 import mobilelocker from '@mobilelocker/javascript-sdk'
@@ -14,7 +21,16 @@ const databases = await mobilelocker.database.list()
 // e.g. ['products.sqlite', 'search/fts.db']
 ```
 
-## Query
+## Query (SELECT only)
+
+```ts
+query(
+  path: string,
+  sql: string,
+  parameters?: unknown[] | Record<string, unknown>,  // default []
+): Promise<DatabaseQueryResult>
+// { rows, rows_affected, last_insert_row_id }
+```
 
 Positional parameters:
 
@@ -29,7 +45,7 @@ const result = await mobilelocker.database.query(
 // result.last_insert_row_id
 ```
 
-Named parameters:
+Named parameters (`:name` placeholders; keys normalized for the host):
 
 ```js
 const result = await mobilelocker.database.query(
@@ -39,7 +55,15 @@ const result = await mobilelocker.database.query(
 )
 ```
 
+In local development, queries fall back to **sql.js** (loads the file via `fetch`).
+
 ## Describe a table
+
+```ts
+describe(database: string, table: string): Promise<DatabaseTableDescription>
+// { name, sql, columns: DatabaseColumnInfo[] }
+// columns: { cid, name, type, not_null, default_value, primary_key }
+```
 
 ```js
 const description = await mobilelocker.database.describe('products.sqlite', 'products')
@@ -48,13 +72,14 @@ const description = await mobilelocker.database.describe('products.sqlite', 'pro
 
 ## Constraints
 
-- **SELECT only** — writes throw `WriteNotPermitted` (`DatabaseErrorCode`)
-- Path must be an allowed presentation database file (`InvalidPath` otherwise)
-- Databases may still be copying open on cold start (`NotReady` after retries)
-
-See [Errors](errors/) for `MobileLockerDatabaseError` codes.
+| Rule | Code |
+|------|------|
+| SELECT only — writes not allowed | `WriteNotPermitted` (`write_not_permitted`) |
+| Path / table not allowed or missing | `InvalidPath` (`invalid_database_path`) |
+| DB still copying/opening | `NotReady` (`databases_not_ready`) |
+| SQL execution failed | `QueryFailed` (`query_failed`) |
 
 ## API reference
 
 - Module: [`database`](../api/variables/database/)
-- Types: [`DatabaseQueryResult`](../api/interfaces/databasequeryresult/), [`DatabaseTableDescription`](../api/interfaces/databasetabledescription/)
+- Types: [`DatabaseQueryResult`](../api/interfaces/databasequeryresult/), [`DatabaseTableDescription`](../api/interfaces/databasetabledescription/), [`DatabaseColumnInfo`](../api/interfaces/databasecolumninfo/)

@@ -1,18 +1,30 @@
 ---
 title: Errors
-description: MobileLockerError hierarchy, error codes, and handling patterns.
+description: Error classes and *ErrorCode constants — matching src/errors.ts.
 ---
 
 All domain failures share a common base so you can write one catch path for the SDK.
 
 ## Base class
 
+```ts
+class MobileLockerError extends Error {
+  readonly code: string
+  constructor(message: string, code?: string) // default code: server_error
+}
+```
+
 ```js
 import {
   MobileLockerError,
   MobileLockerCRMError,
+  MobileLockerDatabaseError,
+  MobileLockerHTTPError,
+  MobileLockerHttpResponseError,
   GeneralErrorCode,
   CRMErrorCode,
+  DatabaseErrorCode,
+  HTTPErrorCode,
 } from '@mobilelocker/javascript-sdk'
 
 try {
@@ -45,22 +57,22 @@ try {
 
 ## Error classes
 
-| Class | Thrown by |
-|-------|-----------|
-| `MobileLockerError` | General SDK failures |
-| `MobileLockerCRMError` | `crm.*` |
-| `MobileLockerDatabaseError` | `database.*` |
-| `MobileLockerHTTPError` | `http.*` transport |
-| `MobileLockerHttpResponseError` | Non-success HTTP responses (when applicable) |
+| Class | Thrown by | Extra fields |
+|-------|-----------|--------------|
+| `MobileLockerError` | General SDK failures | `code` |
+| `MobileLockerCRMError` | `crm.*` | `code: CRMErrorCode`, `crmMessage?: string` |
+| `MobileLockerDatabaseError` | `database.*` | `code: DatabaseErrorCode`, `sqliteMessage?: string` |
+| `MobileLockerHTTPError` | `http.*` transport (timeout, offline, …) | `code: HTTPErrorCode` |
+| `MobileLockerHttpResponseError` | `http.*` non-2xx responses | `status`, `statusText`, `headers`, `data` (code is `server_error`) |
 
 ## Code constants
 
-Prefer constants over raw strings:
+Prefer constants over raw strings. CRM / Database / HTTP constants **spread** general codes.
 
 ### `GeneralErrorCode`
 
-| Constant | Code |
-|----------|------|
+| Constant | Code string |
+|----------|-------------|
 | `NotConnected` | `not_connected` |
 | `ServerError` | `server_error` |
 | `RequestTimeout` | `request_timeout` |
@@ -68,18 +80,18 @@ Prefer constants over raw strings:
 | `UnsupportedEnvironment` | `unsupported_environment` |
 | `NotFound` | `not_found` |
 
-### `CRMErrorCode` (extends general)
+### `CRMErrorCode` (includes all general +)
 
-| Constant | Code |
-|----------|------|
+| Constant | Code string |
+|----------|-------------|
 | `NotSupported` | `crm_not_supported` |
 | `AuthExpired` | `crm_auth_expired` |
 | `SOQLInvalid` | `soql_invalid` |
 
-### `DatabaseErrorCode` (extends general)
+### `DatabaseErrorCode` (includes all general +)
 
-| Constant | Code |
-|----------|------|
+| Constant | Code string |
+|----------|-------------|
 | `NotReady` | `databases_not_ready` |
 | `InvalidPath` | `invalid_database_path` |
 | `WriteNotPermitted` | `write_not_permitted` |
@@ -87,22 +99,37 @@ Prefer constants over raw strings:
 
 ### `HTTPErrorCode`
 
-Same set as general codes for HTTP transport failures.
+Same set as `GeneralErrorCode` (no additional codes).
 
 ## Status objects (not thrown)
 
-Some APIs return **status unions** instead of throwing (scanner, picker, refresh):
+Some APIs return **status unions** with `withStatusBooleans` helpers instead of throwing:
+
+| API | `status` values | Boolean helpers |
+|-----|-----------------|-----------------|
+| `scanner.scan*` | `success` \| `cancelled` \| `failed` | `isSuccess`, `isCancelled`, `isFailed` |
+| `crm.openCustomerPicker` | `selected` \| `cancelled` | `isSelected`, `isCancelled` |
+| `crm.refresh` | `started` \| `not_connected` | `isStarted`, `isNotConnected` |
+| `presentation.download` | `queued` \| `already_installed` \| `not_available` \| `not_permitted` | `isQueued`, `isAlreadyInstalled`, … |
+| `ui.openVideo` | `completed` \| `dismissed` \| `failed` | `isCompleted`, `isDismissed`, `isFailed` |
+
+Snake_case statuses become camelCase booleans (`not_connected` → `isNotConnected`).
 
 ```js
 const result = await mobilelocker.scanner.scanBusinessCard()
-if (result.isSuccess) { /* ... */ }
-if (result.isCancelled) { /* ... */ }
-if (result.isFailed) { /* ... */ }
+if (result.isSuccess) { /* … */ }
+if (result.status === 'cancelled') { /* … */ }
 ```
 
-Those use `withStatusBooleans` helpers (`isSuccess`, …) on top of a `status` field.
+## Helper factories (advanced)
 
-## Logging
+Exported for mappers / tests (usually not needed in presentation code):
+
+- `mapToMobileLockerError` · `mapToCRMError` · `mapToDatabaseError`
+- `unsupportedEnvironmentError(method, environment?)`
+- `invalidArgumentError(message)`
+
+## Logging errors
 
 ```js
 mobilelocker.log.error('CRM failed', { code: err.code, message: err.message })
@@ -113,5 +140,10 @@ const sdkLogs = await mobilelocker.log.getSdkLogs({ level: 'error', domain: 'crm
 
 - [`MobileLockerError`](../api/classes/mobilelockererror/)
 - [`MobileLockerCRMError`](../api/classes/mobilelockercrmerror/)
+- [`MobileLockerDatabaseError`](../api/classes/mobilelockerdatabaseerror/)
+- [`MobileLockerHTTPError`](../api/classes/mobilelockerhttperror/)
+- [`MobileLockerHttpResponseError`](../api/classes/mobilelockerhttpresponseerror/)
 - [`GeneralErrorCode`](../api/variables/generalerrorcode/)
 - [`CRMErrorCode`](../api/variables/crmerrorcode/)
+- [`DatabaseErrorCode`](../api/variables/databaseerrorcode/)
+- [`HTTPErrorCode`](../api/variables/httperrorcode/)

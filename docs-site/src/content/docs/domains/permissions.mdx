@@ -1,11 +1,44 @@
 ---
 title: Permissions
-description: Query camera, mic, photos, location, bluetooth, and biometrics (iOS).
+description: Camera, mic, photos, location, bluetooth, biometrics — matching src/domains/permissions.ts.
 ---
 
-Check iOS permission state before opening camera/scanner flows. Methods return a **safe default** outside the iOS app rather than throwing.
+**Public surface (`permissions`):**  
+`camera` · `microphone` · `photoLibrary` · `location` · `bluetooth` · `biometric`
+
+Outside **iOS**, permission helpers return a **safe default** (they do **not** throw for wrong environment). Network failures on iOS throw **`MobileLockerError`**.
+
+## Types
+
+```ts
+type PermissionStatus =
+  | 'authorized' | 'authorized_always' | 'authorized_when_in_use'
+  | 'denied' | 'restricted' | 'not_determined' | 'limited' | 'unknown'
+
+type BiometricType = 'face_id' | 'touch_id' | 'optic_id' | 'none' | 'unknown'
+
+interface PermissionResult {
+  status: PermissionStatus
+  granted: boolean
+}
+
+interface BiometricResult {
+  available: boolean
+  biometric_type: BiometricType
+  error: string | null
+}
+```
 
 ## Common permissions
+
+```ts
+camera(): Promise<PermissionResult>
+microphone(): Promise<PermissionResult>
+photoLibrary(): Promise<PermissionResult>
+location(): Promise<PermissionResult>
+bluetooth(): Promise<PermissionResult>
+// Outside iOS → { status: 'not_determined', granted: false }
+```
 
 ```js
 import mobilelocker from '@mobilelocker/javascript-sdk'
@@ -16,32 +49,31 @@ const photoLibrary = await mobilelocker.permissions.photoLibrary()
 const location = await mobilelocker.permissions.location()
 const bluetooth = await mobilelocker.permissions.bluetooth()
 
-// { status, granted }
 if (!camera.granted) {
   // prompt user via host settings / UI
 }
 ```
 
-### Status values
+Status notes:
 
-Common: `'authorized' | 'denied' | 'restricted' | 'not_determined' | 'unknown'`
-
-Also:
-
-- Location: `'authorized_always' | 'authorized_when_in_use'`
-- Photo library: `'limited'`
+- Location may use `'authorized_always'` / `'authorized_when_in_use'`
+- Photo library may use `'limited'`
 
 ## Biometrics
 
+```ts
+biometric(): Promise<BiometricResult>
+// Outside iOS → { available: false, biometric_type: 'unknown', error: null }
+```
+
 ```js
 const biometric = await mobilelocker.permissions.biometric()
-// { available, biometric_type, error? }
-// biometric_type: 'face_id' | 'touch_id' | 'optic_id' | 'none' | 'unknown'
+// biometric.available, biometric.biometric_type, biometric.error
 ```
 
 ## Related
 
-- [Scanner](scanner/) — requires camera permission in practice
+- [Scanner](scanner/) — camera required in practice
 - [Environments](../guides/environments/) — `isIOS()`
 
 ## API reference

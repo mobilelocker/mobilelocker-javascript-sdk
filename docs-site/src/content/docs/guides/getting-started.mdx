@@ -13,7 +13,9 @@ The SDK **initializes automatically**. There is no `init()` call. At runtime, Mo
 import mobilelocker from '@mobilelocker/javascript-sdk'
 ```
 
-**Script tag (UMD):** see [UMD in presentation HTML](../guides/umd-html/) — the global is `mobilelocker`.
+**Script tag (UMD):** see [UMD in presentation HTML](../guides/umd-html/) — the global is `mobilelocker` (use `mobilelocker.default || mobilelocker`).
+
+Named exports are available for TypeScript consumers (`user`, `crm`, `MobileLockerError`, `GeneralErrorCode`, domain types, …). See `src/index.ts` / package types.
 
 ## 2. Confirm you are in Mobile Locker (optional)
 
@@ -23,7 +25,7 @@ if (!mobilelocker.isMobileLocker()) {
 }
 ```
 
-More helpers: [Environments](../guides/environments/).
+Top-level helpers on the default export: `isMobileLocker`, `isApp`, `isCDN`, `isIOS`, `isAndroid`, `isElectron`. Details: [Environments](../guides/environments/).
 
 ## 3. First success path — greet the user
 
@@ -36,12 +38,13 @@ import mobilelocker, {
 async function boot() {
   try {
     const currentUser = await mobilelocker.user.get()
+    // User fields are snake_case: name, email, current_team_id, …
     console.log(`Hello, ${currentUser.name}`)
 
-    // Optional: gate features on app version (native app)
+    // Optional: gate features on app version (iOS/Android only)
     if (mobilelocker.isApp()) {
       const info = await mobilelocker.device.get()
-      console.log('App version', info.app?.version)
+      if (info) console.log('App version', info.app.version)
     }
   } catch (err) {
     if (err instanceof MobileLockerError) {
@@ -59,17 +62,17 @@ async function boot() {
 boot()
 ```
 
-You should see the current user's name in the console when the presentation runs inside Mobile Locker with a valid session.
+You should see the current user's name when the presentation runs inside Mobile Locker with a valid session.
 
 ## 4. Common next calls
 
 | Goal | Start here |
 |------|------------|
-| Query Salesforce / CRM | [CRM](../domains/crm/) |
-| Walk the address book | [Contacts](../domains/contacts/) |
+| Query Salesforce / CRM | [CRM](../domains/crm/) — `crm.query`, `eachAccountsPage`, … |
+| Walk the address book | [Contacts](../domains/contacts/) — `contacts.eachPage` |
 | Scan a badge or business card (iOS) | [Scanner](../domains/scanner/) |
 | Persist presentation data | [Storage](../domains/storage/) · [localforage](../domains/localforage/) |
-| Call your own HTTPS API | [HTTP](../domains/http/) |
+| Call your own HTTPS API | [HTTP](../domains/http/) — `http.get(url)`, `http.post(url, body, options?)` |
 | Bundled SQLite | [Database](../domains/database/) |
 | Open PDF / video | [UI](../domains/ui/) |
 | Structured logging | [Log](../domains/log/) |
@@ -78,7 +81,12 @@ You should see the current user's name in the console when the presentation runs
 
 ## 5. Large lists use cursor paging
 
-Contacts and CRM offline lists return a **cursor envelope**. Walk page by page — do not load an entire large set into one array.
+Contacts and CRM offline lists return a **`Page<T>`** cursor envelope (iOS **5.5.0+**). Walk page by page — do not load an entire large set into one array.
+
+```ts
+// Page shape (src/types/page.ts)
+{ data: T[]; meta: { cursor: { next: string | null; count: number } } }
+```
 
 ```js
 // Process one page at a time
@@ -87,9 +95,13 @@ await mobilelocker.contacts.eachPage(500, (chunk) => {
     // render / index this contact
   }
 })
+
+// Or manual:
+const page = await mobilelocker.contacts.getPage(500)
+// advance only with page.meta.cursor.next until null
 ```
 
-Advance single pages with `page.meta.cursor.next` until it is `null`. Prefer `crm.query` (SOQL) when you only need a filtered CRM set. Details: [Contacts](../domains/contacts/), [CRM](../domains/crm/).
+Prefer `crm.query` (SOQL) when you only need a filtered CRM set. Details: [Contacts](../domains/contacts/), [CRM](../domains/crm/).
 
 ## Error handling pattern
 

@@ -1,51 +1,58 @@
 ---
 title: localforage
-description: Stable key-value storage that survives WKWebView port changes.
+description: Port-safe key-value store — matching src/domains/localforage.ts.
 ---
 
-A **localForage-compatible** key-value API backed by native storage on modern iOS, with automatic IndexedDB fallback elsewhere.
+**Public surface (`localforage`):** localForage data API —  
+`getItem` · `setItem` · `removeItem` · `clear` · `length` · `key` · `keys` · `iterate`
 
-:::tip[Prefer this over browser localforage]
-Raw IndexedDB is origin-scoped. In WKWebView each presentation can get a unique port, so the origin changes and data is lost. `mobilelocker.localforage` routes through the host where available.
-:::
+A **single pre-configured** store (`name: 'mobilelocker'`, `storeName: 'localforage'`). Settings / multi-instance APIs are intentionally **not** exposed.
 
-## Basic usage
+## When to use
+
+| API | Use when |
+|-----|----------|
+| `mobilelocker.localforage` | Client-side key-value that must survive WKWebView port changes |
+| [`storage`](storage/) | Named **server-backed** presentation/user entries |
+
+Prefer `mobilelocker.localforage` over importing raw `localforage` in presentations.
+
+## Drivers
+
+| Environment | Backend |
+|-------------|---------|
+| iOS **5.3.0+** | Native driver → host `/localstorage` (GRDB) |
+| Android | Native driver (when supported by host) |
+| CDN, Electron, older iOS, local browser | IndexedDB → WebSQL → localStorage fallback stack |
+
+On first native use, existing IndexedDB keys may migrate into native storage automatically.
+
+## API
+
+```ts
+interface MobileLockerLocalForage {
+  getItem<T>(key: string, callback?): Promise<T | null>
+  setItem<T>(key: string, value: T, callback?): Promise<T>
+  removeItem(key: string, callback?): Promise<void>
+  clear(callback?): Promise<void>
+  length(callback?): Promise<number>
+  key(keyIndex: number, callback?): Promise<string>
+  keys(callback?): Promise<string[]>
+  iterate<T, U>(iteratee, callback?): Promise<U>
+}
+```
 
 ```js
 import mobilelocker from '@mobilelocker/javascript-sdk'
 
-await mobilelocker.localforage.setItem('user-prefs', { theme: 'dark', fontSize: 14 })
+await mobilelocker.localforage.setItem('user-prefs', { theme: 'dark' })
 const prefs = await mobilelocker.localforage.getItem('user-prefs')
 
 await mobilelocker.localforage.removeItem('user-prefs')
-await mobilelocker.localforage.clear()
-
-const count = await mobilelocker.localforage.length()
-const keys = await mobilelocker.localforage.keys()
+const allKeys = await mobilelocker.localforage.keys()
 ```
 
-## Iterate
-
-```js
-await mobilelocker.localforage.iterate((value, key, n) => {
-  console.log(n, key, value)
-  // return non-undefined to stop early (localForage semantics)
-})
-```
-
-## Binary values
-
-```js
-await mobilelocker.localforage.setItem('buffer', new Uint8Array([1, 2, 3]).buffer)
-const buf = await mobilelocker.localforage.getItem('buffer') // ArrayBuffer
-```
-
-## vs `storage`
-
-| API | Best for |
-|-----|----------|
-| [`localforage`](localforage/) | Generic key-value prefs, caches, offline UI state |
-| [`storage`](storage/) | Named server-backed entries with presentation/user metadata |
+Supports the same value types as localForage, including `ArrayBuffer` / `Blob` / typed arrays (serialized on the native path).
 
 ## API reference
 

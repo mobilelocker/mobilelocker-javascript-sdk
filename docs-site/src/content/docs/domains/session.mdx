@@ -1,11 +1,19 @@
 ---
 title: Session
-description: Read device events recorded during the current session.
+description: Session device events and hitSessionId — matching src/domains/session.ts.
 ---
 
 :::tip[Live demo]
 Open the **Events** screen in the [SDK Demo IVA](../examples/demo-iva/) (`#/events`).
 :::
+
+**Public surface (`session`):** `getDeviceEvents` · `hitSessionId` (getter)
+
+## Device events
+
+```ts
+getDeviceEvents(): Promise<unknown[]>
+```
 
 ```js
 import mobilelocker from '@mobilelocker/javascript-sdk'
@@ -13,9 +21,26 @@ import mobilelocker from '@mobilelocker/javascript-sdk'
 const events = await mobilelocker.session.getDeviceEvents()
 ```
 
-Use this for session-scoped timelines. Presentation-level event helpers also live on [`presentation`](presentation/) (`getEvents`, `getDeviceEvents`).
+| Environment | Behavior |
+|-------------|----------|
+| Inside Mobile Locker | `GET …/session/events` |
+| Outside (local dev) | Events buffered in IndexedDB via localforage |
+
+Presentation-scoped event helpers also live on [`presentation`](presentation/) (`getEvents`, `getDeviceEvents` alias).
 
 Live vs practice recording is controlled via [`log.liveMode` / `log.practiceMode`](log/).
+
+## Hit session id
+
+```ts
+get hitSessionId(): string | null
+```
+
+```js
+const id = mobilelocker.session.hitSessionId
+// Session id from JWT `hit_uuid` when the presentation was opened via a shared
+// CDN link; null if not applicable or not yet created.
+```
 
 ## API reference
 

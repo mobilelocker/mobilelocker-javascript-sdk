@@ -1,31 +1,70 @@
 ---
 title: Device
-description: Read app, OS, and hardware metadata from the native host.
+description: App/hardware metadata and version gating — matching src/domains/device.ts.
 ---
 
-Device and application metadata from the Mobile Locker native shell.
+**Public surface (`device`):** `get` · `isAtLeastVersion`
+
+Both methods run on **iOS and Android** only. Elsewhere they return `null` / `false` (they do **not** throw).
+
+## Types
+
+```ts
+type AppEnvironment = 'production' | 'staging'
+
+interface DeviceInfo {
+  app: {
+    name: string
+    version: string
+    build: string
+    environment: AppEnvironment
+  }
+  os: { name: string; version: string }
+  hardware: {
+    model: string
+    name: string
+    isPhone: boolean
+    isPad: boolean
+    isSimulator: boolean
+    hasSensorHousing: boolean
+  }
+  orientation: 'portrait' | 'landscape'
+  locale: { region: string }
+}
+```
 
 ## Get device info
+
+```ts
+get(): Promise<DeviceInfo | null>
+```
 
 ```js
 import mobilelocker from '@mobilelocker/javascript-sdk'
 
 const info = await mobilelocker.device.get()
-// info may be null outside the app
-// info.app.version, info.os.name, info.hardware.model, info.orientation, …
+if (info) {
+  console.log(info.app.version, info.hardware.model, info.orientation)
+}
+// null outside iOS/Android Mobile Locker apps
 ```
 
-## Version gating
+## Version gate
+
+```ts
+isAtLeastVersion(version: string): Promise<boolean>
+// version format: major.minor.patch, e.g. '5.5.0'
+```
 
 ```js
-if (await mobilelocker.device.isAtLeastVersion('5.6.0')) {
-  // Feature that depends on a specific app version
+if (mobilelocker.isApp() && (await mobilelocker.device.isAtLeastVersion('5.5.0'))) {
+  // feature that depends on a specific host version
 }
 ```
 
-Combine with [Environments](../guides/environments/) (`isIOS`, `isApp`, …) for feature switches. Everyday contacts/CRM cursor APIs do not need a special version check.
+Returns `false` when not on iOS/Android, when `get()` fails to return info, or when the app version is lower.
 
-
+Combine with [Environments](../guides/environments/) (`isIOS`, `isAndroid`, `isApp`) for feature switches.
 
 ## API reference
 

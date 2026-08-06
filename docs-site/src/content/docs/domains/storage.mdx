@@ -1,11 +1,43 @@
 ---
 title: Storage
-description: Persist data for the current presentation and user context.
+description: Presentation-scoped server-backed entries — matching src/domains/storage.ts.
 ---
 
-Store JSON-serializable data tied to the **current presentation / user** context. Field names on entries are **snake_case** (`team_id`, `created_at`, …).
+Store JSON-serializable data tied to the **current presentation / user** context. Field names on entries are **snake_case**.
 
-## Save and load
+**Public surface (`storage`):** `get` · `getAll` · `getAllAcrossPresentations` · `getForPresentation` · `query` · `search` · `save` · `delete`
+
+There is **no** `getAllForPresentation()` — that 1.x name hit the unrestricted list and was replaced by `getAllAcrossPresentations()` / `getAll()` / `getForPresentation(id)`.
+
+## Types
+
+```ts
+interface StorageEntry {
+  name: string
+  data: unknown
+  team_id: number
+  user_id: number
+  presentation_id: number | null
+  created_at: string | null   // ISO 8601
+  updated_at: string | null
+}
+
+interface StorageFilter {
+  name?: string
+  presentationID?: number
+  since?: string              // ISO 8601
+  until?: string
+  limit?: number              // default 100 (local fallback path)
+}
+```
+
+## Save, load, delete
+
+```ts
+get(name: string): Promise<StorageEntry | null>
+save(name: string, data: unknown): Promise<StorageEntry>
+delete(name: string): Promise<void>
+```
 
 ```js
 import mobilelocker from '@mobilelocker/javascript-sdk'
@@ -13,15 +45,33 @@ import mobilelocker from '@mobilelocker/javascript-sdk'
 await mobilelocker.storage.save('scan-results', { leads: [{ id: 1 }] })
 
 const entry = await mobilelocker.storage.get('scan-results')
-// entry.name, entry.data, entry.team_id, entry.presentation_id, …
-
-const allHere = await mobilelocker.storage.getAll() // current presentation
-const across = await mobilelocker.storage.getAllAcrossPresentations() // all for user
+// entry?.name, entry?.data, entry?.team_id, entry?.presentation_id, …
 
 await mobilelocker.storage.delete('scan-results')
 ```
 
-## Query
+Outside Mobile Locker, `get` / `getAll` / `save` / `delete` use IndexedDB via localforage.
+
+## List by scope
+
+```ts
+getAll(): Promise<StorageEntry[]>                          // current presentation
+getAllAcrossPresentations(): Promise<StorageEntry[]>       // all for user
+getForPresentation(presentationID: number): Promise<StorageEntry[]>
+```
+
+```js
+const allHere = await mobilelocker.storage.getAll()
+const across = await mobilelocker.storage.getAllAcrossPresentations()
+const forPres = await mobilelocker.storage.getForPresentation(37976)
+```
+
+## Query and search
+
+```ts
+query(filter?: StorageFilter): Promise<StorageEntry[]>
+search(text: string, filter?: StorageFilter): Promise<StorageEntry[]>
+```
 
 ```js
 const filtered = await mobilelocker.storage.query({
@@ -29,29 +79,17 @@ const filtered = await mobilelocker.storage.query({
   limit: 10,
   // presentationID, since, until also supported
 })
+
+const hits = await mobilelocker.storage.search('lead', { limit: 20 })
+// Matches against name and stringified data
 ```
-
-## Field names
-
-`StorageEntry` fields are **snake_case** only: `team_id`, `user_id`, `presentation_id`, `created_at`, `updated_at`.
-
-| Method | Scope |
-|--------|--------|
-| `storage.getAll()` | Current presentation |
-| `storage.getAllAcrossPresentations()` | All presentations for the user |
-| `storage.getForPresentation(id)` | One presentation by id |
 
 ## localforage vs storage
 
 | API | Use when |
 |-----|----------|
-| [`storage`](../api/variables/storage/) | Named server-backed entries with presentation/user metadata |
-| [`localforage`](../api/variables/localforage/) | Drop-in key-value store that survives WKWebView port changes on iOS |
-
-```js
-await mobilelocker.localforage.setItem('user-prefs', { theme: 'dark' })
-const prefs = await mobilelocker.localforage.getItem('user-prefs')
-```
+| [`storage`](../api/variables/storage/) | Named **server-backed** entries with presentation/user metadata |
+| [`localforage`](localforage/) | Drop-in key-value store (native-backed on iOS 5.3.0+ / Android) |
 
 Prefer `mobilelocker.localforage` over raw browser `localforage` in presentations so data is not lost when the WebView origin/port changes.
 
@@ -60,4 +98,3 @@ Prefer `mobilelocker.localforage` over raw browser `localforage` in presentation
 - [`storage`](../api/variables/storage/)
 - [`StorageEntry`](../api/interfaces/storageentry/)
 - [`StorageFilter`](../api/interfaces/storagefilter/)
-- [`localforage`](../api/variables/localforage/)

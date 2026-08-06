@@ -1,42 +1,99 @@
 ---
 title: Log
-description: Structured presentation logs and SDK log inspection.
+description: Structured SDK logs and live/practice mode — matching src/domains/log.ts.
 ---
 
-Write structured logs from presentation code and inspect SDK-internal logs when debugging.
+**Public surface (`log`):**  
+`setMode` · `isEnabled` · `liveMode` · `practiceMode` ·  
+`getSdkLogs` · `searchSdkLogs` · `debug` · `info` · `warn` · `error`
 
-## Enable debug mode (sync)
+## Types
+
+```ts
+type SDKLogLevel = 'debug' | 'info' | 'warn' | 'error'
+type SDKLogDomain =
+  | 'analytics' | 'congresses' | 'contacts' | 'crm'
+  | 'data' | 'database' | 'device' | 'http' | 'localforage' | 'log'
+  | 'network' | 'permissions' | 'presentation' | 'scanner' | 'search' | 'session'
+  | 'share' | 'storage' | 'ui' | 'user' | 'sdk'
+
+interface SDKLogEntry {
+  id: number
+  timestamp: string           // ISO 8601
+  level: SDKLogLevel
+  domain: SDKLogDomain
+  function: string | null
+  message: string
+  durationMs: number | null
+  retryCount: number | null
+  metadata: Record<string, unknown> | null
+}
+
+interface SDKLogFilter {
+  level?: SDKLogLevel
+  domain?: SDKLogDomain
+  function?: string
+  since?: string
+  until?: string
+  retriesOnly?: boolean
+  limit?: number              // default 100
+}
+```
+
+## Debug mode
+
+```ts
+setMode(enabled: boolean): void
+isEnabled(): boolean
+```
 
 ```js
 import mobilelocker from '@mobilelocker/javascript-sdk'
 
 mobilelocker.log.setMode(true)
-mobilelocker.log.isEnabled() // boolean
+console.log(mobilelocker.log.isEnabled()) // true
 ```
-
-## Write logs (sync)
-
-```js
-mobilelocker.log.debug('Fetching products', { category: 'oncology' })
-mobilelocker.log.info('Query returned 42 rows')
-mobilelocker.log.warn('Result set large — consider paginating')
-mobilelocker.log.error('Query failed', { error: err.message })
-```
-
-## Read SDK logs (async)
-
-```js
-const errors = await mobilelocker.log.getSdkLogs({ level: 'error', domain: 'crm' })
-const hits = await mobilelocker.log.searchSdkLogs('timeout', { domain: 'database' })
-```
-
-Filter fields include `level` and `domain` (see `SDKLogFilter` / `SDKLogDomain` in the API reference).
 
 ## Live vs practice session
 
+```ts
+liveMode(uri?: string): void      // default uri ''
+practiceMode(uri?: string): void
+```
+
+Emits analytics events (`session_live_mode` activate / deactivate).
+
 ```js
-mobilelocker.log.liveMode()       // activate live session recording
-mobilelocker.log.practiceMode() // practice mode
+mobilelocker.log.liveMode()
+mobilelocker.log.practiceMode('/practice')
+```
+
+## Write logs
+
+```ts
+debug(message: string, metadata?: Record<string, unknown>): void
+info(message: string, metadata?: Record<string, unknown>): void
+warn(message: string, metadata?: Record<string, unknown>): void
+error(message: string, metadata?: Record<string, unknown>): void
+```
+
+```js
+mobilelocker.log.info('User selected product', { productId: 42, slide: 'overview' })
+mobilelocker.log.error('CRM failed', { code: 'crm_auth_expired' })
+```
+
+Inside Mobile Locker, entries post to the host. Outside, they buffer in IndexedDB (up to 1000 entries).
+
+## Read / search logs
+
+```ts
+getSdkLogs(filter?: SDKLogFilter): Promise<SDKLogEntry[]>
+searchSdkLogs(text: string, filter?: SDKLogFilter): Promise<SDKLogEntry[]>
+```
+
+```js
+const errors = await mobilelocker.log.getSdkLogs({ level: 'error', domain: 'crm' })
+const hits = await mobilelocker.log.searchSdkLogs('timeout', { limit: 50 })
 ```
 
 ## API reference

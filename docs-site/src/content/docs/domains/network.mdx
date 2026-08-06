@@ -1,23 +1,40 @@
 ---
 title: Network
-description: Check connectivity before online-only work.
+description: Connectivity status — matching src/domains/network.ts.
 ---
 
-## Status
+**Public surface (`network`):** `getStatus`
+
+## Types
+
+```ts
+type NetworkConnectionType = 'wifi' | 'cellular' | 'wired' | 'none'
+
+interface NetworkStatus {
+  connected: boolean
+  type: NetworkConnectionType
+}
+```
+
+## Get status
+
+```ts
+getStatus(): Promise<NetworkStatus>
+```
 
 ```js
 import mobilelocker from '@mobilelocker/javascript-sdk'
 
-const status = await mobilelocker.network.getStatus()
-// status.connected — boolean
-// status.type — 'wifi' | 'cellular' | 'wired' | 'none'
-
-if (!status.connected) {
-  // show offline UI; avoid CRM refresh / remote HTTP
+const { connected, type } = await mobilelocker.network.getStatus()
+if (!connected) {
+  // show offline banner
 }
 ```
 
-Pair with [Errors](errors/) (`NotConnected`) when calls fail after a race with connectivity loss.
+| Environment | Behavior |
+|-------------|----------|
+| Native app (`isApp()`) | Host `GET …/network/status` (accurate connection type) |
+| Browser / CDN | `navigator.onLine` — approximate; may report online on captive portals. Type is `'wifi'` when connected else `'none'` |
 
 ## API reference
 

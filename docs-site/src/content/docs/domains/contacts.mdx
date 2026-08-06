@@ -1,11 +1,19 @@
 ---
 title: Contacts
-description: Page through the user address book with cursor APIs.
+description: Cursor-paged user address book — matching src/domains/contacts.ts.
 ---
 
-Read the **current user's** contacts (address book). Books can exceed **100k** rows — always walk with **cursor paging**. Process one page at a time; do not rebuild the full book in memory.
+Read the **current user's** contacts (address book). Production books can exceed **100k** rows — always walk with **cursor paging**. Process one page at a time; do not rebuild the full book in memory.
+
+**Public surface (`contacts`):** `get` · `getPage` · `eachPage`
+
+Requires **Mobile Locker iOS 5.5.0+** for list walks. There is **no** `getAll()` and **no** `getChunked(min, limit)` (removed in SDK 2.0). Failures throw **`MobileLockerError`**.
 
 ## Fetch one contact
+
+```ts
+get(contactID: number): Promise<UserContact>
+```
 
 ```js
 import mobilelocker from '@mobilelocker/javascript-sdk'
@@ -13,12 +21,21 @@ import mobilelocker from '@mobilelocker/javascript-sdk'
 const contact = await mobilelocker.contacts.get(contactID)
 ```
 
+`contactID` is a **`number`** (user address-book id — not a Salesforce CRM id).
+
 ## Walk page by page (preferred)
+
+```ts
+eachPage(
+  pageSize: number,
+  handler: (chunk: UserContact[]) => void | Promise<void>,
+): Promise<void>
+```
 
 Host envelope:
 
 ```
-GET …?limit=1…5000&cursor=
+GET …/user-contacts?limit=1…5000&cursor=
 → { data, meta: { cursor: { next, count } } }
 ```
 
@@ -32,27 +49,32 @@ await mobilelocker.contacts.eachPage(500, (chunk) => {
 
 ## Single page
 
+```ts
+getPage(limit: number, cursor?: string): Promise<Page<UserContact>>
+// Page<T>: { data: T[]; meta: { cursor: { next: string | null; count: number } } }
+```
+
 ```js
 const page = await mobilelocker.contacts.getPage(500)
 // page.data — UserContact[]
 // page.meta.cursor.next — string | null
-// page.meta.cursor.count
+// page.meta.cursor.count — number (rows in this page)
 
 if (page.meta.cursor.next) {
   const next = await mobilelocker.contacts.getPage(500, page.meta.cursor.next)
 }
 ```
 
-`limit` / `pageSize` must be an integer **1…5000** or the SDK throws `InvalidArgument`.
+`limit` / `pageSize` must be an integer **1…5000** or the SDK throws `InvalidArgument` (`GeneralErrorCode.InvalidArgument`).
 
 ## Related
 
-- [CRM](crm/) — CRM contacts are a different domain (`crm.getContact` / SOQL)
+- [CRM](crm/) — CRM contacts are a different domain (`crm.getContact` / SOQL; IDs are **strings**)
 - [Scanner](scanner/) — capture new leads on device
 - [Search](search/) — cross-entity search including contacts
-- [Errors](errors/) — `MobileLockerError` / `InvalidArgument`
+- [Errors](errors/)
 
 ## API reference
 
 - Module: [`contacts`](../api/variables/contacts/)
-- Types: [`UserContact`](../api/interfaces/usercontact/), [`Page`](../api/interfaces/page/)
+- Types: [`UserContact`](../api/interfaces/usercontact/), [`Page`](../api/interfaces/page/), [`PageCursor`](../api/interfaces/pagecursor/)

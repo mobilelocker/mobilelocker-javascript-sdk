@@ -1,9 +1,11 @@
 ---
 title: Environments
-description: Detect iOS, Android, Electron, CDN, and app vs CDN context.
+description: Detect iOS, Android, Electron, CDN, and app vs CDN context — matching src/env.ts.
 ---
 
 Use environment helpers to branch UI and to avoid calling APIs that only exist on certain hosts.
+
+These are **top-level** functions on the default export and as named exports (not under a domain object).
 
 :::tip[Live demo]
 Open the **ML JS SDK** screen in the [SDK Demo IVA](../examples/demo-iva/) (`#/mljs`) for live flags, network, permissions, and device info.
@@ -22,6 +24,7 @@ Open the **ML JS SDK** screen in the [SDK Demo IVA](../examples/demo-iva/) (`#/m
 
 ```js
 import mobilelocker from '@mobilelocker/javascript-sdk'
+// or: import { isIOS, isApp, isMobileLocker } from '@mobilelocker/javascript-sdk'
 
 mobilelocker.isMobileLocker()
 mobilelocker.isApp()
@@ -37,7 +40,7 @@ mobilelocker.isCDN()
 import mobilelocker from '@mobilelocker/javascript-sdk'
 
 async function openScannerIfPossible(eventID) {
-  // Badge / business-card scanners throw outside the iOS app
+  // scanBadge / scanBusinessCard throw UnsupportedEnvironment outside iOS
   if (!mobilelocker.isIOS()) {
     console.info('Scanner is iOS-only')
     return null
@@ -46,22 +49,25 @@ async function openScannerIfPossible(eventID) {
 }
 
 async function fetchRemote(url) {
-  // In the native app, http.* is proxied (no CORS). On CDN/browser, fetch CORS rules apply.
+  // In the native app (isApp), http.* is proxied (no CORS). On CDN/browser, fetch CORS rules apply.
   return mobilelocker.http.get(url)
 }
 ```
 
 ## Version gating
 
-Some host features require a minimum app version:
+```ts
+// device.get(): Promise<DeviceInfo | null>  — iOS and Android only; null elsewhere
+// device.isAtLeastVersion(version: string): Promise<boolean>  — false outside iOS/Android
+```
 
 ```js
-if (mobilelocker.isApp() && (await mobilelocker.device.isAtLeastVersion('5.6.0'))) {
-  // Feature that depends on a specific app version
+if (mobilelocker.isApp() && (await mobilelocker.device.isAtLeastVersion('5.5.0'))) {
+  // Contacts/CRM cursor list APIs and other host features that need a minimum version
 }
 ```
 
-Use `device.isAtLeastVersion` when you need to gate on a **specific** host capability. Everyday contacts/CRM cursor APIs are part of the current platform.
+Use `device.isAtLeastVersion` when you need to gate on a **specific** host capability. Documented cursor list APIs require **iOS 5.5.0+**.
 
 ## Outside Mobile Locker
 
