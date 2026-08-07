@@ -76,7 +76,9 @@ export const ui = {
         if (!isIOS()) {
             throw unsupportedEnvironmentError('showToolbar()')
         }
-        void apiClient.post(getEndpoint('/menu/show'))
+        // Send an empty JSON body so Content-Type is application/json (host contract)
+        // and body-less POSTs are not dropped by intermediaries or strict parsers.
+        void apiClient.post(getEndpoint('/menu/show'), {})
     },
 
     /**

@@ -102,14 +102,30 @@ describe('presentation', () => {
         expect(env.apiClient.get).toHaveBeenCalledWith('/mobilelocker/api/open-presentation-picker')
     })
 
-    it('close logs presentation close event', () => {
+    it('close posts dedicated close-presentation route', async () => {
+        env.apiClient.post.mockResolvedValue({ data: { status: 'ok' } })
         presentation.close()
-        expect(analyticsMock.logEvent).toHaveBeenCalledWith(
-            'presentation',
-            'close',
-            'close-presentation',
-            null,
-            'close-presentation',
-        )
+        // close() is fire-and-forget async — flush microtasks
+        await vi.waitFor(() => {
+            expect(env.apiClient.post).toHaveBeenCalledWith(
+                '/mobilelocker/api/close-presentation',
+                {},
+            )
+        })
+        expect(analyticsMock.logEvent).not.toHaveBeenCalled()
+    })
+
+    it('close falls back to legacy method event when dedicated route fails', async () => {
+        env.apiClient.post.mockRejectedValue(new Error('not found'))
+        presentation.close()
+        await vi.waitFor(() => {
+            expect(analyticsMock.logEvent).toHaveBeenCalledWith(
+                'presentation',
+                'close',
+                'close-presentation',
+                null,
+                'close-presentation',
+            )
+        })
     })
 })

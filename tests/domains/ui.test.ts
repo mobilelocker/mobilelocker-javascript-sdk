@@ -44,7 +44,7 @@ describe('ui', () => {
 
         env.isIOS.mockReturnValue(true)
         ui.showToolbar()
-        expect(env.apiClient.post).toHaveBeenCalledWith('/mobilelocker/api/menu/show')
+        expect(env.apiClient.post).toHaveBeenCalledWith('/mobilelocker/api/menu/show', {})
     })
 
     it('openVideo on iOS posts to bridge and wraps status booleans', async () => {

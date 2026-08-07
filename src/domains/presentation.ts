@@ -62,9 +62,26 @@ export const presentation = {
 
     /**
      * Close the current presentation and return to the app home screen.
+     *
+     * Prefers the dedicated host route `POST /mobilelocker/api/close-presentation`
+     * (documented in the iOS web-server API). Falls back to the legacy
+     * `method=close-presentation` analytics POST used by older app builds.
      */
     close(): void {
-        analytics.logEvent('presentation', 'close', 'close-presentation', null, 'close-presentation')
+        void (async () => {
+            try {
+                await apiClient.post(getEndpoint('/close-presentation'), {})
+            } catch {
+                // Older hosts only honor the legacy method on POST /mobilelocker/api.
+                analytics.logEvent(
+                    'presentation',
+                    'close',
+                    'close-presentation',
+                    null,
+                    'close-presentation',
+                )
+            }
+        })()
     },
 
     /**
