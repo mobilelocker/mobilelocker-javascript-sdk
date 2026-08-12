@@ -11,6 +11,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [2.0.1] — 2026-08-12
+
+### Fixed
+
+- **Scanner open calls no longer use the 30s `apiClient` default timeout** (MLJS-32 / [MLI-1863](https://mobilelocker.atlassian.net/browse/MLI-1863)).
+  `scanner.scanBusinessCard` and `scanner.scanBadge` pass per-request `timeout: 0` (no limit) so native capture + OCR can finish without the presentation rejecting early. Other SDK traffic keeps the global 30s default.
+- **Scanner open calls no longer use `withRetry`.** A retry after a network blip would open a second native scanner session; interactive host bridges fire once.
+
+---
+
 ## [2.0.0] — Unreleased
 
 ### Highlights

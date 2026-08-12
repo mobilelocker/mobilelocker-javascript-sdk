@@ -33,6 +33,20 @@ describe('scanner', () => {
         expect(env.apiClient.post).toHaveBeenCalledWith(
             '/mobilelocker/api/open-scanner',
             { event_id: 99 },
+            { timeout: 0 },
+        )
+    })
+
+    it('scanBusinessCard omits body event_id when none is passed', async () => {
+        env.isIOS.mockReturnValue(true)
+        env.apiClient.post.mockResolvedValue({
+            data: { status: 'success', businessCard: { id: 2 } },
+        })
+        await scanner.scanBusinessCard()
+        expect(env.apiClient.post).toHaveBeenCalledWith(
+            '/mobilelocker/api/open-scanner',
+            {},
+            { timeout: 0 },
         )
     })
 
@@ -44,6 +58,7 @@ describe('scanner', () => {
         expect(env.apiClient.post).toHaveBeenCalledWith(
             '/mobilelocker/api/leadretrieval/open-badge-scanner',
             { event_id: 7 },
+            { timeout: 0 },
         )
     })
 })
