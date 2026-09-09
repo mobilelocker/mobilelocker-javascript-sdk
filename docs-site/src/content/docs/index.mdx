@@ -4,7 +4,7 @@ description: Official JavaScript SDK for interactive presentations and custom fe
 template: splash
 hero:
   title: JavaScript SDK for Mobile Locker presentations
-  tagline: Call CRM, contacts, scanning, storage, analytics, and device APIs from inside a Mobile Locker presentation on iOS, Android, Electron, or CDN.
+  tagline: Call CRM, contacts, scanning, storage, analytics, and device APIs from inside a Mobile Locker presentation on iOS, Android, Windows, or CDN.
   image:
     file: ../../assets/demo/mljs-environments-hero.png
     alt: SDK Demo IVA runtime panel showing environment flags, network status, and permissions
@@ -35,7 +35,8 @@ The SDK initializes automatically. There is no `init()` call. At runtime, Mobile
 |-------------|------|
 | **iOS / iPadOS** | Mobile Locker iOS app |
 | **Android** | Mobile Locker Android app |
-| **Electron** | Mobile Locker Windows app |
+| **Windows** | Mobile Locker Windows app |
+| **Electron (legacy)** | Legacy Electron Windows shell |
 | **CDN** | CDN-hosted presentation |
 
 Outside a Mobile Locker environment (for example local development), most bridge calls are no-ops or return local fallbacks so you can still build the presentation.
