@@ -16,6 +16,7 @@ export type EnvMock = {
     withRetry: <T>(fn: () => Promise<T>) => Promise<T>
     isIOS: Mock
     isAndroid: Mock
+    isWindows: Mock
     isElectron: Mock
     isApp: Mock
     isCDN: Mock
@@ -35,6 +36,7 @@ export type EnvMock = {
 export type EnvMockOptions = {
     isIOS?: boolean
     isAndroid?: boolean
+    isWindows?: boolean
     isElectron?: boolean
     isApp?: boolean
     isCDN?: boolean
@@ -74,6 +76,7 @@ export function createEnvMock(options: EnvMockOptions = {}): EnvMock {
         withRetry: async <T>(fn: () => Promise<T>) => fn(),
         isIOS: flag(options.isIOS ?? false),
         isAndroid: flag(options.isAndroid ?? false),
+        isWindows: flag(options.isWindows ?? false),
         isElectron: flag(options.isElectron ?? false),
         isApp: flag(options.isApp ?? false),
         isCDN: flag(options.isCDN ?? false),
@@ -101,12 +104,14 @@ export function resetEnvMock(env: EnvMock, flags: EnvMockOptions = {}): void {
     }
     env.isIOS.mockReset()
     env.isAndroid.mockReset()
+    env.isWindows.mockReset()
     env.isElectron.mockReset()
     env.isApp.mockReset()
     env.isCDN.mockReset()
     env.isMobileLocker.mockReset()
     env.isIOS.mockReturnValue(flags.isIOS ?? false)
     env.isAndroid.mockReturnValue(flags.isAndroid ?? false)
+    env.isWindows.mockReturnValue(flags.isWindows ?? false)
     env.isElectron.mockReturnValue(flags.isElectron ?? false)
     env.isApp.mockReturnValue(flags.isApp ?? false)
     env.isCDN.mockReturnValue(flags.isCDN ?? false)

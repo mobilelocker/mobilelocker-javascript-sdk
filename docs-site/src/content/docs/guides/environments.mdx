@@ -1,6 +1,6 @@
 ---
 title: Environments
-description: Detect iOS, Android, Electron, CDN, and app vs CDN context — matching src/env.ts.
+description: Detect iOS, Android, Windows, Electron, CDN, and app vs CDN context — matching src/env.ts.
 ---
 
 Use environment helpers to branch UI and to avoid calling APIs that only exist on certain hosts.
@@ -16,20 +16,22 @@ Open the **ML JS SDK** screen in the [SDK Demo IVA](../examples/demo-iva/) (`#/m
 | Helper | True when |
 |--------|-----------|
 | `isMobileLocker()` | Any Mobile Locker app **or** CDN presentation context |
-| `isApp()` | iOS, Android, or Electron native shell |
+| `isApp()` | iOS, Android, or Windows native shell |
 | `isIOS()` | Mobile Locker iOS / iPadOS app |
 | `isAndroid()` | Mobile Locker Android app |
-| `isElectron()` | Mobile Locker Windows (Electron) app |
+| `isWindows()` | Mobile Locker Windows app (includes the Electron Windows shell) |
+| `isElectron()` | Mobile Locker Electron Windows shell |
 | `isCDN()` | CDN-hosted presentation URL |
 
 ```js
 import mobilelocker from '@mobilelocker/javascript-sdk'
-// or: import { isIOS, isApp, isMobileLocker } from '@mobilelocker/javascript-sdk'
+// or: import { isIOS, isWindows, isApp, isMobileLocker } from '@mobilelocker/javascript-sdk'
 
 mobilelocker.isMobileLocker()
 mobilelocker.isApp()
 mobilelocker.isIOS()
 mobilelocker.isAndroid()
+mobilelocker.isWindows()
 mobilelocker.isElectron()
 mobilelocker.isCDN()
 ```
@@ -78,6 +80,7 @@ Local development in a normal browser: most bridge calls **no-op** or return loc
 - [`isMobileLocker`](../api/functions/ismobilelocker/)
 - [`isIOS`](../api/functions/isios/)
 - [`isAndroid`](../api/functions/isandroid/)
+- [`isWindows`](../api/functions/iswindows/)
 - [`isElectron`](../api/functions/iselectron/)
 - [`isCDN`](../api/functions/iscdn/)
 - [`isApp`](../api/functions/isapp/)

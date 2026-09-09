@@ -10,6 +10,7 @@ import mobilelocker, {
     isElectron,
     isIOS,
     isMobileLocker,
+    isWindows,
     storage,
     withStatusBooleans,
 } from '../src/index'
@@ -21,6 +22,7 @@ describe('public API surface (SDK 2.0)', () => {
         expect(mobilelocker.isCDN).toBeTypeOf('function')
         expect(mobilelocker.isIOS).toBeTypeOf('function')
         expect(mobilelocker.isAndroid).toBeTypeOf('function')
+        expect(mobilelocker.isWindows).toBeTypeOf('function')
         expect(mobilelocker.isElectron).toBeTypeOf('function')
         expect(mobilelocker.MobileLockerError).toBe(MobileLockerError)
 
@@ -48,6 +50,7 @@ describe('public API surface (SDK 2.0)', () => {
         expect(isCDN).toBeTypeOf('function')
         expect(isIOS).toBeTypeOf('function')
         expect(isAndroid).toBeTypeOf('function')
+        expect(isWindows).toBeTypeOf('function')
         expect(isElectron).toBeTypeOf('function')
         expect(withStatusBooleans).toBeTypeOf('function')
         expect(GeneralErrorCode.InvalidArgument).toBe('invalid_argument')

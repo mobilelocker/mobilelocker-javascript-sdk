@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **`isWindows()`** (MLJS-33) — detect the Mobile Locker Windows app via `IS_MOBILE_LOCKER_WINDOWS_APP` or the `mobilelocker-windows` user-agent prefix. Also `true` for the existing Electron Windows shell (`isElectron()`). Exported on the public API next to `isIOS` / `isAndroid` / `isElectron`. `isApp()` treats Windows as a native app environment.
+
 ---
 
 ## [2.0.1] — 2026-08-12

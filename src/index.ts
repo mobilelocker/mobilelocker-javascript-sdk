@@ -1,4 +1,4 @@
-import { isMobileLocker, isApp, isCDN, isIOS, isAndroid, isElectron } from './env'
+import { isMobileLocker, isApp, isCDN, isIOS, isAndroid, isElectron, isWindows } from './env'
 
 import { analytics } from './domains/analytics'
 import { congresses } from './domains/congresses'
@@ -37,6 +37,7 @@ const mobilelocker = {
     isCDN,
     isIOS,
     isAndroid,
+    isWindows,
     isElectron,
 
     // Top-level error class
@@ -71,7 +72,7 @@ const mobilelocker = {
 export default mobilelocker
 
 // Named exports for TypeScript consumers
-export { isMobileLocker, isApp, isCDN, isIOS, isAndroid, isElectron }
+export { isMobileLocker, isApp, isCDN, isIOS, isAndroid, isWindows, isElectron }
 export { analytics, congresses, contacts, crm, data, database, device, http, localforage, log, network, permissions, presentation, scanner, search, session, share, storage, ui, user }
 export { MobileLockerError } from './errors'
 export { MobileLockerCRMError, MobileLockerDatabaseError, MobileLockerHTTPError, MobileLockerHttpResponseError } from './errors'

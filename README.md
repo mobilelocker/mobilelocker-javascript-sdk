@@ -12,7 +12,7 @@ The SDK works in these environments:
 |------------------|---------------------------------------------------------------------------------|
 | **iOS/iPadOS**   | Running inside the Mobile Locker iOS app (`isIOS() === true`)                   |
 | **Android**      | Running inside the Mobile Locker Android app (`isAndroid() === true`)           |
-| **Electron**     | Running inside the Mobile Locker Windows app (`isElectron() === true`)          |
+| **Windows**      | Running inside the Mobile Locker Windows app (`isWindows() === true`)           |
 | **CDN**          | Loaded as part of a CDN-hosted presentation (`isCDN() === true`)                |
 
 When running outside of a Mobile Locker environment (e.g. local development), most SDK calls are silently no-ops or return sensible local fallbacks so you can develop without a live host.
@@ -95,10 +95,11 @@ Use these helpers to branch behavior based on where your code is running:
 import mobilelocker from '@mobilelocker/javascript-sdk'
 
 mobilelocker.isMobileLocker()  // true in any app or CDN context
-mobilelocker.isApp()           // true in iOS, Android, or Electron
+mobilelocker.isApp()           // true in iOS, Android, or Windows
 mobilelocker.isIOS()           // true specifically in the iOS or iPadOS app
 mobilelocker.isAndroid()       // true specifically in the Android app
-mobilelocker.isElectron()      // true in the Electron (Windows) app
+mobilelocker.isWindows()       // true specifically in the Windows app
+mobilelocker.isElectron()      // true in the Electron Windows shell
 mobilelocker.isCDN()           // true when served from a CDN presentation URL
 ```
 

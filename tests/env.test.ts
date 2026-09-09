@@ -25,6 +25,7 @@ describe('environment detection', () => {
     beforeEach(() => {
         delete window.IS_MOBILE_LOCKER_IOS_APP
         delete window.IS_MOBILE_LOCKER_ANDROID_APP
+        delete window.IS_MOBILE_LOCKER_WINDOWS_APP
         delete (globalThis as Record<string, unknown>)['ML_ENVIRONMENT']
         setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X) AppleWebKit/537.36')
         setLocation('http://localhost:5173/')
@@ -42,6 +43,7 @@ describe('environment detection', () => {
         expect(env.isApp()).toBe(true)
         expect(env.isMobileLocker()).toBe(true)
         expect(env.isAndroid()).toBe(false)
+        expect(env.isWindows()).toBe(false)
     })
 
     it('detects iOS via user agent prefixes', async () => {
@@ -64,14 +66,38 @@ describe('environment detection', () => {
         setUserAgent('mobilelocker-android/2.0')
         env = await loadEnv()
         expect(env.isAndroid()).toBe(true)
+        expect(env.isWindows()).toBe(false)
     })
 
     it('detects Electron via Mobile Locker UA without iOS', async () => {
         setUserAgent('Mobile Locker Electron/1.0')
         const env = await loadEnv()
         expect(env.isElectron()).toBe(true)
+        expect(env.isWindows()).toBe(true)
         expect(env.isApp()).toBe(true)
         expect(env.isIOS()).toBe(false)
+        expect(env.isAndroid()).toBe(false)
+    })
+
+    it('detects Windows via window flag', async () => {
+        window.IS_MOBILE_LOCKER_WINDOWS_APP = true
+        const env = await loadEnv()
+        expect(env.isWindows()).toBe(true)
+        expect(env.isApp()).toBe(true)
+        expect(env.isMobileLocker()).toBe(true)
+        expect(env.isElectron()).toBe(false)
+        expect(env.isIOS()).toBe(false)
+        expect(env.isAndroid()).toBe(false)
+    })
+
+    it('detects Windows via user agent prefix', async () => {
+        setUserAgent('mobilelocker-windows/1.0')
+        const env = await loadEnv()
+        expect(env.isWindows()).toBe(true)
+        expect(env.isApp()).toBe(true)
+        expect(env.isElectron()).toBe(false)
+        expect(env.isIOS()).toBe(false)
+        expect(env.isAndroid()).toBe(false)
     })
 
     it('isCDN matches app/eu/staging/dev hosts and subdomains', async () => {

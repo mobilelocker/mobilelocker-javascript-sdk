@@ -5,6 +5,7 @@ declare global {
     interface Window {
         IS_MOBILE_LOCKER_IOS_APP?: boolean
         IS_MOBILE_LOCKER_ANDROID_APP?: boolean
+        IS_MOBILE_LOCKER_WINDOWS_APP?: boolean
         SQL?: unknown
         initSqlJs?: (config: object) => Promise<unknown>
     }
@@ -44,6 +45,7 @@ export function isAndroid(): boolean {
  * Returns `true` when running inside the Mobile Locker Electron desktop app.
  *
  * Detected via the `Mobile Locker` user agent prefix set by the Electron app.
+ * Prefer {@link isWindows} when targeting the Windows app rather than Electron specifically.
  * Use {@link isApp} if you want to match any native app environment.
  */
 export function isElectron(): boolean {
@@ -52,13 +54,27 @@ export function isElectron(): boolean {
 }
 
 /**
- * Returns `true` when running inside any Mobile Locker native app — iOS, iPadOS, or Electron.
+ * Returns `true` when running inside the Mobile Locker Windows app.
  *
- * Use {@link isIOS} or {@link isElectron} if you need to target a specific platform.
+ * Detected via the `IS_MOBILE_LOCKER_WINDOWS_APP` window flag, the
+ * `mobilelocker-windows` user agent prefix, or {@link isElectron} (current Windows shell).
+ * Use {@link isApp} if you want to match any native app environment.
+ */
+export function isWindows(): boolean {
+    if (window.IS_MOBILE_LOCKER_WINDOWS_APP === true) return true
+    const ua = navigator?.userAgent?.toLowerCase() ?? ''
+    if (ua.startsWith('mobilelocker-windows')) return true
+    return isElectron()
+}
+
+/**
+ * Returns `true` when running inside any Mobile Locker native app — iOS, iPadOS, Android, or Windows.
+ *
+ * Use {@link isIOS}, {@link isAndroid}, or {@link isWindows} if you need to target a specific platform.
  */
 export function isApp(): boolean {
     if (_isAppCached === null) {
-        _isAppCached = isIOS() || isAndroid() || isElectron() ||
+        _isAppCached = isIOS() || isAndroid() || isWindows() || isElectron() ||
             typeof (globalThis as Record<string, unknown>)['ML_ENVIRONMENT'] !== 'undefined'
     }
     return _isAppCached

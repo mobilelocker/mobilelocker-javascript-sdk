@@ -140,7 +140,7 @@ function writeLlmsTxt() {
     '- [Install](guides/install/): npm and package install',
     '- [Getting started](guides/getting-started/): first success path',
     '- [UMD in presentation HTML](guides/umd-html/): script-tag usage in presentations',
-    '- [Environments](guides/environments/): isIOS, isElectron, isCDN, isApp',
+    '- [Environments](guides/environments/): isIOS, isAndroid, isWindows, isElectron, isCDN, isApp',
     '- [Changelog](guides/changelog/): release notes',
     '',
     '## Examples',
