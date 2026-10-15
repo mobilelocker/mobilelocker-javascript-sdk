@@ -42,7 +42,7 @@ mobilelocker.isElectron()
 import mobilelocker from '@mobilelocker/javascript-sdk'
 
 async function openScannerIfPossible(eventID) {
-  // scanBadge / scanBusinessCard throw UnsupportedEnvironment outside iOS
+  // scanBadge throws UnsupportedEnvironment outside iOS
   if (!mobilelocker.isIOS()) {
     console.info('Scanner is iOS-only')
     return null

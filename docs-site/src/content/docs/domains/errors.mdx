@@ -116,7 +116,7 @@ Some APIs return **status unions** with `withStatusBooleans` helpers instead of 
 Snake_case statuses become camelCase booleans (`not_connected` → `isNotConnected`).
 
 ```js
-const result = await mobilelocker.scanner.scanBusinessCard()
+const result = await mobilelocker.scanner.scanBadge(eventID)
 if (result.isSuccess) { /* … */ }
 if (result.status === 'cancelled') { /* … */ }
 ```

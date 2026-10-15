@@ -1,11 +1,13 @@
 ---
 title: Scanner
-description: Business card and badge scanning (iOS) — matching src/domains/scanner.ts.
+description: Badge scanning (iOS) — matching src/domains/scanner.ts.
 ---
 
-**Public surface (`scanner`):** `scanBusinessCard` · `scanBadge`
+**Public surface (`scanner`):** `scanBadge`
 
-**iOS app only** — both methods throw `UnsupportedEnvironment` (`unsupported_environment`) outside iOS.
+**iOS app only** — `scanBadge` throws `UnsupportedEnvironment` (`unsupported_environment`) outside iOS.
+
+`scanner.scanBusinessCard()` and `POST /api/open-scanner` are removed. There is no SDK replacement. Badge scanning is still `scanner.scanBadge(eventID)`.
 
 :::tip[Live demo]
 Open the **Scanner** screen in the [SDK Demo IVA](../examples/demo-iva/) (`#/scanner`) on an iOS device.
@@ -18,32 +20,10 @@ type ScanStatus = 'success' | 'cancelled' | 'failed'
 
 type ScanResult = WithStatusBooleans<
   | { status: 'success'; attendee: Attendee }
-  | { status: 'success'; businessCard: BusinessCard }
   | { status: 'cancelled' }
   | { status: 'failed'; error: string }
 >
 // booleans: isSuccess, isCancelled, isFailed
-```
-
-## Business card
-
-```ts
-scanBusinessCard(eventID?: number): Promise<ScanResult>
-```
-
-```js
-import mobilelocker from '@mobilelocker/javascript-sdk'
-
-const result = await mobilelocker.scanner.scanBusinessCard(eventID) // eventID optional
-
-if (result.isSuccess) {
-  console.log(result.businessCard)
-  await mobilelocker.storage.save('last-business-card', result.businessCard)
-} else if (result.isCancelled) {
-  // user cancelled
-} else if (result.isFailed) {
-  console.error(result.error)
-}
 ```
 
 ## Badge (attendee)
@@ -53,14 +33,20 @@ scanBadge(eventID: number): Promise<ScanResult>  // eventID required
 ```
 
 ```js
+import mobilelocker from '@mobilelocker/javascript-sdk'
+
 const result = await mobilelocker.scanner.scanBadge(eventID)
 
 if (result.isSuccess) {
   console.log(result.attendee)
+} else if (result.isCancelled) {
+  // user cancelled
+} else if (result.isFailed) {
+  console.error(result.error)
 }
 ```
 
-Always check `isSuccess` / `status === 'success'` before reading `businessCard` or `attendee`.
+Always check `isSuccess` / `status === 'success'` before reading `attendee`.
 
 ## Related
 

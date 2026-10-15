@@ -1,7 +1,6 @@
 import { apiClient, getEndpoint, isIOS } from '../env'
 import { unsupportedEnvironmentError } from '../errors'
 import type { Attendee } from '../types/attendee'
-import type { BusinessCard } from '../types/businessCard'
 import { withStatusBooleans, WithStatusBooleans } from '../utils/status'
 
 export type ScanStatus = 'success' | 'cancelled' | 'failed'
@@ -17,7 +16,6 @@ const SCANNER_REQUEST_CONFIG = { timeout: 0 } as const
 
 export type RawScanResult =
     | { status: 'success'; attendee: Attendee }
-    | { status: 'success'; businessCard: BusinessCard }
     | { status: 'cancelled' }
     | { status: 'failed'; error: string }
 
@@ -25,31 +23,6 @@ export type ScanResult = WithStatusBooleans<RawScanResult>
 
 /** @category Device */
 export const scanner = {
-    /**
-     * Open the native business card scanner and capture a contact.
-     *
-     * @remarks iOS app only. Throws in all other environments.
-     * Long-lived host bridge: per-request `timeout: 0`, no automatic retry.
-     * @param eventID - Optional lead retrieval event ID to associate the scan with.
-     * @returns A {@link ScanResult} — check `isSuccess` before accessing `businessCard`.
-     * @throws {@link MobileLockerError} if called outside the iOS app.
-     *
-     * @example
-     * const result = await mobilelocker.scanner.scanBusinessCard()
-     * if (result.isSuccess) console.log(result.businessCard)
-     */
-    async scanBusinessCard(eventID?: number): Promise<ScanResult> {
-        if (!isIOS()) {
-            throw unsupportedEnvironmentError('scanBusinessCard()')
-        }
-        const { data } = await apiClient.post<ScanResult>(
-            getEndpoint('/open-scanner'),
-            eventID !== undefined ? { event_id: eventID } : {},
-            SCANNER_REQUEST_CONFIG,
-        )
-        return withStatusBooleans(data as RawScanResult, SCAN_STATUSES)
-    },
-
     /**
      * Open the native badge scanner and capture an event attendee.
      *

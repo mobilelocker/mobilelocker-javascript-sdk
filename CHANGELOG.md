@@ -13,6 +13,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - **`isWindows()`** (MLJS-33) — detect the Mobile Locker Windows app via `IS_MOBILE_LOCKER_WINDOWS_APP` or the `mobilelocker-windows` user-agent prefix. Also `true` for the existing Electron Windows shell (`isElectron()`). Exported on the public API next to `isIOS` / `isAndroid` / `isElectron`. `isApp()` treats Windows as a native app environment.
 
+### Removed
+
+- **`scanner.scanBusinessCard()`** (MLJS-34) — **breaking.** `scanner.scanBusinessCard()` and `POST /api/open-scanner` are removed. There is no SDK replacement. Badge scanning is still `scanner.scanBadge(eventID)`. Form authors must delete calls to `scanner.scanBusinessCard` and any direct `POST /api/open-scanner` (or `/mobilelocker/api/open-scanner`) before shipping an SDK update. `ScanResult` no longer includes a `businessCard` success member.
+
 ---
 
 ## [2.0.1] — 2026-08-12

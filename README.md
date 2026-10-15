@@ -392,10 +392,9 @@ mobilelocker.presentation.reload()
 Trigger the device camera scanner (iOS app only).
 
 ```js
-const result = await mobilelocker.scanner.scanBusinessCard(eventID)
 const result = await mobilelocker.scanner.scanBadge(eventID)
 // result.status — 'success' | 'cancelled' | 'failed'
-// result.attendee or result.businessCard on success
+// result.attendee on success
 ```
 
 ### search
