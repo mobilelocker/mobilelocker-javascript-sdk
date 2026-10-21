@@ -1,6 +1,8 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import { isSatteriProcessor } from '@astrojs/markdown-satteri';
+import { docLinkMdastPlugin } from './plugins/resolve-doc-links.mjs';
 
 // GitHub Pages project site: https://mobilelocker.github.io/mobilelocker-javascript-sdk/
 const isProd = process.env.NODE_ENV === 'production' || process.env.GITHUB_ACTIONS === 'true';
@@ -151,5 +153,21 @@ export default defineConfig({
 				},
 			],
 		}),
+		{
+			name: 'resolve-doc-links',
+			hooks: {
+				'astro:config:setup'({ config, logger }) {
+					const processor = config.markdown?.processor;
+					if (!processor || !isSatteriProcessor(processor)) {
+						logger.warn(
+							'resolve-doc-links: markdown processor is not satteri, so doc hrefs were not rewritten.',
+						);
+						return;
+					}
+					const base = config.base;
+					processor.options.mdastPlugins.push(() => docLinkMdastPlugin(base));
+				},
+			},
+		},
 	],
 });

@@ -48,14 +48,14 @@ function relLink(fromFile, targetAbsUrl) {
   const fromDir = path.dirname(fromFile)
   const fromUrlDir = path.relative(path.join(root, 'docs-site/src/content/docs'), fromDir)
   const fromParts = toPosix(fromUrlDir).split('/').filter(Boolean)
-  const baseName = path.basename(fromFile, '.md')
-  const fromUrlParts = [...fromParts]
-  if (baseName !== 'index') {
-    fromUrlParts.push(baseName)
-  }
-  const targetParts = target.split('/').filter(Boolean)
-  const rel = path.posix.relative(fromUrlParts.join('/') || '.', targetParts.join('/'))
-  return (rel || '.') + '/'
+  // File-relative, not page-URL-relative. The docs build resolves these against
+  // the content directory and prefixes the site base. Starlight slugs are lowercase.
+  const targetParts = target
+    .split('/')
+    .filter(Boolean)
+    .map((seg) => seg.toLowerCase())
+  const rel = path.posix.relative(fromParts.join('/') || '.', targetParts.join('/'))
+  return `${rel || '.'}/`
 }
 
 function cleanLinks(body, filePath) {
